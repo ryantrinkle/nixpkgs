@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Add Haskell expressions, update one, tweak another to build on Darwin
