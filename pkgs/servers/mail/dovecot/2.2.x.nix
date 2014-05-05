@@ -5,7 +5,7 @@ stdenv.mkDerivation rec {
   name = "dovecot-2.2.12";
 
   buildInputs = [perl openssl bzip2 zlib openldap clucene_core_2]
-    ++ stdenv.lib.optionals stdenv.isDarwin [ systemd pam inotifyTools ];
+    ++ stdenv.lib.optionals (!stdenv.isDarwin) [ systemd pam inotifyTools ];
 
   src = fetchurl {
     url = "http://dovecot.org/releases/2.2/${name}.tar.gz";
