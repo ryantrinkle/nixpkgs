@@ -2872,6 +2872,8 @@ let
   haskellPackages_ghc763              = recurseIntoAttrs (haskell.packages_ghc763.highPrio);
   # Reasonably current HEAD snapshot.
   haskellPackages_ghc782 = haskell.packages_ghc782;
+  haskellPackages_ghc782_no_profiling = recurseIntoAttrs (haskell.packages_ghc782.noProfiling);
+  haskellPackages_ghc782_profiling    = recurseIntoAttrs (haskell.packages_ghc782.profiling);
   haskellPackages_ghcHEAD = haskell.packages_ghcHEAD;
 
   haxe = callPackage ../development/compilers/haxe { };
@@ -6695,10 +6697,12 @@ let
       HTTPDate MailDKIM LWP IOSocketSSL;
   };
 
-  samba = callPackage ../servers/samba { };
+  samba = samba3;
+  samba3 = callPackage ../servers/samba/3.6.22.nix { };
+  samba4 = callPackage ../servers/samba/4.1.7.nix { };
 
   # A lightweight Samba, useful for non-Linux-based OSes.
-  samba_light = lowPrio (callPackage ../servers/samba {
+  samba_light = lowPrio (callPackage ../servers/samba/3.6.22.nix {
     pam = null;
     fam = null;
     cups = null;
