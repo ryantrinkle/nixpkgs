@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Add -Wno-error=deprecated-declarations for nginx, required to build on Darwin
