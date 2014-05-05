@@ -9,7 +9,7 @@ cabal.mkDerivation (self: {
     sha256 = "1ynjgqk8hhnm6rbngy8fjsrd6i4phj2hlan9bk435bbywbl366k3";
   };
 
-  buildDepends = [ filemanip Agda cabalInstall ];
+  buildDepends = [ filemanip Agda ];
 
   preConfigure = "cd ffi";
 
