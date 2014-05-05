@@ -16,10 +16,7 @@ cabal.mkDerivation (self: {
   postInstall = ''
       mkdir -p $out/share
       cd ..
-      unset GHC_PACKAGE_PATH
-      HOME=$PWD cabal configure $extraConfigureFlags $configureFlags
-      HOME=$PWD cabal build
-      ./dist/build/GenerateEverything/GenerateEverything
+      runhaskell GenerateEverything
       agda -i . -i src Everything.agda
       cp -pR src $out/share/agda
   '';
