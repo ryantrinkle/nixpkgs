@@ -6695,10 +6695,12 @@ let
       HTTPDate MailDKIM LWP IOSocketSSL;
   };
 
-  samba = callPackage ../servers/samba { };
+  samba = samba3;
+  samba3 = callPackage ../servers/samba/3.6.22.nix { };
+  samba4 = callPackage ../servers/samba/4.1.7.nix { };
 
   # A lightweight Samba, useful for non-Linux-based OSes.
-  samba_light = lowPrio (callPackage ../servers/samba {
+  samba_light = lowPrio (callPackage ../servers/samba/3.6.22.nix {
     pam = null;
     fam = null;
     cups = null;
