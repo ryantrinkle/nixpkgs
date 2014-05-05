@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Allow Git-annex to build, using fsnotify, on Darwin
