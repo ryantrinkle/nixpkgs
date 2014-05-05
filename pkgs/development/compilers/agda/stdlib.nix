@@ -1,4 +1,4 @@
-{ cabal, fetchurl }:
+{ cabal, fetchurl, filemanip, Agda, cabalInstall }:
 
 cabal.mkDerivation (self: {
   pname = "Agda-stdlib";
@@ -9,11 +9,19 @@ cabal.mkDerivation (self: {
     sha256 = "1ynjgqk8hhnm6rbngy8fjsrd6i4phj2hlan9bk435bbywbl366k3";
   };
 
+  buildDepends = [ filemanip Agda cabalInstall ];
+
   preConfigure = "cd ffi";
 
   postInstall = ''
       mkdir -p $out/share
-      cp -pR ../src $out/share/agda
+      cd ..
+      unset GHC_PACKAGE_PATH
+      HOME=$PWD cabal configure $extraConfigureFlags $configureFlags
+      HOME=$PWD cabal build
+      ./dist/build/GenerateEverything/GenerateEverything
+      agda -i . -i src Everything.agda
+      cp -pR src $out/share/agda
   '';
 
   meta = {
