@@ -30,7 +30,9 @@ stdenv.mkDerivation rec {
     ++ optional xineramaSupport libXinerama
     ++ optionals cupsSupport [ cups ];
 
-  configureFlags = "--with-xinput=yes";
+  configureFlags = if stdenv.isDarwin
+    then "--disable-glibtest --disable-introspection --disable-visibility"
+    else "--with-xinput=yes";
 
   postInstall = "rm -rf $out/share/gtk-doc";
 

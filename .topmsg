@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Get glib, gtk+, harfbuzz and pango working on Darwin
