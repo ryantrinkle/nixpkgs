@@ -173,7 +173,7 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
     vector       = self.vector_0_10_9_1;
     xhtml        = self.xhtml_3000_2_1;
     zlib         = self.zlib_0_5_4_1;
-    cabalInstall = self.cabalInstall_1_20_0_0;
+    cabalInstall = self.cabalInstall_1_20_0_1;
     alex         = self.alex_3_1_3;
     haddock      = self.haddock_2_14_2;
     happy        = self.happy_1_19_3;
@@ -1249,7 +1249,10 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
 
   GlomeVec = callPackage ../development/libraries/haskell/GlomeVec {};
 
-  gloss = callPackage ../development/libraries/haskell/gloss {};
+  gloss = callPackage ../development/libraries/haskell/gloss {
+    OpenGL = self.OpenGL_2_9_1_0;
+    GLUT = self.GLUT_2_5_1_0;
+  };
 
   glossAccelerate = callPackage ../development/libraries/haskell/gloss-accelerate {};
 
@@ -1370,6 +1373,8 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   heredoc = callPackage ../development/libraries/haskell/heredoc {};
 
   hexpat = callPackage ../development/libraries/haskell/hexpat {};
+
+  hourglass = callPackage ../development/libraries/haskell/hourglass {};
 
   hseCpp = callPackage ../development/libraries/haskell/hse-cpp {};
 
@@ -2103,7 +2108,7 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   pqueue = callPackage ../development/libraries/haskell/pqueue {};
 
   process = callPackage ../development/libraries/haskell/process {};
-  
+
   profiteur = callPackage ../development/tools/haskell/profiteur {};
 
   preludeExtras = callPackage ../development/libraries/haskell/prelude-extras {};
@@ -3102,7 +3107,8 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       ${self.cabal2nix}/bin/cabal2nix ${src + "/${name}.cabal"} --sha256=FILTERME \
           | grep -v FILTERME | sed \
             -e 's/licenses.proprietary/licenses.unfree/' \
-            -e 's/{ cabal/{ cabal, src/' \
+            -e 's/{ cabal/{ cabal, cabalInstall, src/' \
+            -e 's/buildDepends = \[/buildDepends = \[ cabalInstall/' \
             -e 's/pname = \([^\n]*\)/pname = \1\n  inherit src;\n  jailbreak = true;/'  > $out
       '';
 
@@ -3139,7 +3145,7 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   cabalInstall_1_18_0_3 = callPackage ../tools/package-management/cabal-install/1.18.0.3.nix {
     Cabal = self.Cabal_1_18_1_3;
   };
-  cabalInstall_1_20_0_0 = callPackage ../tools/package-management/cabal-install/1.20.0.0.nix {
+  cabalInstall_1_20_0_1 = callPackage ../tools/package-management/cabal-install/1.20.0.1.nix {
     Cabal = self.Cabal_1_20_0_0;
   };
   cabalInstall = self.cabalInstall_1_20_0_0;
