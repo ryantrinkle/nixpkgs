@@ -1,5 +1,5 @@
-{ cabal, Cabal, cmdargs, either, filepath, lens, strict, tasty
-, tastyGolden, transformers, unorderedContainers, cabalLenses
+{ cabal, Cabal, cabalLenses, cmdargs, either, filepath, lens
+, strict, tasty, tastyGolden, transformers, unorderedContainers
 }:
 
 cabal.mkDerivation (self: {
@@ -9,8 +9,8 @@ cabal.mkDerivation (self: {
   isLibrary = true;
   isExecutable = true;
   buildDepends = [
-    Cabal cmdargs either lens strict transformers unorderedContainers
-    cabalLenses
+    Cabal cabalLenses cmdargs either lens strict transformers
+    unorderedContainers
   ];
   testDepends = [ filepath tasty tastyGolden ];
   jailbreak = true;
