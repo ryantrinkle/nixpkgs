@@ -1,4 +1,4 @@
-{ cabal, fetchurl, filemanip, Agda, cabalInstall }:
+{ cabal, fetchurl, filemanip, Agda }:
 
 cabal.mkDerivation (self: {
   pname = "Agda-stdlib";
