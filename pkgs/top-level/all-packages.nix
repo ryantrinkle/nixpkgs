@@ -6241,10 +6241,6 @@ let
     inherit (pythonPackages) gyp;
   };
 
-  v8_3_14 = callPackage ../development/libraries/v8/3.14.nix {
-    inherit (pythonPackages) gyp;
-  };
-
   xmlsec = callPackage ../development/libraries/xmlsec { };
 
   zziplib = callPackage ../development/libraries/zziplib { };
@@ -9144,6 +9140,8 @@ let
   };
 
   seq24 = callPackage ../applications/audio/seq24 { };
+
+  setbfree = callPackage ../applications/audio/setbfree { };
 
   sflphone = callPackage ../applications/networking/instant-messengers/sflphone {
     gtk = gtk3;
