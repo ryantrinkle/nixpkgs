@@ -82,7 +82,7 @@ cabal.mkDerivation (self: rec {
     unset ftp_proxy
 
     chmod 644 *.hoo *.txt
-    $out/bin/hoogle data -d $out/share/hoogle/doc --redownload -l $(echo *.txt | sed 's/\.txt//g')
+    $out/bin/hoogle data -d $PWD --redownload -l $(echo *.txt | sed 's/\.txt//g')
     PATH=$out/bin:$PATH ${rehoo}/bin/rehoo -j4 -c64 .
 
     rm -fr downloads *.txt *.dep
