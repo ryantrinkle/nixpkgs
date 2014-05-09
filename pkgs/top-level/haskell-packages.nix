@@ -58,7 +58,7 @@
 #
 # For most packages, however, we keep only one version, and use default.nix.
 
-{ pkgs, newScope, ghc, prefFun, modifyPrio ? (x : x)
+{ pkgs, newScope, ghc, modifyPrio ? (x : x)
 , enableLibraryProfiling ? false
 , enableSharedLibraries ? pkgs.stdenv.lib.versionOlder "7.7" ghc.version
 , enableSharedExecutables ? pkgs.stdenv.lib.versionOlder "7.7" ghc.version
@@ -70,17 +70,13 @@
 # modifyPrio argument can be set to lowPrio to make all Haskell packages have
 # low priority.
 
-let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x y);
-                 self = (prefFun result) result; in
+self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
 # Indentation deliberately broken at this point to keep the bulk
 # of this file at a low indentation level.
 
 {
-
-  finalReturn = self;
-
-  callPackage = callPackage;
+  inherit callPackage;
 
   # GHC and its wrapper
   #
@@ -140,7 +136,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   # NOTE: 2013.2.0.0 is the current default.
 
   haskellPlatformArgs_future = self : {
-    inherit (self) cabal ghc;
     async        = self.async_2_0_1_5;
     attoparsec   = self.attoparsec_0_11_3_0;
     caseInsensitive = self.caseInsensitive_1_2_0_0;
@@ -151,7 +146,7 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
     haskellSrc   = self.haskellSrc_1_0_1_6;
     hashable     = self.hashable_1_2_1_0;
     html         = self.html_1_0_1_2;
-    HTTP         = self.HTTP_4000_2_13;
+    HTTP         = self.HTTP_4000_2_14;
     HUnit        = self.HUnit_1_2_5_2;
     mtl          = self.mtl_2_1_3_1;
     network      = self.network_2_5_0_0;
@@ -181,7 +176,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   };
 
   haskellPlatformArgs_2013_2_0_0 = self : {
-    inherit (self) cabal ghc;
     async        = self.async_2_0_1_4;
     attoparsec   = self.attoparsec_0_10_4_0;
     caseInsensitive = self.caseInsensitive_1_0_0_1;
@@ -226,7 +220,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2013_2_0_0 self);
 
   haskellPlatformArgs_2012_4_0_0 = self : {
-    inherit (self) cabal ghc;
     async        = self.async_2_0_1_3;
     cgi          = self.cgi_3001_1_7_4;
     fgl          = self.fgl_5_4_2_4;
@@ -265,7 +258,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2012_4_0_0 self);
 
   haskellPlatformArgs_2012_2_0_0 = self : {
-    inherit (self) cabal ghc;
     cgi          = self.cgi_3001_1_7_4;
     fgl          = self.fgl_5_4_2_4;
     GLUT         = self.GLUT_2_1_2_1;
@@ -300,7 +292,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2012_2_0_0 self);
 
   haskellPlatformArgs_2011_4_0_0 = self : {
-    inherit (self) cabal ghc;
     cgi          = self.cgi_3001_1_7_4;
     fgl          = self.fgl_5_4_2_4;
     GLUT         = self.GLUT_2_1_2_1;
@@ -335,7 +326,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2011_4_0_0 self);
 
   haskellPlatformArgs_2011_2_0_1 = self : {
-    inherit (self) cabal ghc;
     cgi          = self.cgi_3001_1_7_4;
     fgl          = self.fgl_5_4_2_3;
     GLUT         = self.GLUT_2_1_2_1;
@@ -370,7 +360,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2011_2_0_1 self);
 
   haskellPlatformArgs_2011_2_0_0 = self : {
-    inherit (self) cabal ghc;
     cgi          = self.cgi_3001_1_7_4;
     fgl          = self.fgl_5_4_2_3;
     GLUT         = self.GLUT_2_1_2_1;
@@ -405,7 +394,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2011_2_0_0 self);
 
   haskellPlatformArgs_2010_2_0_0 = self : {
-    inherit (self) cabal ghc;
     cgi          = self.cgi_3001_1_7_3;
     fgl          = self.fgl_5_4_2_3;
     GLUT         = self.GLUT_2_1_2_1;
@@ -437,7 +425,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2010_2_0_0 self);
 
   haskellPlatformArgs_2010_1_0_0 = self : {
-    inherit (self) cabal ghc;
     haskellSrc   = self.haskellSrc_1_0_1_3;
     html         = self.html_1_0_1_2;
     fgl          = self.fgl_5_4_2_2;
@@ -467,7 +454,6 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       (self.haskellPlatformArgs_2010_1_0_0 self);
 
   haskellPlatformArgs_2009_2_0_2 = self : {
-    inherit (self) cabal ghc;
     time         = self.time_1_1_2_4;
     haddock      = self.haddock_2_4_2;
     cgi          = self.cgi_3001_1_7_1;
@@ -1010,6 +996,8 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
 
   distributive = callPackage ../development/libraries/haskell/distributive {};
 
+  djinn = callPackage ../development/libraries/haskell/djinn {};
+
   dlist = callPackage ../development/libraries/haskell/dlist {};
 
   dlistInstances = callPackage ../development/libraries/haskell/dlist-instances {};
@@ -1243,10 +1231,7 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
 
   GlomeVec = callPackage ../development/libraries/haskell/GlomeVec {};
 
-  gloss = callPackage ../development/libraries/haskell/gloss {
-    OpenGL = self.OpenGL_2_9_1_0;
-    GLUT = self.GLUT_2_5_1_0;
-  };
+  gloss = callPackage ../development/libraries/haskell/gloss {};
 
   glossAccelerate = callPackage ../development/libraries/haskell/gloss-accelerate {};
 
@@ -1385,8 +1370,8 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   HTTP_4000_2_3 = callPackage ../development/libraries/haskell/HTTP/4000.2.3.nix {};
   HTTP_4000_2_5 = callPackage ../development/libraries/haskell/HTTP/4000.2.5.nix {};
   HTTP_4000_2_8 = callPackage ../development/libraries/haskell/HTTP/4000.2.8.nix {};
-  HTTP_4000_2_13 = callPackage ../development/libraries/haskell/HTTP/4000.2.13.nix {};
-  HTTP = self.HTTP_4000_2_13;
+  HTTP_4000_2_14 = callPackage ../development/libraries/haskell/HTTP/4000.2.14.nix {};
+  HTTP = self.HTTP_4000_2_14;
 
   httpAttoparsec = callPackage ../development/libraries/haskell/http-attoparsec {};
 
@@ -2337,6 +2322,8 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
 
   snapletAcidState = callPackage ../development/libraries/haskell/snaplet-acid-state {};
 
+  snapletStripe = callPackage ../development/libraries/haskell/snaplet-stripe {};
+
   snapBlaze = callPackage ../development/libraries/haskell/snap-blaze/default.nix {};
 
   snapCore = callPackage ../development/libraries/haskell/snap/core.nix {};
@@ -2367,15 +2354,10 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
 
   StateVar = callPackage ../development/libraries/haskell/StateVar {};
 
-  statistics_0_10_5_2 = callPackage ../development/libraries/haskell/statistics/0.10.5.2.nix {
+  statistics = callPackage ../development/libraries/haskell/statistics {
     binary = self.binary_0_7_1_0;
     vectorBinaryInstances = self.vectorBinaryInstances.override { binary = self.binary_0_7_1_0; };
   };
-  statistics_0_11_0_0 = callPackage ../development/libraries/haskell/statistics/0.11.0.0.nix {
-    binary = self.binary_0_7_1_0;
-    vectorBinaryInstances = self.vectorBinaryInstances.override { binary = self.binary_0_7_1_0; };
-  };
-  statistics = self.statistics_0_10_5_2;
 
   statvfs = callPackage ../development/libraries/haskell/statvfs {};
 
@@ -3091,7 +3073,7 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   cabal2nix = callPackage ../development/tools/haskell/cabal2nix {};
 
   # Build a cabal package given a local .cabal file
-  buildLocalCabalWithArgs = { src, name, args ? {} }: let
+  buildLocalCabalWithArgs = { src, name, args ? {}, cabalDrvArgs ? { jailbreak = true; } }: let
     cabalExpr = pkgs.stdenv.mkDerivation ({
       name = "${name}.nix";
 
@@ -3099,16 +3081,17 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
       ${self.cabal2nix}/bin/cabal2nix ${src + "/${name}.cabal"} --sha256=FILTERME \
           | grep -v FILTERME | sed \
             -e 's/licenses.proprietary/licenses.unfree/' \
-            -e 's/{ cabal/{ cabal, cabalInstall, src/' \
+            -e 's/{ cabal/{ cabal, cabalInstall, cabalDrvArgs ? {}, src/' \
+            -e 's/cabal.mkDerivation (self: {/cabal.mkDerivation (self: cabalDrvArgs \/\/ {/' \
             -e 's/buildDepends = \[/buildDepends = \[ cabalInstall/' \
-            -e 's/pname = \([^\n]*\)/pname = \1\n  inherit src;\n  jailbreak = true;/'  > $out
+            -e 's/pname = \([^\n]*\)/pname = \1\n  inherit src;\n/'  > $out
       '';
 
     } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
       LANG = "en_US.UTF-8";
       LOCALE_ARCHIVE = "${pkgs.glibcLocales}/lib/locale/locale-archive";
     });
-  in callPackage cabalExpr ({ inherit src; } // args);
+  in callPackage cabalExpr ({ inherit src cabalDrvArgs; } // args);
 
   buildLocalCabal = src: name: self.buildLocalCabalWithArgs { inherit src name; };
 
@@ -3140,7 +3123,7 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
   cabalInstall_1_20_0_1 = callPackage ../tools/package-management/cabal-install/1.20.0.1.nix {
     Cabal = self.Cabal_1_20_0_0;
   };
-  cabalInstall = self.cabalInstall_1_20_0_0;
+  cabalInstall = self.cabalInstall_1_20_0_1;
 
   gitAnnex = callPackage ../applications/version-management/git-and-tools/git-annex {
     hS3 = self.hS3.override { Crypto = self.Crypto.override { QuickCheck = self.QuickCheck_2_7_3; }; };
@@ -3177,6 +3160,4 @@ let result = let callPackage = x : y : modifyPrio (newScope result.finalReturn x
 
 # End of the main part of the file.
 
-};
-
-in result.finalReturn
+}
