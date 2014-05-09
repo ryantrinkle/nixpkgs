@@ -76,6 +76,7 @@ cabal.mkDerivation (self: rec {
         ln -sf $i/share/doc/* $out/share/hoogle/doc
     done
 
+    import_dbs ${self.ghc}/share/doc/ghc*/html/libraries
     ln -sf ${self.ghc}/share/doc/ghc*/html/libraries/* $out/share/hoogle/doc
 
     unset http_proxy
