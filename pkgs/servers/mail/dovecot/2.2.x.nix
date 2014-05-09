@@ -1,10 +1,10 @@
 { stdenv, fetchurl, perl, systemd, openssl, pam, bzip2, zlib, openldap
-, inotifyTools, clucene_core_2 }:
+, inotifyTools, clucene_core_2, sqlite }:
 
 stdenv.mkDerivation rec {
   name = "dovecot-2.2.12";
 
-  buildInputs = [perl openssl bzip2 zlib openldap clucene_core_2]
+  buildInputs = [perl openssl bzip2 zlib openldap clucene_core_2 sqlite]
     ++ stdenv.lib.optionals (stdenv.isLinux) [ systemd pam inotifyTools ];
 
   src = fetchurl {
@@ -52,6 +52,6 @@ stdenv.mkDerivation rec {
     homepage = "http://dovecot.org/";
     description = "Open source IMAP and POP3 email server written with security primarily in mind";
     maintainers = with stdenv.lib.maintainers; [viric simons rickynils];
-    platforms = stdenv.lib.platforms.unix;
+    hydraPlatforms = stdenv.lib.platforms.linux;
   };
 }
