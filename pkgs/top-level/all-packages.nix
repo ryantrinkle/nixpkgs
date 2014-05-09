@@ -329,7 +329,7 @@ let
   };
 
   # A wrapper around fetchurl that generates miror://gnome URLs automatically
-  fetchurl_gnome = callPackage ../build-support/fetchurl/gnome.nix { };
+  fetchurlGnome = callPackage ../build-support/fetchurl/gnome.nix { };
 
   # fetchurlBoot is used for curl and its dependencies in order to
   # prevent a cyclic dependency (curl depends on curl.tar.bz2,
@@ -337,6 +337,14 @@ let
   # uses the curl from the previous bootstrap phase (e.g. a statically
   # linked curl in the case of stdenv-linux).
   fetchurlBoot = stdenv.fetchurlBoot;
+
+  fetchzip = import ../build-support/fetchzip { inherit lib fetchurl unzip; };
+
+  fetchFromGitHub = { owner, repo, rev, sha256 }: fetchzip {
+    name = "${repo}-${rev}-src";
+    url = "https://github.com/${owner}/${repo}/archive/${rev}.tar.gz";
+    inherit sha256;
+  };
 
   resolveMirrorURLs = {url}: fetchurl {
     showURLs = true;
@@ -577,6 +585,10 @@ let
   ccnet = callPackage ../tools/networking/ccnet { };
 
   capstone = callPackage ../development/libraries/capstone { };
+
+  coprthr = callPackage ../development/libraries/coprthr {
+    flex = flex_2_5_35;
+  };
 
   ditaa = callPackage ../tools/graphics/ditaa { };
 
@@ -1541,6 +1553,8 @@ let
 
   pa_applet = callPackage ../tools/audio/pa-applet { };
 
+  nifskope = callPackage ../tools/graphics/nifskope { };
+
   nilfs_utils = callPackage ../tools/filesystems/nilfs-utils {};
 
   nlopt = callPackage ../development/libraries/nlopt {};
@@ -1820,9 +1834,7 @@ let
 
   privateer = callPackage ../games/privateer { };
 
-  rtmpdump = callPackage ../tools/video/rtmpdump {
-    gnutls = gnutls31; # gnutls32: undefined reference to gnutls_calc_dh_{key,secret}
-  };
+  rtmpdump = callPackage ../tools/video/rtmpdump { };
 
   reaverwps = callPackage ../tools/networking/reaver-wps {};
 
@@ -3431,14 +3443,6 @@ let
   php_apc = callPackage ../development/libraries/php-apc { };
 
   php_xcache = callPackage ../development/libraries/php-xcache { };
-
-  phpXdebug_5_3 = lowPrio (callPackage ../development/interpreters/php-xdebug {
-    php = php53;
-  });
-
-  phpXdebug_5_4 = callPackage ../development/interpreters/php-xdebug { };
-
-  phpXdebug = phpXdebug_5_4;
 
   picolisp = callPackage ../development/interpreters/picolisp {};
 
@@ -5089,6 +5093,9 @@ let
     then null
     else libiconv;
 
+  # The logic behind this attribute is broken: libiconvOrNull==null does
+  # NOT imply libiconv=glibc! On Darwin, for example, we have a native
+  # libiconv library which is not glibc.
   libiconvOrLibc = if libiconvOrNull == null then gcc.libc else libiconv;
 
   # On non-GNU systems we need GNU Gettext for libintl.
@@ -6439,10 +6446,10 @@ let
     packages = [];
   };
 
-  rPackages = recurseIntoAttrs (import ../development/r-modules/cran-packages.nix {
+  rPackages = import ../development/r-modules/cran-packages.nix {
     inherit pkgs;
     overrides = (config.rPackageOverrides or (p: {})) pkgs;
-  });
+  };
 
   ### SERVERS
 
@@ -7659,6 +7666,8 @@ let
 
   oldstandard = callPackage ../data/fonts/oldstandard { };
 
+  poly = callPackage ../data/fonts/poly { };
+
   posix_man_pages = callPackage ../data/documentation/man-pages-posix { };
 
   pthreadmanpages = callPackage ../data/documentation/pthread-man-pages { };
@@ -7680,6 +7689,8 @@ let
   r4rs = callPackage ../data/documentation/rnrs/r4rs.nix { };
 
   r5rs = callPackage ../data/documentation/rnrs/r5rs.nix { };
+
+  sourceCodePro = callPackage ../data/fonts/source-code-pro {};
 
   tango-icon-theme = callPackage ../data/icons/tango-icon-theme { };
 
@@ -7878,6 +7889,8 @@ let
   chromium = lowPrio (callPackage ../applications/networking/browsers/chromium {
     channel = "stable";
     pulseSupport = config.pulseaudio or true;
+    enablePepperFlash = config.chromium.enablePepperFlash or false;
+    enablePepperPDF = config.chromium.enablePepperPDF or false;
   });
 
   chromiumBeta = lowPrio (chromium.override { channel = "beta"; });
@@ -7949,7 +7962,7 @@ let
     inherit (gnome) GConf libglade;
   };
 
-  "dd-agent" = callPackage ../tools/networking/dd-agent { inherit (pythonPackages) tornado; };
+  dd-agent = callPackage ../tools/networking/dd-agent { inherit (pythonPackages) tornado; };
 
   dia = callPackage ../applications/graphics/dia {
     inherit (pkgs.gnome) libart_lgpl libgnomeui;
@@ -9486,7 +9499,7 @@ let
 
   weechat = callPackage ../applications/networking/irc/weechat { };
 
-  weechatDevel = callPackage ../applications/networking/irc/weechat/devel.nix { };
+  weechatDevel = lowPrio (callPackage ../applications/networking/irc/weechat/devel.nix { });
 
   weston = callPackage ../applications/window-managers/weston { };
 
@@ -10302,6 +10315,8 @@ let
   jags = callPackage ../applications/science/math/jags { };
 
   liblapack = callPackage ../development/libraries/science/math/liblapack { };
+
+  liblbfgs = callPackage ../development/libraries/science/math/liblbfgs { };
 
   openblas = callPackage ../development/libraries/science/math/openblas { };
 
