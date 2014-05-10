@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Allow dar to build on Darwin
