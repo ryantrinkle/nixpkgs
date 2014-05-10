@@ -1,17 +1,13 @@
 master
 tg/annex
 tg/coq
-tg/dovecot
-tg/geoip
 tg/hoogle-local
 tg/newhask
 tg/nginx
-tg/texinfo
 tg/agda
 tg/ghc782
 tg/emacs
 tg/ghc-mod
 tg/ppl
-tg/djinn
 tg/gtk
 tg/dar
