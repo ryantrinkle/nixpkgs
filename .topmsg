@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Support using GHC 7.4.2 with current Nixpkgs
