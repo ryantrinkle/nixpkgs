@@ -13,7 +13,10 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ perl gnum4 ];
   propagatedBuildInputs = [ gmpxx ];
 
-  configureFlags = "--disable-watchdog";
+  configureFlags = [
+    "--disable-watchdog" "--disable-ppl_lcdd" "--disable-ppl_lpsol"
+    "--disable-ppl_pips" "CPPFLAGS=-fexceptions"
+  ];
 
   patches = [ ./upstream-based.patch ];
 
