@@ -426,7 +426,7 @@ let
   aefs = callPackage ../tools/filesystems/aefs { };
 
   aegisub = callPackage ../applications/video/aegisub {
-    wxGTK = wxGTK29;
+    wxGTK = wxGTK30;
     lua = lua5_1;
   };
 
@@ -1868,6 +1868,8 @@ let
 
   ripmime = callPackage ../tools/networking/ripmime {};
 
+  rkflashtool = callPackage ../tools/misc/rkflashtool { };
+
   rmlint = callPackage ../tools/misc/rmlint {};
 
   rng_tools = callPackage ../tools/security/rng-tools { };
@@ -2856,35 +2858,26 @@ let
     builtins.substring 0 (builtins.stringLength "packages_") name == "packages_"
   ) haskell));
 
-  # Current default version: 7.6.3.
   haskellPackages = haskellPackages_ghc763;
-  # Current Haskell Platform: 2013.2.0.0
-  haskellPlatform = haskellPackages.haskellPlatform;
+  haskellPlatform = haskellPlatformPackages."2013_2_0_0";
 
   haskellPackages_ghc6104 = haskell.packages_ghc6104;
-  haskellPackages_ghc6121 = haskell.packages_ghc6121;
-  haskellPackages_ghc6122 = haskell.packages_ghc6122;
   haskellPackages_ghc6123 = haskell.packages_ghc6123;
-  haskellPackages_ghc701  = haskell.packages_ghc701;
-  haskellPackages_ghc702  = haskell.packages_ghc702;
-  haskellPackages_ghc703  = haskell.packages_ghc703;
   haskellPackages_ghc704  = haskell.packages_ghc704;
-  haskellPackages_ghc721  = haskell.packages_ghc721;
   haskellPackages_ghc722  = haskell.packages_ghc722;
-  haskellPackages_ghc741  = haskell.packages_ghc741;
   haskellPackages_ghc742  = haskell.packages_ghc742;
-  haskellPackages_ghc761  = haskell.packages_ghc761;
-  haskellPackages_ghc762  = haskell.packages_ghc762;
   # For the default version, we build profiling versions of the libraries, too.
   # The following three lines achieve that: the first two make Hydra build explicit
   # profiling and non-profiling versions; the final respects the user-configured
   # default setting.
-  haskellPackages_ghc763_no_profiling = recurseIntoAttrs (haskell.packages_ghc763.noProfiling);
-  haskellPackages_ghc763_profiling    = recurseIntoAttrs (haskell.packages_ghc763.profiling);
-  haskellPackages_ghc763              = recurseIntoAttrs (haskell.packages_ghc763.highPrio);
+  haskellPackages_ghc763_no_profiling = recurseIntoAttrs haskell.packages_ghc763.noProfiling;
+  haskellPackages_ghc763_profiling    = recurseIntoAttrs haskell.packages_ghc763.profiling;
+  haskellPackages_ghc763              = recurseIntoAttrs haskell.packages_ghc763.highPrio;
   # Reasonably current HEAD snapshot.
   haskellPackages_ghc782 = haskell.packages_ghc782;
   haskellPackages_ghcHEAD = haskell.packages_ghcHEAD;
+
+  haskellPlatformPackages = recurseIntoAttrs (import ../development/libraries/haskell/haskell-platform { inherit pkgs; });
 
   haxe = callPackage ../development/compilers/haxe { };
 
@@ -3223,8 +3216,9 @@ let
   };
 
   scala_2_9 = callPackage ../development/compilers/scala/2.9.nix { };
-  scala_2_10 = callPackage ../development/compilers/scala { };
-  scala = scala_2_10;
+  scala_2_10 = callPackage ../development/compilers/scala/2.10.nix { };
+  scala_2_11 = callPackage ../development/compilers/scala { };
+  scala = scala_2_11;
 
   sdcc = callPackage ../development/compilers/sdcc { };
 
@@ -3454,18 +3448,13 @@ let
     llvm = llvm_33 ;
   };
 
-  python3 = hiPrio (callPackage ../development/interpreters/python/3.3 { });
+  python26 = callPackage ../development/interpreters/python/2.6 { db = db47; };
+  python27 = callPackage ../development/interpreters/python/2.7 { libX11 = xlibs.libX11; };
   python32 = callPackage ../development/interpreters/python/3.2 { };
   python33 = callPackage ../development/interpreters/python/3.3 { };
-  python34 = callPackage ../development/interpreters/python/3.4 { };
-
+  python34 = hiPrio (callPackage ../development/interpreters/python/3.4 { });
   python = python27;
-  python26 = callPackage ../development/interpreters/python/2.6 {
-    db = db47;
-  };
-  python27 = callPackage ../development/interpreters/python/2.7 {
-    libX11 = xlibs.libX11;
-  };
+  python3 = python3Packages.python;
 
   pypy = callPackage ../development/interpreters/pypy/2.2 { };
 
@@ -3543,6 +3532,8 @@ let
     qt = qt4;
     fftw = fftwSinglePrec;
   };
+
+  supercollider_scel = supercollider.override { useSCEL = true; };
 
   sysPerl = callPackage ../development/interpreters/perl/sys-perl { };
 
@@ -4714,6 +4705,8 @@ let
   gvfs = callPackage ../development/libraries/gvfs { gconf = gnome.GConf; };
 
   gwenhywfar = callPackage ../development/libraries/gwenhywfar { };
+
+  hamlib = callPackage ../development/libraries/hamlib { };
 
   # TODO : Add MIT Kerberos and let admin choose.
   kerberos = heimdal;
@@ -6169,6 +6162,8 @@ let
     inherit ncurses flex bison autoconf automake m4 coreutils;
   };
 
+  zeitgeist = callPackage ../development/libraries/zeitgeist { };
+
   zlib = callPackage ../development/libraries/zlib {
     fetchurl = fetchurlBoot;
   };
@@ -6327,7 +6322,7 @@ let
     python = python26;
   };
 
-  python3Packages = python33Packages;
+  python3Packages = python34Packages;
 
   python33Packages = recurseIntoAttrs (import ./python-packages.nix {
     inherit pkgs;
@@ -6833,6 +6828,8 @@ let
   bluez5 = lowPrio (callPackage ../os-specific/linux/bluez/bluez5.nix { });
 
   bluez = bluez4;
+
+  inherit (pythonPackages) bedup;
 
   beret = callPackage ../games/beret { };
 
@@ -7379,6 +7376,10 @@ let
 
   statifier = builderDefsPackage (import ../os-specific/linux/statifier) { };
 
+  sysdig = callPackage ../os-specific/linux/sysdig {
+    kernel = null;
+  }; # pkgs.sysdig is a client, for a driver look at linuxPackagesFor
+
   sysfsutils = callPackage ../os-specific/linux/sysfsutils { };
 
   sysprof = callPackage ../development/tools/profiling/sysprof {
@@ -7629,6 +7630,8 @@ let
   docbook_xsl_ns = callPackage ../data/sgml+xml/stylesheets/xslt/docbook-xsl-ns { };
 
   dosemu_fonts = callPackage ../data/fonts/dosemu-fonts { };
+
+  eb-garamond = callPackage ../data/fonts/eb-garamond { };
 
   freefont_ttf = callPackage ../data/fonts/freefont-ttf { };
 
@@ -7921,6 +7924,9 @@ let
     libpng = libpng12;
   };
 
+  codeblocks = callPackage ../applications/editors/codeblocks { };
+  codeblocksFull = callPackage ../applications/editors/codeblocks { contribPlugins = true; };
+
   codeville = builderDefsPackage (import ../applications/version-management/codeville/0.8.0.nix) {
     inherit makeWrapper;
     python = pythonFull;
@@ -7952,10 +7958,12 @@ let
   darcs = haskellPackages.darcs.override {
     # A variant of the Darcs derivation that containts only the executable and
     # thus has no dependencies on other Haskell packages.
-    cabal = { mkDerivation = x: rec { final = haskellPackages.cabal.mkDerivation (self: (x final) // {
-              isLibrary = false;
-              configureFlags = "-f-library"; }); }.final;
-            };
+    cabal = haskellPackages.cabal.override {
+      extension = self : super : {
+        isLibrary = false;
+        configureFlags = "-f-library " + super.configureFlags or "";
+      };
+    };
   };
 
   darktable = callPackage ../applications/graphics/darktable {
@@ -8217,6 +8225,8 @@ let
   fetchmail = import ../applications/misc/fetchmail {
     inherit stdenv fetchurl openssl;
   };
+
+  fldigi = callPackage ../applications/audio/fldigi { };
 
   fluidsynth = callPackage ../applications/audio/fluidsynth { };
 
@@ -8774,6 +8784,8 @@ let
 
   minicom = callPackage ../tools/misc/minicom { };
 
+  minimodem = callPackage ../applications/audio/minimodem { };
+
   minidjvu = callPackage ../applications/graphics/minidjvu { };
 
   mirage = callPackage ../applications/graphics/mirage {};
@@ -9049,6 +9061,8 @@ let
   pommed = callPackage ../os-specific/linux/pommed {
     inherit (xorg) libXpm;
   };
+
+  potrace = callPackage ../applications/graphics/potrace {};
 
   pqiv = callPackage ../applications/graphics/pqiv { };
 
