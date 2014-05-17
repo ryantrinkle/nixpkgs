@@ -303,9 +303,31 @@ let
     inherit stdenv git cacert;
   };
 
+  fetchgitPrivate = args: derivation ((fetchgit args).drvAttrs // {
+    SSH_AUTH_SOCK = if (builtins.tryEval <ssh-auth-sock>).success
+      then builtins.toString <ssh-auth-sock>
+      else null;
+    GIT_SSH = pkgs.writeScript "fetchgit-ssh" ''
+      #! ${pkgs.stdenv.shell}
+      exec -a ssh ${pkgs.openssh}/bin/ssh -F ${let
+        sshConfigFile = if (builtins.tryEval <ssh-config-file>).success
+          then <ssh-config-file>
+          else builtins.trace ''
+            Please set your nix-path such that ssh-config-file points to a file that will allow ssh to access private repositories. The builder will not be able to see any running ssh agent sessions unless ssh-auth-sock is also set in the nix-path.
+
+            Note that the config file and any keys it points to must be readable by the build user, which depending on your nix configuration means making it readable by the build-users-group, the user of the running nix-daemon, or the user calling the nix command which started the build. Similarly, if using an ssh agent ssh-auth-sock must point to a socket the build user can access.
+
+            You may need StrictHostKeyChecking=no in the config file. Since ssh will refuse to use a group-readable private key, if using build-users you will likely want to use something like IdentityFile /some/directory/%u/key and have a directory for each build user accessible to that user.
+          '' "/var/lib/empty/config";
+      in builtins.toString sshConfigFile} "$@"
+    '';
+  });
+
   fetchgitrevision = import ../build-support/fetchgitrevision runCommand git;
 
   fetchmtn = callPackage ../build-support/fetchmtn (config.fetchmtn or {});
+
+  fetchpatch = callPackage ../build-support/fetchpatch { };
 
   fetchsvn = import ../build-support/fetchsvn {
     inherit stdenv subversion openssh;
@@ -677,6 +699,8 @@ let
     par2Support = (config.bup.par2Support or false);
   };
 
+  ori = callPackage ../tools/backup/ori { };
+
   atool = callPackage ../tools/archivers/atool { };
 
   bzip2 = callPackage ../tools/compression/bzip2 { };
@@ -754,6 +778,8 @@ let
   "unionfs-fuse" = callPackage ../tools/filesystems/unionfs-fuse { };
 
   usb_modeswitch = callPackage ../development/tools/misc/usb-modeswitch { };
+
+  biosdevname = callPackage ../tools/networking/biosdevname { };
 
   clamav = callPackage ../tools/security/clamav { };
 
@@ -1274,6 +1300,8 @@ let
 
   jing = callPackage ../tools/text/xml/jing { };
 
+  jmtpfs = callPackage ../tools/filesystems/jmtpfs { };
+
   jnettop = callPackage ../tools/networking/jnettop { };
 
   jq = callPackage ../development/tools/jq {};
@@ -1442,9 +1470,7 @@ let
 
   modemmanager = callPackage ../tools/networking/modemmanager {};
 
-  monit = builderDefsPackage ../tools/system/monit {
-    inherit openssl flex bison;
-  };
+  monit = callPackage ../tools/system/monit { };
 
   mosh = callPackage ../tools/networking/mosh {
     boost = boostHeaders;
@@ -3023,6 +3049,8 @@ let
     callPackage_i686 ../development/compilers/mentor {}
   );
 
+  mercury = callPackage ../development/compilers/mercury { };
+
   mitscheme = callPackage ../development/compilers/mit-scheme { };
 
   mlton = callPackage ../development/compilers/mlton { };
@@ -3704,6 +3732,8 @@ let
      wrapGCC (ccache.links extraConfig)) {};
   ccacheStdenv = lowPrio (overrideGCC stdenv ccacheWrapper);
 
+  cccc = callPackage ../development/tools/analysis/cccc { };
+
   cgdb = callPackage ../development/tools/misc/cgdb { };
 
   chromedriver = callPackage ../development/tools/selenium/chromedriver { gconf = gnome.GConf; };
@@ -4232,6 +4262,8 @@ let
   coredumper = callPackage ../development/libraries/coredumper { };
 
   ctl = callPackage ../development/libraries/ctl { };
+
+  cpp-netlib = callPackage ../development/libraries/cpp-netlib { };
 
   cppunit = callPackage ../development/libraries/cppunit { };
 
@@ -4963,6 +4995,8 @@ let
   libgnome_keyring = callPackage ../development/libraries/libgnome-keyring { };
   libgnome_keyring3 = gnome3.libgnome_keyring;
 
+  libgnurl = callPackage ../development/libraries/libgnurl { };
+
   libseccomp = callPackage ../development/libraries/libseccomp { };
 
   libsecret = callPackage ../development/libraries/libsecret { };
@@ -5170,6 +5204,8 @@ let
   libmusicbrainz5 = callPackage ../development/libraries/libmusicbrainz/5.x.nix { };
 
   libmusicbrainz = libmusicbrainz3;
+
+  libmx = callPackage ../development/libraries/libmx { };
 
   libnet = callPackage ../development/libraries/libnet { };
 
@@ -6043,6 +6079,10 @@ let
 
   ucommon = callPackage ../development/libraries/ucommon { };
 
+  v8 = callPackage ../development/libraries/v8 {
+    inherit (pythonPackages) gyp;
+  };
+
   vaapiIntel = callPackage ../development/libraries/vaapi-intel { };
 
   vaapiVdpau = callPackage ../development/libraries/vaapi-vdpau { };
@@ -6154,6 +6194,8 @@ let
 
   xmlrpc_c = callPackage ../development/libraries/xmlrpc-c { };
 
+  xmlsec = callPackage ../development/libraries/xmlsec { };
+
   xvidcore = callPackage ../development/libraries/xvidcore { };
 
   yajl = callPackage ../development/libraries/yajl { };
@@ -6175,6 +6217,8 @@ let
   zeromq2 = callPackage ../development/libraries/zeromq/2.x.nix {};
   zeromq3 = callPackage ../development/libraries/zeromq/3.x.nix {};
   zeromq4 = callPackage ../development/libraries/zeromq/4.x.nix {};
+
+  zziplib = callPackage ../development/libraries/zziplib { };
 
 
   ### DEVELOPMENT / LIBRARIES / JAVA
@@ -6236,14 +6280,6 @@ let
   swt = callPackage ../development/libraries/java/swt {
     inherit (gnome) libsoup;
   };
-
-  v8 = callPackage ../development/libraries/v8 {
-    inherit (pythonPackages) gyp;
-  };
-
-  xmlsec = callPackage ../development/libraries/xmlsec { };
-
-  zziplib = callPackage ../development/libraries/zziplib { };
 
 
   ### DEVELOPMENT / LIBRARIES / JAVASCRIPT
@@ -6748,7 +6784,7 @@ let
   xinetd = callPackage ../servers/xinetd { };
 
   xorg = recurseIntoAttrs (import ../servers/x11/xorg/default.nix {
-    inherit fetchurl fetchgit stdenv pkgconfig intltool freetype fontconfig
+    inherit fetchurl fetchgit fetchpatch stdenv pkgconfig intltool freetype fontconfig
       libxslt expat libdrm libpng zlib perl mesa_drivers
       dbus libuuid openssl gperf m4
       autoconf automake libtool xmlto asciidoc udev flex bison python mtdev pixman;
@@ -9064,6 +9100,8 @@ let
 
   potrace = callPackage ../applications/graphics/potrace {};
 
+  posterazor = callPackage ../applications/misc/posterazor { };
+
   pqiv = callPackage ../applications/graphics/pqiv { };
 
   qiv = callPackage ../applications/graphics/qiv { };
@@ -9474,7 +9512,10 @@ let
     vimrc = config.vim.vimrc or "";
   };
 
-  virtviewer = callPackage ../applications/virtualization/virt-viewer {};
+  virtviewer = callPackage ../applications/virtualization/virt-viewer {
+    gtkvnc = gtkvnc.override { enableGTK3 = true; };
+    spice_gtk = spice_gtk.override { enableGTK3 = true; };
+  };
   virtmanager = callPackage ../applications/virtualization/virt-manager {
     inherit (gnome) gnome_python;
     vte = gnome3.vte;
