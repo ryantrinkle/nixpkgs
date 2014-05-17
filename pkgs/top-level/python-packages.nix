@@ -8783,6 +8783,51 @@ rec {
     };
   };
 
+
+  pyusb = buildPythonPackage rec {
+    name = "pyusb-1.0.0b1";
+
+    src = fetchurl {
+      url = "https://pypi.python.org/packages/source/p/pyusb/${name}.tar.gz";
+      md5 = "5cc9c7dd77b4d12fcc22fee3b39844bc";
+    };
+
+    # Fix the USB backend library lookup
+    postPatch = ''
+      libusb=${pkgs.libusb1}/lib/libusb-1.0.so
+      test -f $libusb || { echo "ERROR: $libusb doesn't exist, please update/fix this build expression."; exit 1; }
+      sed -i -e "s|libname = .*|libname = \"$libusb\"|" usb/backend/libusb1.py
+    '';
+
+    meta = with stdenv.lib; {
+      description = "Python USB access module (wraps libusb 1.0)";  # can use other backends
+      homepage = http://pyusb.sourceforge.net/;
+      license = "BSD";
+      maintainers = [ maintainers.bjornfor ];
+    };
+  };
+
+
+  usbtmc = buildPythonPackage rec {
+    name = "usbtmc-${version}";
+    version = "0.5";
+
+    src = fetchurl {
+      url = "https://github.com/python-ivi/python-usbtmc/archive/v${version}.tar.gz";
+      sha256 = "0xn8whjcdn8wgs9j1gj7sw7fh425akdmq3hi448m36fywldbhryg";
+    };
+
+    propagatedBuildInputs = [ pyusb ];
+
+    meta = {
+      description = "Python implementation of the USBTMC instrument control protocol";
+      homepage = http://alexforencich.com/wiki/en/python-usbtmc/start;
+      license = licenses.mit;
+      maintainers = [ maintainers.bjornfor ];
+    };
+  };
+
+
   txamqp = buildPythonPackage rec {
     name = "txamqp-${version}";
     version = "0.3";
