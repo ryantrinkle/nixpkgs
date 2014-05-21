@@ -642,6 +642,8 @@ let
 
   apparix = callPackage ../tools/misc/apparix { };
 
+  appdata-tools = callPackage ../tools/misc/appdata-tools { };
+
   asciidoc = callPackage ../tools/typesetting/asciidoc {
     inherit (pythonPackages) matplotlib numpy aafigure recursivePthLoader;
     enableStandardFeatures = false;
@@ -706,6 +708,8 @@ let
   bzip2 = callPackage ../tools/compression/bzip2 { };
 
   cabextract = callPackage ../tools/archivers/cabextract { };
+
+  cantata = callPackage ../applications/audio/cantata { };
 
   can-utils = callPackage ../os-specific/linux/can-utils { };
 
@@ -824,6 +828,8 @@ let
   cunit = callPackage ../tools/misc/cunit { };
 
   curlftpfs = callPackage ../tools/filesystems/curlftpfs { };
+
+  cutter = callPackage ../tools/networking/cutter { };
 
   dadadodo = builderDefsPackage (import ../tools/text/dadadodo) { };
 
@@ -1440,6 +1446,10 @@ let
     inherit (gnome) scrollkeeper;
   };
 
+  mednafen = callPackage ../misc/emulators/mednafen { };
+
+  mednafen-server = callPackage ../misc/emulators/mednafen/server.nix { };
+
   megacli = callPackage ../tools/misc/megacli { };
 
   megatools = callPackage ../tools/networking/megatools { };
@@ -1559,11 +1569,9 @@ let
 
   networkmanager_pptp = callPackage ../tools/networking/network-manager/pptp.nix { };
 
-  networkmanager_pptp_gnome = networkmanager_pptp.override { withGnome = true; };
-
   networkmanager_vpnc = callPackage ../tools/networking/network-manager/vpnc.nix { };
 
-  networkmanager_openconnect = callPackage ../tools/networking/network-manager/openconnect.nix { gconf = gnome.GConf; };
+  networkmanager_openconnect = callPackage ../tools/networking/network-manager/openconnect.nix { };
 
   networkmanagerapplet = newScope gnome ../tools/networking/network-manager-applet { };
 
@@ -2846,7 +2854,7 @@ let
   };
 
   jhc = callPackage ../development/compilers/jhc {
-    inherit (haskellPackages_ghc6123) ghc binary zlib utf8String readline fgl
+    inherit (haskellPackages_ghc763) ghc binary zlib utf8String readline fgl
       regexCompat HsSyck random;
   };
 
@@ -3555,6 +3563,7 @@ let
   spidermonkey_1_8_0rc1 = callPackage ../development/interpreters/spidermonkey/1.8.0-rc1.nix { };
   spidermonkey_185 = callPackage ../development/interpreters/spidermonkey/185-1.0.0.nix { };
   spidermonkey_17 = callPackage ../development/interpreters/spidermonkey/17.0.nix { };
+  spidermonkey_24 = callPackage ../development/interpreters/spidermonkey/24.2.nix { };
 
   supercollider = callPackage ../development/interpreters/supercollider {
     qt = qt4;
@@ -3688,7 +3697,7 @@ let
   binutilsCross =
     if crossSystem != null && crossSystem.libc == "libSystem" then darwin.cctools
     else lowPrio (forceNativeDrv (import ../development/tools/misc/binutils {
-      inherit stdenv fetchurl zlib;
+      inherit stdenv fetchurl zlib bison;
       noSysDirs = true;
       cross = assert crossSystem != null; crossSystem;
     }));
@@ -4244,6 +4253,10 @@ let
 
   clutter = callPackage ../development/libraries/clutter { };
 
+  clutter_1_18 = callPackage ../development/libraries/clutter/1.18.nix {
+    cogl = cogl_1_18;
+  };
+
   clutter-gst = callPackage ../development/libraries/clutter-gst { };
 
   clutter_gtk = callPackage ../development/libraries/clutter-gtk { };
@@ -4252,6 +4265,8 @@ let
   cminpack = callPackage ../development/libraries/cminpack { };
 
   cogl = callPackage ../development/libraries/cogl { };
+
+  cogl_1_18 = callPackage ../development/libraries/cogl/1.18.nix { };
 
   coin3d = callPackage ../development/libraries/coin3d { };
 
@@ -6047,9 +6062,7 @@ let
 
   tinyxml2 = callPackage ../development/libraries/tinyxml/2.6.2.nix { };
 
-  tk = callPackage ../development/libraries/tk {
-    libX11 = xlibs.libX11;
-  };
+  tk = callPackage ../development/libraries/tk { };
 
   tnt = callPackage ../development/libraries/tnt { };
 
@@ -7033,6 +7046,8 @@ let
 
   linuxConsoleTools = callPackage ../os-specific/linux/consoletools { };
 
+  # -- Linux kernel expressions ------------------------------------------------
+
   linuxHeaders = linuxHeaders_3_7;
 
   linuxHeaders24Cross = forceNativeDrv (import ../os-specific/linux/kernel-headers/2.4.nix {
@@ -7064,14 +7079,6 @@ let
     kernelPatches = [];
   };
 
-  linux_3_2_apparmor = lowPrio (linux_3_2.override {
-    kernelPatches = [ kernelPatches.apparmor_3_2 ];
-    extraConfig = ''
-      SECURITY_APPARMOR y
-      DEFAULT_SECURITY_APPARMOR y
-    '';
-  });
-
   linux_3_2_xen = lowPrio (linux_3_2.override {
     extraConfig = ''
       XEN_DOM0 y
@@ -7085,14 +7092,6 @@ let
         kernelPatches.mips_fpu_sigill
       ];
   };
-
-  linux_3_4_apparmor = lowPrio (linux_3_4.override {
-    kernelPatches = [ kernelPatches.apparmor_3_4 ];
-    extraConfig = ''
-      SECURITY_APPARMOR y
-      DEFAULT_SECURITY_APPARMOR y
-    '';
-  });
 
   linux_3_6_rpi = makeOverridable (import ../os-specific/linux/kernel/linux-rpi-3.6.nix) {
     inherit fetchurl stdenv perl buildLinux;
@@ -7143,6 +7142,43 @@ let
       ];
   };
 
+  /* grsec configuration
+
+     We build several flavors of 'default' grsec kernels. These are
+     built by default with Hydra. If the user selects a matching
+     'default' flavor, then the pre-canned package set can be
+     chosen. Typically, users will make very basic choices like
+     'security' + 'server' or 'performance' + 'desktop' with
+     virtualisation support. These will then be picked.
+
+     Note: Xen guest kernels are included for e.g. NixOps deployments
+     to EC2, where Xen is the Hypervisor.
+  */
+
+  grFlavors = import ../build-support/grsecurity/flavors.nix;
+
+  mkGrsecurity = opts:
+    (import ../build-support/grsecurity {
+      grsecOptions = opts;
+      inherit pkgs lib;
+    });
+
+  grKernel  = opts: (mkGrsecurity opts).grsecKernel;
+  grPackage = opts: recurseIntoAttrs (mkGrsecurity opts).grsecPackage;
+
+  # Stable kernels
+  linux_grsec_stable_desktop    = grKernel grFlavors.linux_grsec_stable_desktop;
+  linux_grsec_stable_server     = grKernel grFlavors.linux_grsec_stable_server;
+  linux_grsec_stable_server_xen = grKernel grFlavors.linux_grsec_stable_server_xen;
+
+  # Stable+vserver kernels - server versions only
+  #linux_grsec_vserver_server     = grKernel grFlavors.linux_grsec_vserver_server;
+  #linux_grsec_vserver_server_xen = grKernel grFlavors.linux_grsec_vserver_server_xen;
+
+  # Testing kernels
+  linux_grsec_testing_desktop = grKernel grFlavors.linux_grsec_testing_desktop;
+  linux_grsec_testing_server  = grKernel grFlavors.linux_grsec_testing_server;
+  linux_grsec_testing_server_xen = grKernel grFlavors.linux_grsec_testing_server_xen;
 
   /* Linux kernel modules are inherently tied to a specific kernel.  So
      rather than provide specific instances of those packages for a
@@ -7231,24 +7267,39 @@ let
     zfs_git = callPackage ../os-specific/linux/zfs/git.nix { };
   };
 
+  # The current default kernel / kernel modules.
+  linux = linuxPackages.kernel;
+  linuxPackages = linuxPackages_3_12;
+
+  # Update this when adding the newest kernel major version!
+  linux_latest = pkgs.linux_3_14;
+  linuxPackages_latest = pkgs.linuxPackages_3_14;
+
   # Build the kernel modules for the some of the kernels.
   linuxPackages_3_2 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_3_2 linuxPackages_3_2);
-  linuxPackages_3_2_apparmor = linuxPackagesFor pkgs.linux_3_2_apparmor linuxPackages_3_2_apparmor;
   linuxPackages_3_2_xen = linuxPackagesFor pkgs.linux_3_2_xen linuxPackages_3_2_xen;
   linuxPackages_3_4 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_3_4 linuxPackages_3_4);
-  linuxPackages_3_4_apparmor = linuxPackagesFor pkgs.linux_3_4_apparmor linuxPackages_3_4_apparmor;
   linuxPackages_3_6_rpi = linuxPackagesFor pkgs.linux_3_6_rpi linuxPackages_3_6_rpi;
   linuxPackages_3_10 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_3_10 linuxPackages_3_10);
   linuxPackages_3_10_tuxonice = linuxPackagesFor pkgs.linux_3_10_tuxonice linuxPackages_3_10_tuxonice;
   linuxPackages_3_12 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_3_12 linuxPackages_3_12);
   linuxPackages_3_13 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_3_13 linuxPackages_3_13);
   linuxPackages_3_14 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_3_14 linuxPackages_3_14);
-  # Update this when adding a new version!
-  linuxPackages_latest = pkgs.linuxPackages_3_14;
 
-  # The current default kernel / kernel modules.
-  linux = linuxPackages.kernel;
-  linuxPackages = linuxPackages_3_12;
+  # grsecurity flavors
+  # Stable kernels
+  linuxPackages_grsec_stable_desktop    = grPackage grFlavors.linux_grsec_stable_desktop;
+  linuxPackages_grsec_stable_server     = grPackage grFlavors.linux_grsec_stable_server;
+  linuxPackages_grsec_stable_server_xen = grPackage grFlavors.linux_grsec_stable_server_xen;
+
+  # Stable+vserver kernels - server versions only
+  #linuxPackages_grsec_vserver_server     = grPackage grFlavors.linux_grsec_vserver_server;
+  #linuxPackages_grsec_vserver_server_xen = grPackage grFlavors.linux_grsec_vserver_server_xen;
+
+  # Testing kernels
+  linuxPackages_grsec_testing_desktop = grPackage grFlavors.linux_grsec_testing_desktop;
+  linuxPackages_grsec_testing_server  = grPackage grFlavors.linux_grsec_testing_server;
+  linuxPackages_grsec_testing_server_xen = grPackage grFlavors.linux_grsec_testing_server_xen;
 
   # A function to build a manually-configured kernel
   linuxManualConfig = pkgs.buildLinux;
@@ -7498,6 +7549,8 @@ let
   untie = callPackage ../os-specific/linux/untie { };
 
   upower = callPackage ../os-specific/linux/upower { };
+
+  upower_99 = callPackage ../os-specific/linux/upower/0.99.nix { };
 
   upstart = callPackage ../os-specific/linux/upstart { };
 
@@ -8441,7 +8494,7 @@ let
     goffice = goffice_0_8;
   };
 
-  goffice_0_8 = callPackage ../desktops/gnome-3/misc/goffice/0.8.nix {
+  goffice_0_8 = callPackage ../desktops/gnome-3/3.10/misc/goffice/0.8.nix {
     inherit (gnome2) libglade libgnomeui;
     gconf = gnome2.GConf;
     libart = gnome2.libart_lgpl;
@@ -10135,9 +10188,13 @@ let
     inherit (pkgs) libsoup libwnck gtk_doc gnome_doc_utils;
   };
 
-  gnome3 = recurseIntoAttrs (callPackage ../desktops/gnome-3 {
+  gnome3 = recurseIntoAttrs (callPackage ../desktops/gnome-3/3.10 {
     callPackage = pkgs.newScope pkgs.gnome3;
     self = pkgs.gnome3;
+  });
+
+  gnome3_12 = recurseIntoAttrs (callPackage ../desktops/gnome-3/3.12 {
+    callPackage = pkgs.newScope pkgs.gnome3_12;
   });
 
   gnome = recurseIntoAttrs gnome2;
@@ -10401,6 +10458,8 @@ let
 
 
   ### SCIENCE/LOGIC
+
+  abc-verifier = callPackage ../applications/science/logic/abc {};
 
   alt-ergo = callPackage ../applications/science/logic/alt-ergo {};
 
