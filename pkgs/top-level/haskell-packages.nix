@@ -969,6 +969,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   hexpat = callPackage ../development/libraries/haskell/hexpat {};
 
+  hgal = callPackage ../development/libraries/haskell/hgal {};
+
   hourglass = callPackage ../development/libraries/haskell/hourglass {};
 
   hseCpp = callPackage ../development/libraries/haskell/hse-cpp {};
@@ -1492,6 +1494,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   networkConduitTls = callPackage ../development/libraries/haskell/network-conduit-tls {};
 
   networkInfo = callPackage ../development/libraries/haskell/network-info {};
+
+  networkMetrics = callPackage ../development/libraries/haskell/network-metrics {};
 
   networkMulticast = callPackage ../development/libraries/haskell/network-multicast {};
 
