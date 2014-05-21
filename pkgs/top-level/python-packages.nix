@@ -100,7 +100,7 @@ rec {
   };
 
   pycairo = import ../development/python-modules/pycairo {
-    inherit (pkgs) stdenv fetchurl pkgconfig cairo x11;
+    inherit (pkgs) stdenv fetchurl fetchpatch pkgconfig cairo x11;
     inherit python;
   };
 
@@ -5182,12 +5182,9 @@ rec {
 
     meta = {
       description = "ASN.1 tools for Python";
-
       homepage = http://pyasn1.sourceforge.net/;
-
       license = "mBSD";
-
-      platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
+      platforms = stdenv.lib.platforms.unix;  # arbitrary choice
     };
   });
 
