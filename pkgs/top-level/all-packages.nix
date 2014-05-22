@@ -462,11 +462,17 @@ let
 
   analog = callPackage ../tools/admin/analog {};
 
+  apktool = callPackage ../development/tools/apktool {
+    buildTools = androidenv.buildTools;
+  };
+
   apt-offline = callPackage ../tools/misc/apt-offline { };
 
   archivemount = callPackage ../tools/filesystems/archivemount { };
 
   arandr = callPackage ../tools/X11/arandr { };
+
+  arcanist = callPackage ../development/tools/misc/arcanist {};
 
   arduino_core = callPackage ../development/arduino/arduino-core {
     jdk = jdk;
@@ -6388,10 +6394,10 @@ let
     python = python32;
   };
 
-  python27Packages = recurseIntoAttrs (import ./python-packages.nix {
+  python27Packages = lib.hiPrioSet (recurseIntoAttrs (import ./python-packages.nix {
     inherit pkgs;
     python = python27;
-  });
+  }));
 
   pypyPackages = recurseIntoAttrs (import ./python-packages.nix {
     inherit pkgs;
