@@ -228,7 +228,7 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   bimap = callPackage ../development/libraries/haskell/bimap {};
 
   binary_0_6_1_0 = callPackage ../development/libraries/haskell/binary/0.6.1.0.nix {};
-  binary_0_7_2_0 = callPackage ../development/libraries/haskell/binary/0.7.2.0.nix {};
+  binary_0_7_2_1 = callPackage ../development/libraries/haskell/binary/0.7.2.1.nix {};
   binary = null;                # core package since ghc >= 7.2.x
 
   binaryConduit = callPackage ../development/libraries/haskell/binary-conduit {};
@@ -270,7 +270,7 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   bloomfilter = callPackage ../development/libraries/haskell/bloomfilter {};
 
   bmp = callPackage ../development/libraries/haskell/bmp {
-    binary = self.binary_0_7_2_0;
+    binary = self.binary_0_7_2_1;
   };
 
   Boolean = callPackage ../development/libraries/haskell/Boolean {};
@@ -711,6 +711,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   filepath = null;              # core package since forever
 
   fileLocation = callPackage ../development/libraries/haskell/file-location {};
+
+  fmlist = callPackage ../development/libraries/haskell/fmlist {};
 
   ftphs = callPackage ../development/libraries/haskell/ftphs {};
 
@@ -1242,6 +1244,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   languageEcmascript = callPackage ../development/libraries/haskell/language-ecmascript {};
 
+  languageGlsl = callPackage ../development/libraries/haskell/language-glsl {};
+
   languageJava = callPackage ../development/libraries/haskell/language-java {};
 
   languageJavascript = callPackage ../development/libraries/haskell/language-javascript {};
@@ -1355,7 +1359,7 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   minimorph = callPackage ../development/libraries/haskell/minimorph {};
 
   miniutter = callPackage ../development/libraries/haskell/miniutter {
-    binary = self.binary_0_7_2_0;
+    binary = self.binary_0_7_2_1;
   };
 
   mimeMail = callPackage ../development/libraries/haskell/mime-mail {};
@@ -1587,8 +1591,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   parsec = self.parsec_3_1_5;
 
   parsers_0_10_3 = callPackage ../development/libraries/haskell/parsers/0.10.3.nix {};
-  parsers_0_11 = callPackage ../development/libraries/haskell/parsers/0.11.nix {};
-  parsers = self.parsers_0_11;
+  parsers_0_11_0_1 = callPackage ../development/libraries/haskell/parsers/0.11.0.1.nix {};
+  parsers = self.parsers_0_11_0_1;
 
   parsimony = callPackage ../development/libraries/haskell/parsimony {};
 
@@ -2303,8 +2307,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   vect = callPackage ../development/libraries/haskell/vect {};
 
   vector_0_10_0_1  = callPackage ../development/libraries/haskell/vector/0.10.0.1.nix {};
-  vector_0_10_9_1  = callPackage ../development/libraries/haskell/vector/0.10.9.1.nix {};
-  vector = self.vector_0_10_9_1;
+  vector_0_10_9_2  = callPackage ../development/libraries/haskell/vector/0.10.9.2.nix {};
+  vector = self.vector_0_10_9_2;
 
   vectorAlgorithms = callPackage ../development/libraries/haskell/vector-algorithms {};
 
@@ -2691,7 +2695,7 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   LambdaHack = callPackage ../games/LambdaHack {
     vectorBinaryInstances = self.vectorBinaryInstances.override {
-      binary = self.binary_0_7_2_0; # the miniutter build input requires this version
+      binary = self.binary_0_7_2_1; # the miniutter build input requires this version
     };
   };
 
