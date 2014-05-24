@@ -3,8 +3,6 @@ R:
 { name, buildInputs ? [], ... } @ attrs:
 
 R.stdenv.mkDerivation ({
-  name = "r-" + name;
-
   buildInputs = buildInputs ++ [R];
 
   configurePhase = ''
@@ -21,7 +19,7 @@ R.stdenv.mkDerivation ({
   installPhase = ''
     runHook preInstall
     mkdir -p $out/library
-    R CMD INSTALL -l $out/library $src
+    R CMD INSTALL -l $out/library .
     runHook postInstall
   '';
 
@@ -30,4 +28,6 @@ R.stdenv.mkDerivation ({
         ln -s $out/nix-support/propagated-native-build-inputs $out/nix-support/propagated-user-env-packages
     fi
   '';
-} // attrs)
+} // attrs // {
+  name = "r-" + name;
+})
