@@ -16,11 +16,11 @@
 
   ghcHEADPrefs = self : super : super // {
     mtl = self.mtl_2_1_3_1;
-    cabalInstall_1_20_0_1 = super.cabalInstall_1_20_0_1.override { Cabal = null; };
+    cabalInstall_1_20_0_2 = super.cabalInstall_1_20_0_2.override { Cabal = null; };
   };
 
   ghc782Prefs = self : super : ghcHEADPrefs self super // {
-    cabalInstall_1_20_0_1 = super.cabalInstall_1_20_0_1.override { Cabal = self.Cabal_1_20_0_0; };
+    cabalInstall_1_20_0_2 = super.cabalInstall_1_20_0_2.override { Cabal = self.Cabal_1_20_0_0; };
     codex = super.codex.override { hackageDb = super.hackageDb.override { Cabal = self.Cabal_1_20_0_0; }; };
   };
 
@@ -42,14 +42,17 @@
     modularArithmetic = null;           # requires base >= 4.7
     pipesBinary = super.pipesBinary.override { binary = self.binary_0_7_2_1; };
     transformers = self.transformers_0_3_0_0; # core packagen in ghc > 7.6.x
+    zipArchive = super.zipArchive_0_2_2_1;    # works without binary 0.7.x
   };
 
   ghc742Prefs = self : super : ghc763Prefs self super // {
-    aeson = super.aeson.override { blazeBuilder = self.blazeBuilder; };
+    aeson = self.aeson_0_7_0_4.override { blazeBuilder = self.blazeBuilder; };
+    attoparsec = self.attoparsec_0_11_3_1;
     extensibleExceptions = null;        # core package in ghc <= 7.4.x
     hackageDb = super.hackageDb.override { Cabal = self.Cabal_1_16_0_3; };
     haddock = self.haddock_2_11_0;
     haskeline = super.haskeline.override { cabal = self.cabal.override { Cabal = self.Cabal_1_16_0_3; }; };
+    scientific = self.scientific_0_2_0_2;
   };
 
   ghc722Prefs = self : super : ghc742Prefs self super // {

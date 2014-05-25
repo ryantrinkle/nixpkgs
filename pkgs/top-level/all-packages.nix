@@ -638,6 +638,8 @@ let
 
   mcrl2 = callPackage ../tools/misc/mcrl2 { };
 
+  mpdcron = callPackage ../tools/audio/mpdcron { };
+
   syslogng = callPackage ../tools/system/syslog-ng { };
 
   rsyslog = callPackage ../tools/system/rsyslog { };
@@ -6615,10 +6617,8 @@ let
   mod_wsgi = callPackage ../servers/http/apache-modules/mod_wsgi { };
 
   mpd = callPackage ../servers/mpd {
-    # resolve the "stray '@' in program" errors
-    stdenv = if stdenv.isDarwin
-      then overrideGCC stdenv gccApple
-      else stdenv;
+    aacSupport    = config.mpd.aacSupport or true;
+    ffmpegSupport = config.mpd.ffmpegSupport or true;
   };
 
   mpd_clientlib = callPackage ../servers/mpd/clientlib.nix { };
@@ -6772,6 +6772,8 @@ let
   shishi = callPackage ../servers/shishi { };
 
   sipwitch = callPackage ../servers/sip/sipwitch { };
+
+  spawn_fcgi = callPackage ../servers/http/spawn-fcgi { };
 
   squids = recurseIntoAttrs( import ../servers/squid/squids.nix {
     inherit fetchurl stdenv perl lib composableDerivation
