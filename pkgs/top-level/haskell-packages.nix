@@ -138,9 +138,9 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   aes = callPackage ../development/libraries/haskell/aes {};
 
-  aeson = callPackage ../development/libraries/haskell/aeson {
-    blazeBuilder = null;
-  };
+  aeson_0_7_0_4 = callPackage ../development/libraries/haskell/aeson/0.7.0.4.nix { blazeBuilder = null; };
+  aeson_0_7_0_6 = callPackage ../development/libraries/haskell/aeson/0.7.0.6.nix { blazeBuilder = null; };
+  aeson = self.aeson_0_7_0_6;
 
   aesonPretty = callPackage ../development/libraries/haskell/aeson-pretty {};
 
@@ -191,7 +191,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   attoparsec_0_10_4_0 = callPackage ../development/libraries/haskell/attoparsec/0.10.4.0.nix {};
   attoparsec_0_11_3_1 = callPackage ../development/libraries/haskell/attoparsec/0.11.3.1.nix {};
-  attoparsec = self.attoparsec_0_11_3_1;
+  attoparsec_0_11_3_4 = callPackage ../development/libraries/haskell/attoparsec/0.11.3.4.nix {};
+  attoparsec = self.attoparsec_0_11_3_4;
 
   attoparsecBinary = callPackage ../development/libraries/haskell/attoparsec-binary {};
 
@@ -1881,7 +1882,7 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   scientific_0_2_0_2 = callPackage ../development/libraries/haskell/scientific/0.2.0.2.nix {};
   scientific_0_3_2_1 = callPackage ../development/libraries/haskell/scientific/0.3.2.1.nix {};
-  scientific = self.scientific_0_2_0_2; # version 0.3.x requires updates to aeson and other stuff
+  scientific = self.scientific_0_3_2_1;
 
   scotty = callPackage ../development/libraries/haskell/scotty {};
 
@@ -2501,7 +2502,9 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   zeromq4Haskell = callPackage ../development/libraries/haskell/zeromq4-haskell { zeromq = pkgs.zeromq4; };
 
-  zipArchive = callPackage ../development/libraries/haskell/zip-archive {};
+  zipArchive_0_2_2_1 = callPackage ../development/libraries/haskell/zip-archive/0.2.2.1.nix {};
+  zipArchive_0_2_3_2 = callPackage ../development/libraries/haskell/zip-archive/0.2.3.2.nix {};
+  zipArchive = self.zipArchive_0_2_3_2;
 
   zipper = callPackage ../development/libraries/haskell/zipper {};
 
@@ -2689,8 +2692,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   cabalInstall_0_14_0 = callPackage ../tools/package-management/cabal-install/0.14.0.nix {};
   cabalInstall_1_16_0_2 = callPackage ../tools/package-management/cabal-install/1.16.0.2.nix { Cabal = self.Cabal_1_16_0_3; };
   cabalInstall_1_18_0_3 = callPackage ../tools/package-management/cabal-install/1.18.0.3.nix { Cabal = self.Cabal_1_18_1_3; };
-  cabalInstall_1_20_0_1 = callPackage ../tools/package-management/cabal-install/1.20.0.1.nix { Cabal = self.Cabal_1_20_0_0; };
-  cabalInstall = self.cabalInstall_1_20_0_1;
+  cabalInstall_1_20_0_2 = callPackage ../tools/package-management/cabal-install/1.20.0.2.nix { Cabal = self.Cabal_1_20_0_0; };
+  cabalInstall = self.cabalInstall_1_20_0_2;
 
   codex = callPackage ../development/tools/haskell/codex {};
 
