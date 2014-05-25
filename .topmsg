@@ -1,5 +1,2 @@
 From: John Wiegley <johnw@newartisans.com>
-Subject: [PATCH] tg/eboard
-
-<patch description>
-
+Subject: [PATCH] Add expression to build the eboard chess client
