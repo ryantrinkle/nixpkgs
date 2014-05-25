@@ -1,2 +1,4 @@
 From: John Wiegley <johnw@newartisans.com>
 Subject: [PATCH] Correct patch the rpath for GHC-built executables on Darwin
+
+@peti This addresses #2488.

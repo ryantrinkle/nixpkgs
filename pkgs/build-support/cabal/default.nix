@@ -197,6 +197,9 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
               ${optionalString (self.enableSharedExecutables && self.stdenv.isLinux) ''
                 configureFlags+=" --ghc-option=-optl=-Wl,-rpath=$out/lib/${ghc.ghc.name}/${self.pname}-${self.version}";
               ''}
+              ${optionalString (self.enableSharedExecutables && self.stdenv.isDarwin) ''
+                configureFlags+=" --ghc-option=-optl=-Wl,-headerpad_max_install_names";
+              ''}
 
               echo "configure flags: $extraConfigureFlags $configureFlags"
               ./Setup configure --verbose --prefix="$out" --libdir='$prefix/lib/$compiler' \
@@ -256,7 +259,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
                 ln -s $out/nix-support/propagated-native-build-inputs $out/nix-support/propagated-user-env-packages
               fi
 
-              ${optionalString (self.isExecutable && self.stdenv.isDarwin) ''
+              ${optionalString (self.enableSharedExecutables && self.isExecutable && self.stdenv.isDarwin) ''
                 for exe in $out/bin/* ; do
                   install_name_tool -add_rpath \
                     $out/lib/${ghc.ghc.name}/${self.pname}-${self.version} $exe
