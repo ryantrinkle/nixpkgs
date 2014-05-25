@@ -8,6 +8,8 @@ stdenv.mkDerivation {
     sha256 = "0vm25j1s2zg1lipwjv9qrcm877ikfmk1yh34i8f5l3bwd63115xd";
   };
 
+  patches = [ ./eboard.patch ];
+
   buildInputs = [ pkgconfig gtk ];
 
   meta = {
