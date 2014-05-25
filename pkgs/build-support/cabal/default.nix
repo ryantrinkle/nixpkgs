@@ -256,6 +256,13 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
                 ln -s $out/nix-support/propagated-native-build-inputs $out/nix-support/propagated-user-env-packages
               fi
 
+              ${optionalString (self.isExecutable && self.stdenv.isDarwin) ''
+                for exe in $out/bin/* ; do
+                  install_name_tool -add_rpath \
+                    $out/lib/${ghc.ghc.name}/${self.pname}-${self.version} $exe
+                done
+              ''}
+
               eval "$postInstall"
             '';
 
