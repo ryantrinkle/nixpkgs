@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Wrap yesod-bin so that yesod devel works with Nix
