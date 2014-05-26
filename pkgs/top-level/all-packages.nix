@@ -9870,6 +9870,8 @@ let
 
   castle_combat = callPackage ../games/castle-combat { };
 
+  chessdb = callPackage ../games/chessdb { };
+
   construoBase = lowPrio (callPackage ../games/construo {
     mesa = null;
     freeglut = null;
