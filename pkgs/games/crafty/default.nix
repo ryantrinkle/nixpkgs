@@ -659,5 +659,7 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://www.craftychess.com/;
     description = "Crafty is a free, open-source computer chess program developed by Dr. Robert M. Hyatt";
+    license = stdenv.lib.licenses.unfree;
+    maintainers = [ stdenv.lib.maintainers.jwiegley ];
   };
 }
