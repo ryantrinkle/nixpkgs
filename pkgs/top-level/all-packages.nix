@@ -373,6 +373,8 @@ let
     inherit url;
   };
 
+  libredirect = callPackage ../build-support/libredirect { };
+
   makeDesktopItem = import ../build-support/make-desktopitem {
     inherit stdenv;
   };
@@ -8624,7 +8626,7 @@ let
 
   hexedit = callPackage ../applications/editors/hexedit { };
 
-  hipchat = callPackage_i686 ../applications/networking/instant-messengers/hipchat { };
+  hipchat = callPackage ../applications/networking/instant-messengers/hipchat { };
 
   homebank = callPackage ../applications/office/homebank { };
 
