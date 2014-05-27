@@ -1115,8 +1115,6 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   hsBibutils = callPackage ../development/libraries/haskell/hs-bibutils {};
 
-  hscolour = callPackage ../development/libraries/haskell/hscolour {};
-
   hsdns = callPackage ../development/libraries/haskell/hsdns {};
 
   hsemail = if (pkgs.stdenv.lib.versionOlder ghc.version "7") then null else
@@ -2606,6 +2604,9 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   hdevtools = callPackage ../development/tools/haskell/hdevtools {};
 
   hlint = callPackage ../development/tools/haskell/hlint {};
+
+  hscolourBootstrap = callPackage ../development/tools/haskell/hscolour/bootstrap.nix {};
+  hscolour = callPackage ../development/tools/haskell/hscolour {};
 
   hslogger = callPackage ../development/tools/haskell/hslogger {};
 
