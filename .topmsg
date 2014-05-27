@@ -1,2 +1,13 @@
 From: John Wiegley <johnw@newartisans.com>
-Subject: [PATCH] Fix to local Hoogle expression
+Subject: [PATCH] Correctly locate Haddocks in hoogle-local expression
+
+On some versions of GHC, documentation is at, for example:
+
+    LIB/share/doc/
+
+In others, it is at:
+
+    LIB/share/doc/x86_64-darwin-ghc7.6.3/
+
+This change will pick up documentation first from the second location, then
+from the first.
