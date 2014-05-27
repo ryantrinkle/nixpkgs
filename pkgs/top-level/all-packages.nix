@@ -9252,6 +9252,7 @@ let
   rxvt_unicode = callPackage ../applications/misc/rxvt_unicode {
     perlSupport = true;
     gdkPixbufSupport = true;
+    unicode3Support = true;
   };
 
   sakura = callPackage ../applications/misc/sakura {
@@ -10742,6 +10743,8 @@ let
 
   hplip = callPackage ../misc/drivers/hplip { };
 
+  hplipWithPlugin = hplip.override { withPlugin = true; };
+
   # using the new configuration style proposal which is unstable
   jack1d = callPackage ../misc/jackaudio/jack1.nix { };
 
@@ -10870,6 +10873,8 @@ let
     snapscanFirmware = config.sane.snapscanFirmware or null;
     hotplugSupport = config.sane.hotplugSupport or true;
   };
+
+  mkSaneConfig = callPackage ../applications/graphics/sane/config.nix { };
 
   saneFrontends = callPackage ../applications/graphics/sane/frontends.nix { };
 
