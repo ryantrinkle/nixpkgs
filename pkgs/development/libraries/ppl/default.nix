@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
   propagatedBuildInputs = [ gmpxx ];
 
   configureFlags = [ "--disable-watchdog" "CPPFLAGS=-fexceptions" ] ++
-    stdenv.lib.optionsals stdenv.isDarwin [
+    stdenv.lib.optionals stdenv.isDarwin [
       "--disable-ppl_lcdd" "--disable-ppl_lpsol" "--disable-ppl_pips"
     ];
 
