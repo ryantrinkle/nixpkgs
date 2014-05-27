@@ -7,6 +7,7 @@ cabal.mkDerivation (self: {
   isLibrary = true;
   isExecutable = true;
   buildDepends = [ mtl ];
+  doHscolour = false;
   meta = {
     description = "Unlambda interpreter";
     license = "GPL";
