@@ -1,7 +1,8 @@
 # generic builder for Cabal packages
 
-{ stdenv, fetchurl, lib, pkgconfig, ghc, Cabal, jailbreakCabal, glibcLocales
-, gnugrep, coreutils
+{ stdenv, fetchurl, lib, pkgconfig
+, ghc, Cabal, jailbreakCabal, hscolour
+, glibcLocales, gnugrep, coreutils
 , enableLibraryProfiling ? false
 , enableSharedLibraries ? false
 , enableSharedExecutables ? false
@@ -90,7 +91,8 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
             # default buildInputs are just ghc, if more buildInputs are required
             # buildInputs can be extended by the client by using extraBuildInputs,
             # but often propagatedBuildInputs is preferable anyway
-            buildInputs = [ghc Cabal] ++ self.extraBuildInputs;
+            buildInputs = optionals (self.pname != "hscolour") [hscolour]
+              ++ [ghc Cabal] ++ self.extraBuildInputs;
             extraBuildInputs = self.buildTools ++
                                (optionals self.doCheck self.testDepends) ++
                                (if self.pkgconfigDepends == [] then [] else [pkgconfig]) ++
@@ -140,6 +142,9 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
             # pass the '--enable-tests' flag to cabal in the configure stage
             # and run any regression test suites the package might have
             doCheck = enableCheckPhase;
+
+            # pass the '--hyperlink-source' flag to ./Setup haddock
+            doHscolour = true;
 
             # abort the build if the configure phase detects that the package
             # depends on multiple versions of the same build input
@@ -223,7 +228,9 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
               ./Setup build ${self.buildTarget}
 
               export GHC_PACKAGE_PATH=$(${ghc.GHCPackages})
-              test -n "$noHaddock" || ./Setup haddock --html --hoogle
+              test -n "$noHaddock" || ./Setup haddock --html --hoogle \
+                  ${optionalString (self.pname != "hscolour" && self.doHscolour)
+                                   "--hyperlink-source"}
 
               eval "$postBuild"
             '';
