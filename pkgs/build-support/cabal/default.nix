@@ -227,8 +227,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
 
               export GHC_PACKAGE_PATH=$(${ghc.GHCPackages})
               test -n "$noHaddock" || ./Setup haddock --html --hoogle \
-                  ${optionalString (self.pname != "hscolour" && self.doHscolour)
-                                   "--hyperlink-source"}
+                  ${optionalString self.doHscolour "--hyperlink-source"}
 
               eval "$postBuild"
             '';
