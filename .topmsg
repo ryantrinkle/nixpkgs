@@ -1,5 +1,2 @@
 From: John Wiegley <johnw@newartisans.com>
-Subject: [PATCH] tg/ppl
-
-<patch description>
-
+Subject: [PATCH] Build ppl and gmp correctly for building gcc48 on darwin
