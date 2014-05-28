@@ -1074,6 +1074,10 @@ let
 
   g500-control = callPackage ../tools/misc/g500-control { };
 
+  galculator = callPackage ../applications/misc/galculator {
+    gtk = gtk3;
+  };
+
   gawk = callPackage ../tools/text/gawk { };
 
   gawkInteractive = appendToName "interactive"
@@ -1157,6 +1161,8 @@ let
   gource = callPackage ../applications/version-management/gource {};
 
   gptfdisk = callPackage ../tools/system/gptfdisk { };
+
+  grafana = callPackage ../development/tools/misc/grafana { };
 
   grafx2 = callPackage ../applications/graphics/grafx2 {};
 
@@ -3456,6 +3462,8 @@ let
 
   # mercurial (hg) bleeding edge version
   octaveHG = callPackage ../development/interpreters/octave/hg.nix { };
+  
+  ocropus = callPackage ../applications/misc/ocropus { };
 
   perl58 = callPackage ../development/interpreters/perl/5.8 {
     impureLibcPath = if stdenv.isLinux then null else "/usr";
@@ -5212,6 +5220,8 @@ let
 
   libmilter = callPackage ../development/libraries/libmilter { };
 
+  libmkv = callPackage ../development/libraries/libmkv { };
+
   libmms = callPackage ../development/libraries/libmms { };
 
   libmowgli = callPackage ../development/libraries/libmowgli { };
@@ -6682,6 +6692,8 @@ let
 
   riak = callPackage ../servers/nosql/riak/1.3.1.nix { };
 
+  influxdb = callPackage ../servers/nosql/influxdb { };
+
   mysql51 = import ../servers/sql/mysql/5.1.x.nix {
     inherit fetchurl ncurses zlib perl openssl stdenv;
     ps = procps; /* !!! Linux only */
@@ -7767,6 +7779,8 @@ let
 
   lmodern = callPackage ../data/fonts/lmodern { };
 
+  lohit-fonts = callPackage ../data/fonts/lohit-fonts { };
+
   manpages = callPackage ../data/documentation/man-pages { };
 
   miscfiles = callPackage ../data/misc/miscfiles { };
@@ -7774,6 +7788,8 @@ let
   mobile_broadband_provider_info = callPackage ../data/misc/mobile-broadband-provider-info { };
 
   mph_2b_damase = callPackage ../data/fonts/mph-2b-damase { };
+
+  nafees = callPackage ../data/fonts/nafees { };
 
   oldstandard = callPackage ../data/fonts/oldstandard { };
 
@@ -8847,6 +8863,8 @@ let
 
   lxdvdrip = callPackage ../applications/video/lxdvdrip { };
 
+  handbrake = callPackage ../applications/video/handbrake { };
+
   lynx = callPackage ../applications/networking/browsers/lynx { };
 
   lyx = callPackage ../applications/misc/lyx { };
@@ -9889,6 +9907,9 @@ let
 
   crack_attack = callPackage ../games/crack-attack { };
 
+  crafty = callPackage ../games/crafty { fullVariant = false; };
+  craftyFull = appendToName "full" (crafty.override { fullVariant = true; });
+
   crrcsim = callPackage ../games/crrcsim {};
 
   dhewm3 = callPackage ../games/dhewm3 {};
@@ -9992,6 +10013,8 @@ let
   njam = callPackage ../games/njam { };
 
   oilrush = callPackage ../games/oilrush { };
+
+  openra = callPackage ../games/openra { };
 
   openttd = callPackage ../games/openttd {
     zlib = zlibStatic;
