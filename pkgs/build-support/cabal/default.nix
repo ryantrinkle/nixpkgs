@@ -1,7 +1,7 @@
 # generic builder for Cabal packages
 
 { stdenv, fetchurl, lib, pkgconfig, ghc, Cabal, jailbreakCabal, glibcLocales
-, gnugrep, coreutils, hscolourBootstrap
+, gnugrep, coreutils, hscolour
 , enableLibraryProfiling ? false
 , enableSharedLibraries ? false
 , enableSharedExecutables ? false
@@ -92,6 +92,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
             buildInputs = [ghc Cabal] ++ self.extraBuildInputs;
             extraBuildInputs = self.buildTools ++
                                (optionals self.doCheck self.testDepends) ++
+                               (optional self.doHscolour hscolour) ++
                                (if self.pkgconfigDepends == [] then [] else [pkgconfig]) ++
                                (if self.isLibrary then [] else self.buildDepends ++ self.extraLibraries ++ self.pkgconfigDepends);
 
