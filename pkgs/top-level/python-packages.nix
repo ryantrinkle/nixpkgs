@@ -1849,6 +1849,18 @@ rec {
     };
   };
 
+  gcutil = buildPythonPackage rec {
+    name = "gcutil-1.15.0";
+    meta.maintainers = [ stdenv.lib.maintainers.phreedom ];
+
+    src = fetchurl {
+      url = https://dl.google.com/dl/cloudsdk/release/artifacts/gcutil-1.15.0.tar.gz;
+      sha256 = "12c98ivhjr01iz6lkga574xm8p0bsil6arydvpblyw8sjkgim5sq";
+    };
+
+    propagatedBuildInputs = [ gflags iso8601_0_1_4 ipaddr httplib2 google_apputils google_api_python_client ];
+  };
+
   gitdb = buildPythonPackage rec {
     name = "gitdb-0.5.4";
     meta.maintainers = [ stdenv.lib.maintainers.mornfall ];
@@ -3216,11 +3228,11 @@ rec {
 
 
   gflags = buildPythonPackage rec {
-    name = "gflags-1.5.1";
+    name = "gflags-2.0";
 
     src = fetchurl {
       url = "http://python-gflags.googlecode.com/files/python-${name}.tar.gz";
-      sha256 = "1p8blsc3z1wasi9dhbjij7m2czps17dll3cpj37v97fv5ww7al9v";
+      sha256 = "1mkc7315bpmh39vbn0jq237jpw34zsrjr1sck98xi36bg8hnc41i";
     };
 
     meta = {
@@ -3316,6 +3328,22 @@ rec {
       homepage = "https://code.google.com/p/google-api-python-client/";
       license = licenses.asl20;
       platforms = platforms.unix;
+    };
+  };
+
+   google_apputils = buildPythonPackage rec {
+    name = "google-apputils-0.4.0";
+
+    src = fetchurl {
+      url = http://pypi.python.org/packages/source/g/google-apputils/google-apputils-0.4.0.tar.gz;
+      sha256 = "18wlivnqxvx1wsw177lckpl32nmr6cq7f5nhk8r72fvjy8wynq5j";
+    };
+
+    propagatedBuildInputs = [ pytz gflags dateutil_1_5 mox ];
+
+    meta = with stdenv.lib; {
+      description = "Google Application Utilities for Python";
+      homepage = http://code.google.com/p/google-apputils-python;
     };
   };
 
@@ -3528,14 +3556,11 @@ rec {
 
 
   ipaddr = buildPythonPackage {
-    name = "ipaddr-2.1.7";
+    name = "ipaddr-2.1.10";
     src = fetchurl {
-      url = "http://ipaddr-py.googlecode.com/files/ipaddr-2.1.7.tar.gz";
-      md5 = "71a2be9f1d528d9a945ef555de312685";
+      url = "http://ipaddr-py.googlecode.com/files/ipaddr-2.1.10.tar.gz";
+      sha256 = "18ycwkfk3ypb1yd09wg20r7j7zq2a73d7j6j10qpgra7a7abzhyj";
     };
-
-    # error: invalid command 'test'
-    doCheck = false;
 
     meta = {
       description = "Google's IP address manipulation library";
@@ -3562,6 +3587,19 @@ rec {
     propagatedBuildInputs = [ pythonPackages.nose pythonPackages.ipythonLight ];
   };
 
+  iso8601_0_1_4 = buildPythonPackage {
+    name = "iso8601-0.1.4";
+    src = fetchurl {
+      url = https://pypi.python.org/packages/source/i/iso8601/iso8601-0.1.4.tar.gz;
+      sha256 = "03gnjxpfq0wwimqnsvz32xcngq0hrdqryn3zm8qh95hnnggwqa3s";
+    };
+
+    meta = {
+      homepage = https://bitbucket.org/micktwomey/pyiso8601/;
+      description = "Simple module to parse ISO 8601 dates";
+      maintainers = [ stdenv.lib.maintainers.phreedom ];
+    };
+  };
 
   jedi = buildPythonPackage (rec {
     name = "jedi-0.7.0";
