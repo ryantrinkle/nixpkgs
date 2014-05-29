@@ -1,4 +1,4 @@
-{ cabal, doHscolour ? true }:
+{ cabal, hyperlinkSource ? true }:
 
 cabal.mkDerivation (self: {
   pname = "hscolour";
@@ -6,7 +6,7 @@ cabal.mkDerivation (self: {
   sha256 = "15ix93sw4p7g5ln2halcgqppdc0i0vmkzcjzxvqzkk9yp9pq3nrs";
   isLibrary = true;
   isExecutable = true;
-  doHscolour = doHscolour;
+  hyperlinkSource = hyperlinkSource;
   meta = {
     homepage = "http://code.haskell.org/~malcolm/hscolour/";
     description = "Colourise Haskell code";
