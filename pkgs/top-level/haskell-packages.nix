@@ -2605,7 +2605,7 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   hlint = callPackage ../development/tools/haskell/hlint {};
 
   hscolour = callPackage ../development/tools/haskell/hscolour {};
-  hscolourBootstrap = self.hscolour.override { doHscolour = false; };
+  hscolourBootstrap = self.hscolour.override { hyperlinkSource = false; };
 
   hslogger = callPackage ../development/tools/haskell/hslogger {};
 
