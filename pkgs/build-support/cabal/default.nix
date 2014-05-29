@@ -93,7 +93,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
             buildInputs = [ghc Cabal] ++ self.extraBuildInputs;
             extraBuildInputs = self.buildTools ++
                                (optionals self.doCheck self.testDepends) ++
-                               (optional self.doHscolour hscolour) ++
+                               (optional self.hyperlinkSource hscolour) ++
                                (if self.pkgconfigDepends == [] then [] else [pkgconfig]) ++
                                (if self.isLibrary then [] else self.buildDepends ++ self.extraLibraries ++ self.pkgconfigDepends);
 
@@ -143,7 +143,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
             doCheck = enableCheckPhase;
 
             # pass the '--hyperlink-source' flag to ./Setup haddock
-            doHscolour = true;
+            hyperlinkSource = true;
 
             # abort the build if the configure phase detects that the package
             # depends on multiple versions of the same build input
@@ -228,7 +228,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
 
               export GHC_PACKAGE_PATH=$(${ghc.GHCPackages})
               test -n "$noHaddock" || ./Setup haddock --html --hoogle \
-                  ${optionalString self.doHscolour "--hyperlink-source"}
+                  ${optionalString self.hyperlinkSource "--hyperlink-source"}
 
               eval "$postBuild"
             '';
