@@ -1,0 +1,2 @@
+From: John Wiegley <johnw@newartisans.com>
+Subject: [PATCH] Change stdenv on darwin to not set NIX_ENFORCE_PURITY
