@@ -7,6 +7,7 @@
 , enableSharedExecutables ? false
 , enableStaticLibraries ? true
 , enableCheckPhase ? stdenv.lib.versionOlder "7.4" ghc.version
+, enableHyperlinkSource ? true
 , extension ? (self : super : {})
 }:
 
@@ -50,6 +51,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
                 propagatedBuildInputs = filter (y : ! (y == null)) x.propagatedBuildInputs;
                 propagatedUserEnvPkgs = filter (y : ! (y == null)) x.propagatedUserEnvPkgs;
                 doCheck               = enableCheckPhase && x.doCheck;
+                hyperlinkSource       = enableHyperlinkSource && x.hyperlinkSource;
               };
 
         defaults =
@@ -142,7 +144,7 @@ assert !enableStaticLibraries -> versionOlder "7.7" ghc.version;
             doCheck = enableCheckPhase;
 
             # pass the '--hyperlink-source' flag to ./Setup haddock
-            hyperlinkSource = true;
+            hyperlinkSource = enableHyperlinkSource;
 
             # abort the build if the configure phase detects that the package
             # depends on multiple versions of the same build input
