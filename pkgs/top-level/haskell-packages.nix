@@ -822,6 +822,8 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
     cabal = self.cabal.override { enableLibraryProfiling = false; }; # pkg cannot be built with profiling enabled
   };
 
+  ghcjs = callPackage ../development/tools/haskell/ghcjs {};
+
   ghcjsDom = callPackage ../development/libraries/haskell/ghcjs-codemirror {};
 
   ghcjsCodemirror = callPackage ../development/libraries/haskell/ghcjs-codemirror {};
