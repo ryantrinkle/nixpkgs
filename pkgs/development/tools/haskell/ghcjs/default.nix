@@ -1,10 +1,11 @@
 { cabal, filepath, HTTP, HUnit, mtl, network, QuickCheck, random, stm
 , testFramework, testFrameworkHunit, testFrameworkQuickcheck2, time
 , zlib, aeson, attoparsec, bzlib, dataDefault, ghcPaths, hashable
-, haskellSrcExts, haskellSrcMeta, lens, optparseApplicative, parallel
-, safe, shelly, split, stringsearch, syb, systemFileio, systemFilepath
-, tar, terminfo, textBinary, unorderedContainers, vector, wlPprintText
-, yaml, fetchgit, regexPosix
+, haskellSrcExts, haskellSrcMeta, lens, optparseApplicative_0_7_0_2
+, parallel, safe, shelly, split, stringsearch, syb, systemFileio
+, systemFilepath, tar, terminfo, textBinary, unorderedContainers
+, vector, wlPprintText, yaml, fetchgit, cabalInstall, regexPosix
+, alex, happy, git, gnumake, gcc, autoconf, patch
 }:
 
 cabal.mkDerivation (self: rec {
@@ -23,20 +24,28 @@ cabal.mkDerivation (self: rec {
   isLibrary = true;
   isExecutable = true;
   jailbreak = true;
+  noHaddock = true;
   buildDepends = [
     filepath HTTP mtl network random stm time zlib aeson attoparsec
     bzlib dataDefault ghcPaths hashable haskellSrcExts haskellSrcMeta
-    lens optparseApplicative parallel safe shelly split stringsearch syb
-    systemFileio systemFilepath tar terminfo textBinary
+    lens optparseApplicative_0_7_0_2 parallel safe shelly split
+    stringsearch syb systemFileio systemFilepath tar terminfo textBinary
     unorderedContainers vector wlPprintText yaml
+    alex happy git gnumake gcc autoconf patch
   ];
   testDepends = [
     HUnit regexPosix testFramework testFrameworkHunit
   ];
-  preInstall = ''
+  preBuild = ''
+    sed -i -e "s|getAppUserDataDirectory \"ghcjs\"|return \"$out/share/ghcjs\"|" \
+      src/Compiler/Info.hs
+  '';
+  postInstall = ''
     cp -R ${bootSrc} ghcjs-boot
     cd ghcjs-boot
-    $out/bin/ghcjs-boot --init --with-cabal ${cabalInstallGhcjs}/bin/cabal-js
+    chmod -R u+w .              # because fetchgit made it read-only
+    ensureDir $out/share/ghcjs
+    $out/bin/ghcjs-boot --init --with-cabal ${cabalInstall}/bin/cabal-js
   '';
   meta = {
     homepage = "https://github.com/ghcjs/ghcjs";
