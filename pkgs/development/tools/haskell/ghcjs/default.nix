@@ -4,8 +4,9 @@
 , haskellSrcExts, haskellSrcMeta, lens, optparseApplicative_0_7_0_2
 , parallel, safe, shelly, split, stringsearch, syb, systemFileio
 , systemFilepath, tar, terminfo, textBinary, unorderedContainers
-, vector, wlPprintText, yaml, fetchgit, cabalInstall, regexPosix
-, alex, happy, git, gnumake, gcc, autoconf, patch
+, vector, wlPprintText, yaml, fetchgit, Cabal, cabalInstall
+, regexPosix, alex, happy, git, gnumake, gcc, autoconf, patch
+, automake, libtool
 }:
 
 cabal.mkDerivation (self: rec {
@@ -31,21 +32,25 @@ cabal.mkDerivation (self: rec {
     lens optparseApplicative_0_7_0_2 parallel safe shelly split
     stringsearch syb systemFileio systemFilepath tar terminfo textBinary
     unorderedContainers vector wlPprintText yaml
-    alex happy git gnumake gcc autoconf patch
+    alex happy git gnumake gcc autoconf automake libtool patch
   ];
   testDepends = [
     HUnit regexPosix testFramework testFrameworkHunit
   ];
-  preBuild = ''
+  postConfigure = ''
+    echo Patching ghcjs with absolute paths to the Nix store
     sed -i -e "s|getAppUserDataDirectory \"ghcjs\"|return \"$out/share/ghcjs\"|" \
       src/Compiler/Info.hs
+    sed -i -e "s|str = \\[\\]|str = [\"--prefix=$out\", \"--libdir=$prefix/lib/$compiler\", \"--libsubdir=$pkgid\"]|" \
+      src-bin/Boot.hs
   '';
   postInstall = ''
     cp -R ${bootSrc} ghcjs-boot
     cd ghcjs-boot
     chmod -R u+w .              # because fetchgit made it read-only
     ensureDir $out/share/ghcjs
-    $out/bin/ghcjs-boot --init --with-cabal ${cabalInstall}/bin/cabal-js
+    PATH=$out/bin:${Cabal}/bin:$PATH \
+      $out/bin/ghcjs-boot --init --with-cabal ${cabalInstall}/bin/cabal-js
   '';
   meta = {
     homepage = "https://github.com/ghcjs/ghcjs";
