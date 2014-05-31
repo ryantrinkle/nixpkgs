@@ -2938,6 +2938,7 @@ let
   haskellPackages_ghc782_no_profiling = recurseIntoAttrs (haskell.packages_ghc782.noProfiling);
   haskellPackages_ghc782_profiling    = recurseIntoAttrs (haskell.packages_ghc782.profiling);
   haskellPackages_ghcHEAD = haskell.packages_ghcHEAD;
+  haskellPackages_ghcjs = haskell.packages_ghcjs;
 
   haskellPlatformPackages = recurseIntoAttrs (import ../development/libraries/haskell/haskell-platform { inherit pkgs; });
 
