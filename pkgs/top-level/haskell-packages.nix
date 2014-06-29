@@ -2722,7 +2722,7 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
   cabalInstall_1_20_0_2 = callPackage ../tools/package-management/cabal-install/1.20.0.2.nix { Cabal = self.Cabal_1_20_0_0; };
   cabalInstall = self.cabalInstall_1_20_0_2;
 
-  CabalGhcjs = callPackage ../development/tools/haskell/cabal-ghcjs {
+  CabalGhcjs = callPackage ../development/tools/haskell/Cabal-ghcjs {
     QuickCheck = self.QuickCheck_2_6;
     testFrameworkQuickcheck2 = self.testFrameworkQuickcheck2.override {
       QuickCheck = self.QuickCheck_2_6;
