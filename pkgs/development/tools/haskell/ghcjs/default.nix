@@ -1,12 +1,13 @@
 { cabal, filepath, HTTP, HUnit, mtl, network, QuickCheck, random, stm
 , testFramework, testFrameworkHunit, testFrameworkQuickcheck2, time
 , zlib, aeson, attoparsec, bzlib, dataDefault, ghcPaths, hashable
-, haskellSrcExts, haskellSrcMeta, lens, optparseApplicative_0_7_0_2
+, haskellSrcExts, haskellSrcMeta, lens, optparseApplicative
 , parallel, safe, shelly, split, stringsearch, syb, systemFileio
 , systemFilepath, tar, terminfo, textBinary, unorderedContainers
 , vector, wlPprintText, yaml, fetchgit, Cabal, CabalGhcjs, cabalInstall
 , regexPosix, alex, happy, git, gnumake, gcc, autoconf, patch
-, automake, libtool, cabalInstallGhcjs, gmp
+, automake, libtool, cabalInstallGhcjs, gmp, base16Bytestring
+, cryptohash, executablePath, ghcjsPrim, nodejs
 }:
 
 cabal.mkDerivation (self: rec {
@@ -14,8 +15,8 @@ cabal.mkDerivation (self: rec {
   version = "0.1.0";
   src = fetchgit {
     url = git://github.com/ghcjs/ghcjs.git;
-    rev = "c9ce6b9d87296b1236d5ef0f7d5236b2cedcff84";
-    sha256 = "0cla5bchprc8g5n39fkssnv3lj378h948irsnr7dslaki6laaagw";
+    rev = "cac82654c64c20cf5fcb792ff744bf38cf8f035c";
+    sha256 = "7826401e1623a19bfdba6c01ae2e9cd58b45cdbe0201115c6d50ea3f9c00f46c";
   };
   bootSrc = fetchgit {
     url = git://github.com/ghcjs/ghcjs-boot.git;
@@ -34,11 +35,13 @@ cabal.mkDerivation (self: rec {
   buildDepends = [
     filepath HTTP mtl network random stm time zlib aeson attoparsec
     bzlib dataDefault ghcPaths hashable haskellSrcExts haskellSrcMeta
-    lens optparseApplicative_0_7_0_2 parallel safe shelly split
+    lens optparseApplicative parallel safe shelly split
     stringsearch syb systemFileio systemFilepath tar terminfo textBinary
     unorderedContainers vector wlPprintText yaml
     alex happy git gnumake gcc autoconf automake libtool patch gmp
+    base16Bytestring cryptohash executablePath ghcjsPrim
   ];
+  buildTools = [ nodejs ];
   testDepends = [
     HUnit regexPosix testFramework testFrameworkHunit
   ];
@@ -60,7 +63,7 @@ cabal.mkDerivation (self: rec {
     cp -R ${shims} $GHCJS_LIBDIR/shims
     ${cabalInstallGhcjs}/bin/cabal-js update
     PATH=$out/bin:${CabalGhcjs}/bin:$PATH LD_LIBRARY_PATH=${gmp}/lib:${gcc.gcc}/lib64:$LD_LIBRARY_PATH \
-      env -u GHC_PACKAGE_PATH $out/bin/ghcjs-boot --init --with-cabal ${cabalInstallGhcjs}/bin/cabal-js --with-gmp-includes ${gmp}/include --with-gmp-libraries ${gmp}/lib
+      env -u GHC_PACKAGE_PATH $out/bin/ghcjs-boot --dev --with-cabal ${cabalInstallGhcjs}/bin/cabal-js
   '';
   meta = {
     homepage = "https://github.com/ghcjs/ghcjs";
