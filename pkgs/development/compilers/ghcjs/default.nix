@@ -16,9 +16,9 @@ let
   version = "0.1.0";
   libDir = "share/ghcjs/${pkgs.stdenv.system}-${version}-${ghc.ghc.version}/ghcjs";
   ghcjsBoot = fetchgit {
-    url = git://github.com/ghcjs/ghcjs-boot.git;
-    rev = "5c7a71472d5a797e895914d3b82cea447a058793";
-    sha256 = "0dp97bgbnlr3sd9yfnk27p6dfv46fi26sn6y6qv1wxs5i29kmjav";
+    url = git://github.com/ryantrinkle/ghcjs-boot.git;
+    rev = "9fc96bfbad83d681de013d4f43fdc9494a72b8a3";
+    sha256 = "0c895285f3137241a34270da3f12006a1561dc772fc2ae3abcc23a80a85cbb95";
     fetchSubmodules = true;
   };
   shims = fetchgit {
