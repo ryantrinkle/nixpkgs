@@ -5,8 +5,8 @@ cabal.mkDerivation (self: {
   version = "0.1.0.0";
   src = fetchgit {
     url = git://github.com/ryantrinkle/ghcjs-prim.git;
-    rev = "6b43cfd0fdb6ddc1af9c479a978668b42c0e5415";
-    sha256 = "09edce4c695356ea00495b667285afa0896d0dc0465828671489f49fc5ce5e0d";
+    rev = "1d622ffecace0f56a73b7d32b71865d83fa2d496";
+    sha256 = "609feced378a33dd62158b693876528da5293b86c38be7759002e4e09024cbdd";
   };
   buildDepends = [ primitive ];
 })
