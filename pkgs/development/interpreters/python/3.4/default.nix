@@ -10,7 +10,7 @@
 , sqlite
 , tcl, tk
 , zlib
-, configd
+, configd ? null
 , callPackage
 , self
 }:
