@@ -185,6 +185,20 @@ self: super: {
     version = "0.7.0.2";
   });
 
+  ghcjs-dom = self.callPackage
+    ({ mkDerivation, base, mtl, text, glib, webkit, gtk, transformers
+     }:
+     mkDerivation {
+       pname = "ghcjs-dom";
+       version = "0.1.1.3";
+       sha256 = "0pdxb2s7fflrh8sbqakv0qi13jkn3d0yc32xhg2944yfjg5fvlly";
+       buildDepends = [ base mtl text glib webkit gtk transformers ];
+       description = "DOM library that supports both GHCJS and WebKitGTK";
+       license = pkgs.stdenv.lib.licenses.mit;
+       hydraPlatforms = pkgs.stdenv.lib.platforms.none;
+       configureFlags = [ "-f-gtk3" ];
+     }) {};
+
   ghcjs-prim = self.callPackage ({ mkDerivation, fetchgit, primitive }: mkDerivation {
     pname = "ghcjs-prim";
     version = "0.1.0.0";
@@ -253,8 +267,39 @@ self: super: {
     '';
   });
 
-  glib = fixGtk2hs "glib" "0.13.0.8" super.glib;
-  gio = forceGhcPkg (dontCheck (dontHaddock (fixGtk2hs "gio" "0.13.0.5" super.gio)));
+  glib = self.callPackage
+    ({ mkDerivation, glib, pkgconfig
+     , gtk2hs-buildtools, text, utf8-string
+     }:
+     mkDerivation {
+       pname = "glib";
+       version = "0.13.1.0";
+       sha256 = "11scv2imljnr6ng7692jdagr7fc924hgfwfbnw4a5sra3w7ja7fz";
+       buildDepends = [ text utf8-string ];
+       buildTools = [ gtk2hs-buildtools ];
+       extraLibraries = [ pkgconfig ];
+       pkgconfigDepends = [ glib ];
+       homepage = "http://projects.haskell.org/gtk2hs/";
+       description = "Binding to the GLIB library for Gtk2Hs";
+       license = stdenv.lib.licenses.lgpl21;
+     }) { inherit (pkgs) glib;};
+
+  gio = self.callPackage
+    ({ mkDerivation, glib
+     , gtk2hs-buildtools, mtl
+     }:
+     mkDerivation {
+       pname = "gio";
+       version = "0.13.1.0";
+       sha256 = "1qxbdjznxz56jw108cc78lzwh1r4g8l2jcaz2bh2akc1nwhv2x5j";
+       buildDepends = [ glib mtl ];
+       buildTools = [ gtk2hs-buildtools ];
+       pkgconfigDepends = [ pkgs.glib ];
+       homepage = "http://projects.haskell.org/gtk2hs/";
+       description = "Binding to the GIO";
+       license = pkgs.stdenv.lib.licenses.lgpl21;
+     }) {};
+
   cairo = fixGtk2hs "cairo" "0.13.0.7" super.cairo;
   pango = fixGtk2hs "pango" "0.13.0.6" super.pango;
   gtk3 = forceGhcPkg (fixGtk2hs "gtk" "0.13.5" super.gtk3);
@@ -264,6 +309,43 @@ self: super: {
     '';
     buildDepends = (drv.buildDepends or []) ++ [ pkgs.webkitgtk24x ];
   }));
+
+  gtk = self.callPackage
+    ({ mkDerivation, cairo, gio, pkgconfig
+     , glib, gtk, gtk2hs-buildtools, mtl, pango, text
+     }:
+     mkDerivation {
+       pname = "gtk";
+       version = "0.13.6";
+       sha256 = "1xj3vafk6rhy5nifixsp72n88i0idlknggcq1w626jfszx5anx2c";
+       buildDepends = [
+         cairo gio glib mtl pango text
+       ];
+       extraLibraries = [ pkgconfig ];
+       buildTools = [ gtk2hs-buildtools ];
+       pkgconfigDepends = [ glib gtk ];
+       homepage = "http://projects.haskell.org/gtk2hs/";
+       description = "Binding to the Gtk+ graphical user interface library";
+       license = stdenv.lib.licenses.lgpl21;
+     }) { inherit (pkgs.gnome) gtk;};
+
+
+  webkit = self.callPackage
+    ({ mkDerivation, cairo, glib, gtk
+     , gtk2hs-buildtools, mtl, pango, text, webkit
+     }:
+     mkDerivation {
+       pname = "webkit";
+       version = "0.13.1.2";
+       sha256 = "090gp3700dafb30jdf1bw1vcn7rj7cs4h0glbi5rqp2ssg5f78kc";
+       buildDepends = [ cairo glib gtk mtl pango text ];
+       buildTools = [ gtk2hs-buildtools ];
+       pkgconfigDepends = [ pkgs.webkitgtk2 ];
+       homepage = "http://projects.haskell.org/gtk2hs/";
+       description = "Binding to the Webkit library";
+       license = pkgs.stdenv.lib.licenses.lgpl21;
+       hydraPlatforms = pkgs.stdenv.lib.platforms.none;
+     }) { inherit (pkgs) webkit;};
 
   # Tests fail on Mac OS 10.10
   QuickCheck = dontCheck super.QuickCheck;
