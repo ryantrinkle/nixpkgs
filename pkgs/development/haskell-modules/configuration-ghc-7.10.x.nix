@@ -347,6 +347,20 @@ self: super: {
        hydraPlatforms = pkgs.stdenv.lib.platforms.none;
      }) { inherit (pkgs) webkit;};
 
+  webkit-javascriptcore = self.callPackage
+    ({ mkDerivation, glib, gtk, gtk2hs-buildtools, webkit, webkitgtk24x }:
+     mkDerivation {
+       pname = "webkit-javascriptcore";
+       version = "0.13.0.4";
+       sha256 = "1gj40kdll7pd84graxcrc327za6kgp453zh48srmzvrk9yvnj67x";
+       buildDepends = [ glib gtk webkit ];
+       buildTools = [ gtk2hs-buildtools ];
+       pkgconfigDepends = [ pkgs.webkitgtk2 ];
+       description = "JavaScriptCore FFI from webkitgtk";
+       license = pkgs.stdenv.lib.licenses.bsd3;
+       hydraPlatforms = pkgs.stdenv.lib.platforms.none;
+     }) {};
+
   # Tests fail on Mac OS 10.10
   QuickCheck = dontCheck super.QuickCheck;
   async = dontCheck super.async;
