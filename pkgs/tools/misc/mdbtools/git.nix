@@ -13,8 +13,7 @@ stdenv.mkDerivation {
 
   buildInputs = [
     glib readline bison flex pkgconfig autoconf automake
-    libtool which txt2man gnome_doc_utils scrollkeeper
-    libiconv
+    libtool which txt2man gnome_doc_utils scrollkeeper libiconv
   ];
 
   preConfigure = ''

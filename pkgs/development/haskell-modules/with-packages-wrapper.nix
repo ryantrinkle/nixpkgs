@@ -1,7 +1,9 @@
-{ stdenv, ghc, packages, buildEnv, makeWrapper, ignoreCollisions ? false }:
+{ stdenv, lib, ghc, llvmPackages, packages, buildEnv
+, makeWrapper
+, ignoreCollisions ? false, withLLVM ? false }:
 
 # This wrapper works only with GHC 6.12 or later.
-#assert stdenv.lib.versionOlder "6.12" ghc.version;
+assert lib.versionOlder "6.12" ghc.version || ghc.isGhcjs;
 
 # It's probably a good idea to include the library "ghc-paths" in the
 # compiler environment, because we have a specially patched version of
@@ -25,16 +27,22 @@
 #   fi
 
 let
-  ghc761OrLater = true; # stdenv.lib.versionOlder "7.6.1" ghc.version;
+  isGhcjs       = ghc.isGhcjs or false;
+  ghc761OrLater = isGhcjs || lib.versionOlder "7.6.1" ghc.version;
   packageDBFlag = if ghc761OrLater then "--global-package-db" else "--global-conf";
-  ghcCommand    = ghc.ghcCommand or "ghc";
+  ghcCommand    = if isGhcjs then "ghcjs" else "ghc";
   libDir        = "$out/lib/${ghcCommand}-${ghc.version}";
   docDir        = "$out/share/doc/ghc/html";
   packageCfgDir = "${libDir}/package.conf.d";
-  isHaskellPkg  = x: (x ? pname) && (x ? version) && (x ? env);
-  paths         = stdenv.lib.filter isHaskellPkg (stdenv.lib.closePropagation packages);
+  paths         = lib.filter (x: x ? isHaskellLibrary) (lib.closePropagation packages);
+  hasLibraries  = lib.any (x: x.isHaskellLibrary) paths;
+  # CLang is needed on Darwin for -fllvm to work:
+  # https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/code-generators.html
+  llvm          = lib.makeSearchPath "bin"
+                  ([ llvmPackages.llvm ]
+                   ++ lib.optional stdenv.isDarwin llvmPackages.clang);
 in
-if paths == [] then ghc else
+if paths == [] && !withLLVM then ghc else
 buildEnv {
   inherit (ghc) name;
   paths = paths ++ [ghc];
@@ -42,7 +50,9 @@ buildEnv {
   postBuild = ''
     . ${makeWrapper}/nix-support/setup-hook
 
-    ${if (ghc.libDir or null != null) then "cp -r ${ghc}/${ghc.libDir}/* ${libDir}/" else ""}
+    ${lib.optionalString isGhcjs ''
+    cp -r "${ghc}/${ghc.libDir}/"* ${libDir}/
+    ''}
 
     if test -L "$out/bin"; then
       binTarget="$(readlink -f "$out/bin")"
@@ -59,6 +69,7 @@ buildEnv {
         --set "NIX_GHCPKG"     "$out/bin/${ghcCommand}-pkg"       \
         --set "NIX_GHC_DOCDIR" "${docDir}"              \
         --set "NIX_GHC_LIBDIR" "${libDir}"
+        ${lib.optionalString withLLVM ''--prefix "PATH" ":" "${llvm}"''}
     done
 
     for prg in runghc runhaskell; do
@@ -76,8 +87,7 @@ buildEnv {
       makeWrapper ${ghc}/bin/$prg $out/bin/$prg --add-flags "${packageDBFlag}=${packageCfgDir}"
     done
 
-    echo ${packageCfgDir}
-    $out/bin/${ghcCommand}-pkg recache
+    ${lib.optionalString hasLibraries "$out/bin/${ghcCommand}-pkg recache"}
     $out/bin/${ghcCommand}-pkg check
   '';
 } // {

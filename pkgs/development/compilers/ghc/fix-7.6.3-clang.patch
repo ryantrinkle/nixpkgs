@@ -1,6 +1,8 @@
---- compiler/codeGen/CgInfoTbls.hs	2015-01-19 11:56:56.000000000 -0800
-+++ compiler/codeGen/CgInfoTbls.hs.new	2015-01-19 11:57:11.000000000 -0800
-@@ -157,9 +157,7 @@
+diff --git a/compiler/codeGen/CgInfoTbls.hs b/compiler/codeGen/CgInfoTbls.hs
+index 7cdb1b6..e953507 100644
+--- a/compiler/codeGen/CgInfoTbls.hs
++++ b/compiler/codeGen/CgInfoTbls.hs
+@@ -157,9 +157,7 @@ mkStackLayout = do
                      [(offset - frame_sp - retAddrSizeW, b)
                      | (offset, b) <- binds]
  
@@ -11,33 +13,11 @@
      return $ stack_layout rel_binds frame_size
  
  stack_layout :: [(VirtualSpOffset, CgIdInfo)]
---- compiler/simplCore/SimplUtils.lhs	2015-01-19 12:07:44.000000000 -0800
-+++ compiler/simplCore/SimplUtils.lhs.new	2015-01-19 12:08:09.000000000 -0800
-@@ -415,8 +415,7 @@
- 		   else
- 			map isStrictDmd demands ++ vanilla_stricts
- 	       | otherwise
--	       -> WARN( True, text "More demands than arity" <+> ppr fun <+> ppr (idArity fun) 
--				<+> ppr n_val_args <+> ppr demands ) 
-+	       -> WARN( True, text "More demands than arity" <+> ppr fun <+> ppr (idArity fun) <+> ppr n_val_args <+> ppr demands ) 
- 		   vanilla_stricts	-- Not enough args, or no strictness
- 
-     add_type_str :: Type -> [Bool] -> [Bool]
---- compiler/simplCore/Simplify.lhs	2015-01-19 12:18:00.000000000 -0800
-+++ compiler/simplCore/Simplify.lhs.new	2015-01-19 12:18:22.000000000 -0800
-@@ -2359,8 +2359,7 @@
- 		      	     rhs = mkConApp dc (map Type (tyConAppArgs scrut_ty)
- 			     	   	        ++ varsToCoreExprs bndrs')
- 
--		      LitAlt {} -> WARN( True, ptext (sLit "mkDupableAlt")
--		      	     	   	        <+> ppr case_bndr <+> ppr con )
-+		      LitAlt {} -> WARN( True, ptext (sLit "mkDupableAlt") <+> ppr case_bndr <+> ppr con )
- 			           case_bndr
- 		      	   -- The case binder is alive but trivial, so why has 
- 		      	   -- it not been substituted away?
---- compiler/main/GhcMake.hs	2015-01-19 19:59:52.000000000 +0000
-+++ compiler/main/GhcMake.hs.new	2015-01-19 20:24:46.000000000 +0000
-@@ -331,8 +331,7 @@
+diff --git a/compiler/main/GhcMake.hs b/compiler/main/GhcMake.hs
+index f563cd9..4ac7812 100644
+--- a/compiler/main/GhcMake.hs
++++ b/compiler/main/GhcMake.hs
+@@ -331,8 +331,7 @@ load how_much = do
            liftIO $ intermediateCleanTempFiles dflags mods_to_keep hsc_env1
  
            -- there should be no Nothings where linkables should be, now
@@ -47,36 +27,45 @@
      
            -- Link everything together
            linkresult <- liftIO $ link (ghcLink dflags) dflags False hpt4
---- includes/HsFFI.h
-+++ includes/HsFFI.h
-@@ -21,7 +21,7 @@ extern "C" {
- #include "stg/Types.h"
-
- /* get limits for integral types */
--#ifdef HAVE_STDINT_H
-+#if defined HAVE_STDINT_H && !defined USE_INTTYPES_H_FOR_RTS_PROBES_D
- /* ISO C 99 says:
-  * "C++ implementations should define these macros only when
-  * __STDC_LIMIT_MACROS is defined before <stdint.h> is included."
---- rts/RtsProbes.d
-+++ rts/RtsProbes.d
-@@ -6,6 +6,12 @@
-  *
-  * ---------------------------------------------------------------------------*/
-
-+#ifdef __APPLE__ && __MACH__
-+# if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9
-+#  define USE_INTTYPES_H_FOR_RTS_PROBES_D
-+# endif
-+#endif
-+
- #include "HsFFI.h"
- #include "rts/EventLogFormat.h"
-
---- utils/mkdirhier/mkdirhier.sh
-+++ utils/mkdirhier/mkdirhier.sh
-@@ -1,4 +1,4 @@
- #!/bin/sh
-
--mkdir -p ${1+"$@"}
-+mkdir -p ${1+"./$@"}
+diff --git a/compiler/simplCore/SimplUtils.lhs b/compiler/simplCore/SimplUtils.lhs
+index 87aefba..479d2ef 100644
+--- a/compiler/simplCore/SimplUtils.lhs
++++ b/compiler/simplCore/SimplUtils.lhs
+@@ -415,8 +415,7 @@ mkArgInfo fun rules n_val_args call_cont
+ 		   else
+ 			map isStrictDmd demands ++ vanilla_stricts
+ 	       | otherwise
+-	       -> WARN( True, text "More demands than arity" <+> ppr fun <+> ppr (idArity fun) 
+-				<+> ppr n_val_args <+> ppr demands ) 
++	       -> WARN( True, text "More demands than arity" <+> ppr fun <+> ppr (idArity fun) <+> ppr n_val_args <+> ppr demands ) 
+ 		   vanilla_stricts	-- Not enough args, or no strictness
+ 
+     add_type_str :: Type -> [Bool] -> [Bool]
+diff --git a/compiler/simplCore/Simplify.lhs b/compiler/simplCore/Simplify.lhs
+index f2ed224..464fad6 100644
+--- a/compiler/simplCore/Simplify.lhs
++++ b/compiler/simplCore/Simplify.lhs
+@@ -2359,8 +2359,7 @@ mkDupableAlt env case_bndr (con, bndrs', rhs')
+ 		      	     rhs = mkConApp dc (map Type (tyConAppArgs scrut_ty)
+ 			     	   	        ++ varsToCoreExprs bndrs')
+ 
+-		      LitAlt {} -> WARN( True, ptext (sLit "mkDupableAlt")
+-		      	     	   	        <+> ppr case_bndr <+> ppr con )
++		      LitAlt {} -> WARN( True, ptext (sLit "mkDupableAlt") <+> ppr case_bndr <+> ppr con )
+ 			           case_bndr
+ 		      	   -- The case binder is alive but trivial, so why has 
+ 		      	   -- it not been substituted away?
+diff --git a/compiler/types/Coercion.lhs b/compiler/types/Coercion.lhs
+index 42e54ba..9b420ae 100644
+--- a/compiler/types/Coercion.lhs
++++ b/compiler/types/Coercion.lhs
+@@ -498,8 +498,7 @@ splitForAllCo_maybe _                = Nothing
+ coVarKind :: CoVar -> (Type,Type) 
+ coVarKind cv
+  | Just (tc, [_kind,ty1,ty2]) <- splitTyConApp_maybe (varType cv)
+- = ASSERT (tc `hasKey` eqPrimTyConKey)
+-   (ty1,ty2)
++ = ASSERT (tc `hasKey` eqPrimTyConKey) (ty1,ty2)
+  | otherwise = panic "coVarKind, non coercion variable"
+ 
+ -- | Makes a coercion type from two types: the types whose equality 

@@ -26,7 +26,6 @@ in stdenv.mkDerivation rec {
 
   buildInputs = [
     ruby bundler libiconv
-  ] ++ [
     libxslt libxml2 pkgconfig libffi
     imagemagickBig postgresql
   ];

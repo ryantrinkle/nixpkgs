@@ -1,22 +1,24 @@
-{ stdenv, fetchurl, openssl, python, zlib, v8, utillinux, http-parser, c-ares
-, pkgconfig, runCommand, which, unstableVersion ? stdenv.isDarwin, CoreServices, ApplicationServices
+{ stdenv, fetchurl, openssl, python, zlib, libuv, v8, utillinux, http-parser
+, pkgconfig, runCommand, which, unstableVersion ? false
 }:
 
 let
-  version = if unstableVersion then "0.11.15" else "0.10.36";
+  dtrace = runCommand "dtrace-native" {} ''
+    mkdir -p $out/bin
+    ln -sv /usr/sbin/dtrace $out/bin
+  '';
 
-  # !!! Should we also do shared libuv?
+  version = "0.12.0";
+
   deps = {
-    inherit openssl zlib;
+    inherit openssl zlib libuv;
 
     # disabled system v8 because v8 3.14 no longer receives security fixes
     # we fall back to nodejs' internal v8 copy which receives backports for now
     # inherit v8
   } // (stdenv.lib.optionalAttrs (!stdenv.isDarwin) {
     inherit http-parser;
-  })
-  # Node 0.11 has patched c-ares, won't compile with system's version
-  // (if unstableVersion then {} else { cares = c-ares; });
+  });
 
   sharedConfigureFlags = name: [
     "--shared-${name}"
@@ -30,12 +32,10 @@ in stdenv.mkDerivation {
 
   src = fetchurl {
     url = "http://nodejs.org/dist/v${version}/node-v${version}.tar.gz";
-    sha256 = if unstableVersion
-             then "008xk4866gr6mw2qavd6jds8gxrk2i4r5083302rmjd4p9sd44z6"
-             else "10cc2yglmrp8i2l4lm4pnm1pf7jvzjk5v80kddl4dkjb578d3mxr";
+    sha256 = "0cifd2qhpyrbxx71a4hsagzk24qas8m5zvwcyhx69cz9yhxf404p";
   };
 
-  configureFlags = concatMap sharedConfigureFlags (builtins.attrNames deps) ++ [ "--without-dtrace" ];
+  configureFlags = concatMap sharedConfigureFlags (builtins.attrNames deps);
 
   prePatch = ''
     sed -e 's|^#!/usr/bin/env python$|#!${python}/bin/python|g' -i configure
@@ -53,10 +53,10 @@ in stdenv.mkDerivation {
 
   buildInputs = [ python which ]
     ++ (optional stdenv.isLinux utillinux)
-    ++ optionals stdenv.isDarwin [ pkgconfig openssl CoreServices ApplicationServices ];
+    ++ optionals stdenv.isDarwin [ pkgconfig openssl dtrace ];
   setupHook = ./setup-hook.sh;
 
-  enableParallelBuilding = true;
+  passthru.interpreterName = "nodejs";
 
   meta = {
     description = "Event-driven I/O framework for the V8 JavaScript engine";

@@ -8,12 +8,12 @@ in
 
 stdenv.mkDerivation rec {
   name = "v8-${version}";
-  version = "4.1.0.15";
+  version = "3.30.33.16";
 
   src = fetchurl {
     url = "https://commondatastorage.googleapis.com/chromium-browser-official/"
         + "${name}.tar.bz2";
-    sha256 = "0ac6kkcjfsbs19i3m1asjx1c040qknj4n31wrjb6nz7mjsdmwg72";
+    sha256 = "1azf1b36gqj4z5x0k9wq2dkp99zfyhwb0d6i2cl5fjm3k6js7l45";
   };
 
   patchPhase = ''

@@ -13,14 +13,13 @@ stdenv.mkDerivation rec {
   configureFlags = [
     "--with-zlib=${zlib}"
     "--with-libbz2-prefix=${bzip2}"
-  ] ++ (stdenv.lib.optional (!stdenv.stdenv.isGlibc)
-       "--with-iconv-dir=${libiconv}")
-  ++ [
+    "--with-iconv-dir=${libiconv}"
     "--with-xml=${libxml2}"
     "--with-openssl=${openssl}"
     "--with-libncurses-prefix=${ncurses}"
     "--with-libcurl=${curl}"
-    "--disable-clamav" ];
+    "--disable-clamav"
+  ];
 
   meta = with stdenv.lib; {
     homepage = http://www.clamav.net;

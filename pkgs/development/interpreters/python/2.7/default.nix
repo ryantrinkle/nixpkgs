@@ -1,8 +1,20 @@
-{ stdenv, fetchurl, zlib ? null, zlibSupport ? true, bzip2, includeModules ? false
-, sqlite, tcl, tk, x11, openssl, readline, db, ncurses, gdbm, libX11, self, callPackage
-, configd, corefoundation }:
+{ stdenv, fetchurl, self, callPackage
+, bzip2, openssl
+
+, includeModules ? false
+
+, db, gdbm, ncurses, sqlite, readline
+
+, tcl ? null, tk ? null, x11 ? null, libX11 ? null, x11Support ? true
+, zlib ? null, zlibSupport ? true
+, configd, corefoundation
+}:
 
 assert zlibSupport -> zlib != null;
+assert x11Support -> tcl != null
+                  && tk != null
+                  && x11 != null
+                  && libX11 != null;
 
 with stdenv.lib;
 
@@ -30,19 +42,12 @@ let
       ./deterministic-build.patch
     ];
 
-  # The `/usr/bin/arch` substitution only affects darwin systems,
-  # and i386 just means intel here (not 32-bit specifically)
-  ensurePurity = ''
-    substituteInPlace configure \
-      --replace '`/usr/bin/arch`' '"i386"'
-
-    # Purity.
-    for i in /usr /sw /opt /pkg; do
-      substituteInPlace ./setup.py --replace $i /no-such-path
-    done
-  '';
-
-  preConfigure = ensurePurity + optionalString (stdenv ? cc && stdenv.cc.libc != null) ''
+  preConfigure = ''
+      # Purity.
+      for i in /usr /sw /opt /pkg; do
+        substituteInPlace ./setup.py --replace $i /no-such-path
+      done
+    '' + optionalString (stdenv ? cc && stdenv.cc.libc != null) ''
       for i in Lib/plat-*/regen; do
         substituteInPlace $i --replace /usr/include/ ${stdenv.cc.libc}/include/
       done
@@ -56,7 +61,11 @@ let
 
   buildInputs =
     optional (stdenv ? cc && stdenv.cc.libc != null) stdenv.cc.libc ++
-    [ bzip2 openssl ] ++ optionals includeModules [ db openssl ncurses gdbm libX11 readline x11 tcl tk sqlite ]
+    [ bzip2 openssl ]
+    ++ optionals includeModules (
+        [ db gdbm ncurses sqlite readline
+        ] ++ optionals x11Support [ tcl tk x11 libX11 ]
+    )
     ++ optional zlibSupport zlib ++ optionals stdenv.isDarwin [ configd corefoundation ];
 
   # Build the basic Python interpreter without modules that have
@@ -200,10 +209,14 @@ let
       deps = [ sqlite ];
     };
 
+  } // optionalAttrs x11Support {
+
     tkinter = buildInternalPythonModule {
       moduleName = "tkinter";
       deps = [ tcl tk x11 libX11 ];
     };
+
+  } // {
 
     readline = buildInternalPythonModule {
       moduleName = "readline";

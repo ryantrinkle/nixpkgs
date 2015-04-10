@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, ghc, perl, gmp, ncurses, libiconv }:
+{ stdenv, fetchgit, ghc, perl, gmp, ncurses, libiconv, autoconf, automake, happy, alex }:
 
 let
 
@@ -7,6 +7,7 @@ let
     libraries/integer-gmp_CONFIGURE_OPTS += --configure-option=--with-gmp-includes="${gmp}/include"
     libraries/terminfo_CONFIGURE_OPTS += --configure-option=--with-curses-includes="${ncurses}/include"
     libraries/terminfo_CONFIGURE_OPTS += --configure-option=--with-curses-libraries="${ncurses}/lib"
+    DYNAMIC_BY_DEFAULT = NO
     ${stdenv.lib.optionalString stdenv.isDarwin ''
       libraries/base_CONFIGURE_OPTS += --configure-option=--with-iconv-includes="${libiconv}/include"
       libraries/base_CONFIGURE_OPTS += --configure-option=--with-iconv-libraries="${libiconv}/lib"
@@ -16,20 +17,24 @@ let
 in
 
 stdenv.mkDerivation rec {
-  version = "7.11.20150128";
+  version = "7.11.20150402";
   name = "ghc-${version}";
+  rev = "47f821a1a24553dc29b9581b1a259a9b1394c955";
 
-  src = fetchurl {
-    url = "http://deb.haskell.org/dailies/2015-01-31/ghc_${version}.orig.tar.bz2";
-    sha256 = "0fafb4gn2n2fd5779m0j3q0bhj3wlv043japcpr1ly5lljph5y4j";
+  src = fetchgit {
+    url = "git://git.haskell.org/ghc.git";
+    inherit rev;
+    sha256 = "111a2z6bgn966g04a9n2ns9n2a401rd0zqgndznn2w4fv8a4qzgj";
   };
 
   postUnpack = ''
-    # tarball includes many already-compiled files
-    find . \( -name '*.dyn_o' -o -name '*.dyn_hi' -o -name haddock \) -type f -exec rm {} \;
+    pushd ghc-${builtins.substring 0 7 rev}
+    patchShebangs .
+    ./boot
+    popd
   '';
 
-  buildInputs = [ ghc perl ];
+  buildInputs = [ ghc perl autoconf automake happy alex ];
 
   preConfigure = ''
     echo >mk/build.mk "${buildMK}"

@@ -53,7 +53,8 @@ stdenv.mkDerivation rec {
       stdenv.lib.maintainers.andres
       stdenv.lib.maintainers.simons
     ];
-    inherit (ghc.meta) license platforms;
+    platforms = ["x86_64-linux" "i686-linux"];  # Darwin is unsupported.
+    inherit (ghc.meta) license;
   };
 
 }

@@ -17,6 +17,8 @@ in stdenv.mkDerivation rec {
     sha256 = "1669m8k9q72rpd2mzs0bh2q6lcwqiwd1ax3vrard1dgn64yq4hxx";
   };
 
+  patches = [ ./fix-7.6.3-clang.patch ];
+
   buildInputs = [ ghc perl gmp ncurses ];
 
   enableParallelBuilding = true;
@@ -49,7 +51,6 @@ in stdenv.mkDerivation rec {
   '' + stdenv.lib.optionalString stdenv.isDarwin ''
     find . -name '*.hs'  | xargs sed -i -e 's|ASSERT (|ASSERT(|' -e 's|ASSERT2 (|ASSERT2(|' -e 's|WARN (|WARN(|'
     find . -name '*.lhs' | xargs sed -i -e 's|ASSERT (|ASSERT(|' -e 's|ASSERT2 (|ASSERT2(|' -e 's|WARN (|WARN(|'
-    patch -p0 < ${./fix-7.6.3-clang.patch}
     export NIX_LDFLAGS+=" -no_dtrace_dof"
   '';
 
@@ -68,8 +69,7 @@ in stdenv.mkDerivation rec {
 
   # required, because otherwise all symbols from HSffi.o are stripped, and
   # that in turn causes GHCi to abort
-  stripDebugFlags = [ "-S" ]
-    ++ stdenv.lib.optional (!stdenv.isDarwin) "--keep-file-symbols";
+  stripDebugFlags = [ "-S" ] ++ stdenv.lib.optional (!stdenv.isDarwin) "--keep-file-symbols";
 
   meta = {
     homepage = "http://haskell.org/ghc";

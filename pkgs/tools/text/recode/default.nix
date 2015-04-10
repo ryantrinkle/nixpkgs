@@ -1,4 +1,6 @@
-{ stdenv, fetchFromGitHub, python, perl, autoconf, automake, libtool, intltool, flex, libiconv }:
+# XXX: this may need -liconv on non-glibc systems.. 
+
+{ stdenv, fetchFromGitHub, python, perl, autoconf, automake, libtool, intltool, flex, texinfo }:
 
 stdenv.mkDerivation rec {
   name = "recode-3.7-2fd838565";
@@ -10,8 +12,7 @@ stdenv.mkDerivation rec {
     sha256 = "06vyjqaraamcc5vka66mlvxj27ihccqc74aymv2wn8nphr2rhh03";
   };
 
-  buildInputs = [ python perl autoconf automake libtool intltool flex ]
-  ++ stdenv.lib.optional stdenv.isDarwin [libiconv];
+  nativeBuildInputs = [ python perl autoconf automake libtool intltool flex texinfo ];
 
   preConfigure = ''
     # fix build with new automake, https://bugs.gentoo.org/show_bug.cgi?id=419455

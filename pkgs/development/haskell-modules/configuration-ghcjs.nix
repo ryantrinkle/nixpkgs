@@ -5,6 +5,13 @@ let stdenv = pkgs.stdenv;
 in
 self: super: {
 
+  # LLVM is not supported on this GHC; use the latest one.
+  inherit (pkgs) llvmPackages;
+
+  inherit (parent) jailbreak-cabal alex happy;
+
+  # Many packages fail with:
+  #   haddock: internal error: expectJust getPackageDetails
   mkDerivation = drv: super.mkDerivation (drv // { doHaddock = false; });
 
   # This is the list of packages that are built into a booted ghcjs installation
@@ -48,9 +55,6 @@ self: super: {
   unix = null;
   unordered-containers = null;
   vector = null;
-
-  # happy is an executable only, and it will be used in the host, so we want the native binary
-  happy = parent.happy;
 
   pqueue = overrideCabal super.pqueue (drv: {
     patchPhase = ''

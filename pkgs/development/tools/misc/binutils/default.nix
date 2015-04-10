@@ -35,9 +35,8 @@ stdenv.mkDerivation rec {
     ./pt-pax-flags-20121023.patch
   ];
 
-  buildInputs =
-    [ zlib ]
-    ++ optional gold bison ++ libintlOrEmpty;
+  nativeBuildInputs = optional gold bison;
+  buildInputs = [ zlib ];
 
   inherit noSysDirs;
 

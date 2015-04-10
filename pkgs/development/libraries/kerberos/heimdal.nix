@@ -54,4 +54,6 @@ stdenv.mkDerivation rec {
     platforms = platforms.linux ++ platforms.darwin;
     maintainers = with maintainers; [ wkennington ];
   };
+
+  passthru.implementation = "heimdal";
 }

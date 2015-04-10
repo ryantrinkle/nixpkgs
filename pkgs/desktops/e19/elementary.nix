@@ -1,10 +1,10 @@
 { stdenv, fetchurl, pkgconfig, e19, libcap, gdbm }:
 stdenv.mkDerivation rec {
   name = "elementary-${version}";
-  version = "1.12.3";
+  version = "1.13.2";
   src = fetchurl {
     url = "http://download.enlightenment.org/rel/libs/elementary/${name}.tar.gz";
-    sha256 = "0ajljrr72rdz9hniqvsigw7p6dmpqnf0nijrxd2x91gx2cfrwksm";
+    sha256 = "0f8hz60aj4ar8lqnc63nlxkpf3b51scjalgy1iphgjc27hzxcb9i";
   };
   buildInputs = [ pkgconfig e19.efl gdbm ] ++ stdenv.lib.optionals stdenv.isLinux [ libcap ];
   preConfigure = ''

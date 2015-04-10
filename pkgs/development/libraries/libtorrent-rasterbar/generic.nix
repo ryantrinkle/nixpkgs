@@ -19,6 +19,7 @@ stdenv.mkDerivation rec {
     "--with-libiconv=yes"
     "--with-boost=${boost.dev}"
     "--with-boost-libdir=${boost.lib}/lib"
+    "--with-libiconv=yes"
   ];
   
   meta = with stdenv.lib; {

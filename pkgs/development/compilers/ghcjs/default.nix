@@ -1,24 +1,24 @@
-{ mkDerivation # cabal.mkDerivation
-, test-framework # testFramework
-, test-framework-hunit # testFrameworkHunit
-, test-framework-quickcheck2 # testFrameworkQuickcheck2
-, data-default # dataDefault
-, ghc-paths # ghcPaths
-, haskell-src-exts # haskellSrcExts
-, haskell-src-meta # haskellSrcMeta
-, optparse-applicative # optparseApplicative
-, system-fileio # systemFileio
-, system-filepath # systemFilepath
-, text-binary # textBinary
-, unordered-containers # unorderedContainers
-, cabal-install # cabalInstall
-, wl-pprint-text # wlPprintText
-, base16-bytestring # base16Bytestring
-, executable-path # executablePath
-, transformers-compat # transformersCompat
-, haddock-api # haddockApi
-, ghcjs-prim # ghcjsPrim
-, regex-posix # regexPosix
+{ mkDerivation
+, test-framework
+, test-framework-hunit
+, test-framework-quickcheck2
+, data-default
+, ghc-paths
+, haskell-src-exts
+, haskell-src-meta
+, optparse-applicative
+, system-fileio
+, system-filepath
+, text-binary
+, unordered-containers
+, cabal-install
+, wl-pprint-text
+, base16-bytestring
+, executable-path
+, transformers-compat
+, haddock-api
+, ghcjs-prim
+, regex-posix
 
 , ghc, gmp
 , jailbreak-cabal
@@ -35,29 +35,29 @@
 , cryptohash
 , haddock, hspec, xhtml, primitive, cacert, pkgs
 , coreutils
-, cc, libiconv
+, libiconv
 }:
 let
   version = "0.1.0";
   libDir = "share/ghcjs/${pkgs.stdenv.system}-${version}-${ghc.version}/ghcjs";
   ghcjsBoot = fetchgit {
-    url = git://github.com/ryantrinkle/ghcjs-boot.git;
-    rev = "7e9c4df151619b96d97523b75072dd4d0af4115c";
-    sha256 = "5a96be9cf0444dc69118544657f4551044b6f7ec864bb939e5ec223e25d2848e";
+    url = git://github.com/ghcjs/ghcjs-boot.git;
+    rev = "8cd6144870470258fb037b3e04a0a2a98c2b6551"; # 7.10 branch
+    sha256 = "16cbncx179n5khf8hkj9r221wf73rc8isffk8rv3n9psshv1jiji";
     fetchSubmodules = true;
   };
   shims = fetchgit {
     url = git://github.com/ghcjs/shims.git;
-    rev = "6ada4bf1a084d1b80b993303d35ed863d219b031";
-    sha256 = "6c93ebd4c4178257db93d4469d9bd38f7572bd60d2ae1baa58abf53ca4b40e36";
+    rev = "6ada4bf1a084d1b80b993303d35ed863d219b031"; # master branch
+    sha256 = "0dhfnjj3rxdbb2m1pbnjc2yp4xcgsfdrsinljgdmg0hpqkafp4vc";
   };
 in mkDerivation (rec {
   pname = "ghcjs";
   inherit version;
   src = fetchgit {
     url = git://github.com/ghcjs/ghcjs.git;
-    rev = "44df08ad870a13f89c89f688ba2718347b63374c";
-    sha256 = "bce80501a295de840c90b43eb5b2157ebfabd1276721053dc526521fc60cb6f3";
+    rev = "35a59743c4027f26a227635cb24a6246bd851f8d"; # master branch
+    sha256 = "107sh36ji3psdl3py84vxgqbywjyzglj3p0akzpvcmbarxwfr1mw";
   };
   isLibrary = true;
   isExecutable = true;
@@ -83,11 +83,9 @@ in mkDerivation (rec {
   postPatch = ''
     substituteInPlace Setup.hs --replace "/usr/bin/env" "${coreutils}/bin/env"
     substituteInPlace src/Compiler/Info.hs --replace "@PREFIX@" "$out"
-    substituteInPlace src-bin/Boot.hs --replace "@PREFIX@" "$out"
-    for f in ghcjs.cabal utils/patch/ghcjs-patch.cabal test/ghcjs-testsuite.cabal ; do
-      sed -i "s/\bshelly.*,/shelly -any,/g" "$f"
-    done
-    sed -i 's|\("--with-compiler", ghcjs \^\. pgmLocText\)|\1, "--with-gcc", "${cc}/bin/cc"|' src-bin/Boot.hs
+    substituteInPlace src-bin/Boot.hs \
+      --replace "@PREFIX@" "$out"     \
+      --replace "@CC@"     "${stdenv.cc}/bin/cc"
   '';
   preBuild = ''
     local topDir=$out/${libDir}
@@ -98,9 +96,16 @@ in mkDerivation (rec {
 
     cp -r ${shims} $topDir/shims
     chmod -R u+w $topDir/shims
+
+    # Make the patches be relative their corresponding package's directory.
+    # See: https://github.com/ghcjs/ghcjs-boot/pull/12
+    for patch in $topDir/ghcjs-boot/patches/*.patch; do
+      echo "fixing patch: $patch"
+      sed -i -e 's@ \(a\|b\)/boot/[^/]\+@ \1@g' $patch
+    done
   '';
   postInstall = ''
-    PATH=$out/bin:$PATH LD_LIBRARY_PATH=${gmp}/lib:$LD_LIBRARY_PATH \
+    PATH=$out/bin:$PATH LD_LIBRARY_PATH=${gmp}/lib:${stdenv.cc}/lib64:$LD_LIBRARY_PATH \
       env -u GHC_PACKAGE_PATH $out/bin/ghcjs-boot \
         --dev \
         --with-cabal ${cabal-install}/bin/cabal \
@@ -109,20 +114,15 @@ in mkDerivation (rec {
   '';
   passthru = {
     inherit libDir;
-    setupBuilder = "${ghc}/bin/ghc";
-    ghcCommand = "ghcjs";
-    runCommand = x: "${nodejs}/bin/node ${x}.jsexe/all.js";
-    pkgCommand = "ghcjs-pkg";
-    extraConfigureFlags = [ "--ghcjs" ];
+    isGhcjs = true;
+    nativeGhc = ghc;
   };
+
+  homepage = "https://github.com/ghcjs/ghcjs";
+  description = "GHCJS is a Haskell to JavaScript compiler that uses the GHC API";
   license = stdenv.lib.licenses.bsd3;
-/*
-  meta = {
-    homepage = "https://github.com/ghcjs/ghcjs";
-    description = "GHCJS is a Haskell to JavaScript compiler that uses the GHC API";
-    license = stdenv.lib.licenses.bsd3;
-    platforms = ghc.meta.platforms;
-    maintainers = [ stdenv.lib.maintainers.jwiegley ];
-  };
-*/
+  platforms = ghc.meta.platforms;
+  maintainers = with stdenv.lib.maintainers; [
+    jwiegley cstrahan
+  ];
 })

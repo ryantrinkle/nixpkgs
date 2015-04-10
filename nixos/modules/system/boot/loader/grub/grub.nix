@@ -9,7 +9,8 @@ let
   efi = config.boot.loader.efi;
 
   realGrub = if cfg.version == 1 then pkgs.grub
-    else pkgs.grub2.override { zfsSupport = cfg.zfsSupport; };
+    else if cfg.zfsSupport then pkgs.grub2.override { zfsSupport = true; }
+    else pkgs.grub2;
 
   grub =
     # Don't include GRUB if we're only generating a GRUB menu (e.g.,
@@ -21,7 +22,7 @@ let
   grubEfi =
     # EFI version of Grub v2
     if (cfg.devices != ["nodev"]) && cfg.efiSupport && (cfg.version == 2)
-    then pkgs.grub2.override { zfsSupport = cfg.zfsSupport; efiSupport = cfg.efiSupport; }
+    then realGrub.override { efiSupport = cfg.efiSupport; }
     else null;
 
   f = x: if x == null then "" else "" + x;
@@ -33,7 +34,7 @@ let
       shell = "${pkgs.stdenv.shell}";
       fullVersion = (builtins.parseDrvName realGrub.name).version;
       grubEfi = f grubEfi;
-      grubTargetEfi = if cfg.efiSupport && (cfg.version == 2) then f grubEfi.grubTarget else "";
+      grubTargetEfi = if cfg.efiSupport && (cfg.version == 2) then f (grubEfi.grubTarget or "") else "";
       inherit (efi) efiSysMountPoint canTouchEfiVariables;
       inherit (cfg)
         version extraConfig extraPerEntryConfig extraEntries
@@ -178,6 +179,7 @@ in
       };
 
       splashImage = mkOption {
+        type = types.nullOr types.path;
         example = literalExample "./my-background.png";
         description = ''
           Background image used for GRUB.  It must be a 640x480,

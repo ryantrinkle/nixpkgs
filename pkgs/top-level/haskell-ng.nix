@@ -6,9 +6,7 @@ rec {
 
   compiler = {
 
-    ghc6102Binary = callPackage ../development/compilers/ghc/6.10.2-binary.nix ({ gmp = pkgs.gmp4; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
-      libiconv = pkgs.darwin.libiconv;
-    });
+    ghc6102Binary = callPackage ../development/compilers/ghc/6.10.2-binary.nix { gmp = pkgs.gmp4; };
     ghc704Binary = callPackage ../development/compilers/ghc/7.0.4-binary.nix ({ gmp = pkgs.gmp4; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
@@ -16,48 +14,34 @@ rec {
       libiconv = pkgs.darwin.libiconv;
     });
 
-    ghc6104 = callPackage ../development/compilers/ghc/6.10.4.nix ({ ghc = compiler.ghc6102Binary; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc6104 = callPackage ../development/compilers/ghc/6.10.4.nix { ghc = compiler.ghc6102Binary; };
+    ghc6123 = callPackage ../development/compilers/ghc/6.12.3.nix { ghc = compiler.ghc6102Binary; };
+    ghc704 = callPackage ../development/compilers/ghc/7.0.4.nix ({ ghc = compiler.ghc704Binary; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
-    ghc6123 = callPackage ../development/compilers/ghc/6.12.3.nix ({ ghc =
-    compiler.ghc6102Binary; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc722 = callPackage ../development/compilers/ghc/7.2.2.nix ({ ghc = compiler.ghc704Binary; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
-    ghc704 = callPackage ../development/compilers/ghc/7.0.4.nix ({ ghc = compiler.ghc704Binary; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc742 = callPackage ../development/compilers/ghc/7.4.2.nix ({ ghc = compiler.ghc704Binary; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
-    ghc722 = callPackage ../development/compilers/ghc/7.2.2.nix ({ ghc = compiler.ghc704Binary; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc763 = callPackage ../development/compilers/ghc/7.6.3.nix ({ ghc = compiler.ghc704Binary; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
-    ghc742 = callPackage ../development/compilers/ghc/7.4.2.nix ({ ghc = compiler.ghc704Binary; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc784 = callPackage ../development/compilers/ghc/7.8.4.nix ({ ghc = compiler.ghc742Binary; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
-    ghc763 = callPackage ../development/compilers/ghc/7.6.3.nix ({ ghc = compiler.ghc704Binary; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghc7101 = callPackage ../development/compilers/ghc/7.10.1.nix ({ ghc = compiler.ghc784; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
-    ghc784 = callPackage ../development/compilers/ghc/7.8.4.nix ({ ghc = compiler.ghc742Binary; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
-      libiconv = pkgs.darwin.libiconv;
-    });
-    ghc7101 = callPackage ../development/compilers/ghc/7.10.1.nix ({ ghc = compiler.ghc784; gmp = pkgs.gmp.override { withStatic = true; }; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
-      libiconv = pkgs.darwin.libiconv;
-    });
-    ghcHEAD = callPackage ../development/compilers/ghc/head.nix ({ ghc = packages.ghc784.ghc; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
+    ghcHEAD = callPackage ../development/compilers/ghc/head.nix ({ inherit (packages.ghc784) ghc alex happy; } // stdenv.lib.optionalAttrs stdenv.isDarwin {
       libiconv = pkgs.darwin.libiconv;
     });
     ghc = compiler.ghc784;
 
-    ghcjs = (packages.ghc7101.override {
-      overrides = self: super: {
-#        mkDerivation = drv: super.mkDerivation (drv // { doHaddock = false; });
-#        Cabal = self.Cabal_1_22_0_0;
-#        haddock-api = super.haddock-api.override { Cabal = null; };
-#        haddock = super.haddock.override { Cabal = null; };
-      };
-    }).callPackage ../development/compilers/ghcjs {
+    ghcjs = packages.ghc7101.callPackage ../development/compilers/ghcjs {
       ghc = compiler.ghc7101;
-      gmp = "${pkgs.gmp.override { withStatic = true; }}";
     };
-
   };
 
   packages = {
@@ -98,10 +82,8 @@ rec {
     ghcjs = callPackage ../development/haskell-modules {
       ghc = compiler.ghcjs;
       packageSetConfig = callPackage ../development/haskell-modules/configuration-ghcjs.nix {
-        parent = packages.ghc7101;
+        parent = packages.ghc7101; #TODO: This should be set above, where ghcjs is actually built, to make sure they stay in sync
       };
-      jailbreak-cabal = "${packages.ghc7101.jailbreak-cabal}";
-      hsc2hs = "${compiler.ghc7101}/bin/hsc2hs";
     };
 
   };

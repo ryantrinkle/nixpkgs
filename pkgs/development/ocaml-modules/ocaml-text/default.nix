@@ -10,9 +10,7 @@ stdenv.mkDerivation {
 
   buildInputs = [ocaml findlib ncurses libiconv];
 
-  configurePhase =
-    (stdenv.lib.optionalString (!stdenv.isGlibc) "iconv_prefix=${libiconv} ")
-    + "ocaml setup.ml -configure";
+  configurePhase = "iconv_prefix=${libiconv} ocaml setup.ml -configure";
 
   createFindlibDestdir = true;
 
