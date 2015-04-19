@@ -120,4 +120,73 @@ self: super: {
     version = "0.6.0.8";
     jailbreak = true;
   });
+
+  "timezone-series" = self.callPackage
+    ({ time, mkDerivation
+     }:
+    mkDerivation {
+      pname = "timezone-series";
+      version = "0.1.4";
+      sha256 = "06p5v0dimhwmra100gwkhkz3ll492i2bvafw0qx2qzcxx4yxff40";
+      buildDepends = [ time ];
+      homepage = "http://projects.haskell.org/time-ng/";
+      description = "Enhanced timezone handling for Data.Time";
+      license = self.stdenv.lib.licenses.bsd3;
+      platforms = self.ghc.meta.platforms;
+      jailbreak = true; # Can't build correct version of time
+    }) {};
+
+  "timezone-olson" = self.callPackage
+    ({ mkDerivation, base, binary, bytestring, extensible-exceptions
+     , time, timezone-series
+     }:
+     mkDerivation {
+       pname = "timezone-olson";
+       version = "0.1.6";
+       sha256 = "0gg1fq85km5d48966a267q6z0wwl1dz88xq88v0l1jlkwd9jsb0z";
+       buildDepends = [
+         base binary bytestring extensible-exceptions time timezone-series
+       ];
+       homepage = "http://projects.haskell.org/time-ng/";
+       description = "A pure Haskell parser and renderer for binary Olson timezone files";
+       license = self.stdenv.lib.licenses.bsd3;
+       jailbreak = true; # Can't build correct version of time
+     }) {};
+/*
+  "time_1_4_2" = self.callPackage
+    ({ Cabal, deepseq, QuickCheck, test-framework
+    , test-framework-quickcheck2, mkDerivation
+     }:
+    mkDerivation {
+      pname = "time";
+      version = "1.4.2";
+      sha256 = "1kpsak2wka23c8591ry6i1d7hmd54s7iw5n6hpx48jhcxf1w199h";
+      buildDepends = [ deepseq ];
+      testDepends = [
+        Cabal deepseq QuickCheck testFramework testFrameworkQuickcheck2
+      ];
+      homepage = "http://semantic.org/TimeLib/";
+      description = "A time library";
+      license = self.stdenv.lib.licenses.bsd3;
+      platforms = self.ghc.meta.platforms;
+    }) {};
+*/
+  "crypto-numbers" = self.callPackage
+    ({ mkDerivation, byteable, crypto-random, HUnit, QuickCheck, test-framework
+    , test-framework-hunit, test-framework-quickcheck2, vector
+    }:
+    mkDerivation {
+      pname = "crypto-numbers";
+      version = "0.2.2";
+      sha256 = "1ia39al01hb65h23ql0mr5vwzj8slv98i7a22cix8p0b6an1w3vv";
+      buildDepends = [ crypto-random vector ];
+      testDepends = [
+        byteable crypto-random HUnit QuickCheck test-framework
+        test-framework-hunit test-framework-quickcheck2 vector
+      ];
+      homepage = "http://github.com/vincenthz/hs-crypto-numbers";
+      description = "Cryptographic numbers: functions and algorithms";
+      license = self.stdenv.lib.licenses.bsd3;
+      platforms = self.ghc.meta.platforms;
+    }) {};
 }
