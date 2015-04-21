@@ -283,17 +283,6 @@ self: super: {
     version = "0.3.6.6";
   });
 
-  th-expand-syns = overrideCabal super.th-expand-syns (drv: {
-    sha256 = null;
-    src = pkgs.fetchgit {
-      url = git://github.com/DanielSchuessler/th-expand-syns;
-      rev = "25bf93ee8545f34ddd51192b230bbbc94d47039d";
-      sha256 = "8aed02abfa77930f98a2ae9f3b55d905e4db6df5c7774e981289ce70e9ee83a7";
-    };
-    version = "0.3.0.4";
-    jailbreak = true;
-  });
-
   # intervals fails to build on GHC 7.10 due to 'null' being added to Foldable
   intervals = overrideCabal super.intervals (drv: {
     sha256 = null;
@@ -385,18 +374,6 @@ self: super: {
       sed -i 's/^.*trust base.*$//' *.cabal
     '';
   });
-
-  glib = fixGtk2hs "glib" "0.13.0.8" super.glib;
-  gio = forceGhcPkg (dontCheck (dontHaddock (fixGtk2hs "gio" "0.13.0.5" super.gio)));
-  cairo = fixGtk2hs "cairo" "0.13.0.7" super.cairo;
-  pango = fixGtk2hs "pango" "0.13.0.6" super.pango;
-  gtk3 = forceGhcPkg (fixGtk2hs "gtk" "0.13.5" super.gtk3);
-  webkitgtk3 = forceGhcPkg (overrideCabal super.webkitgtk3 (drv: {
-    patchPhase = ''
-      sed -i 's/^import System.Exit$/import System.Exit hiding (die)/' SetupWrapper.hs
-    '';
-    buildDepends = (drv.buildDepends or []) ++ [ pkgs.webkitgtk24x ];
-  }));
 
   # Tests fail on Mac OS 10.10
   QuickCheck = dontCheck super.QuickCheck;
