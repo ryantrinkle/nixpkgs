@@ -1,10 +1,8 @@
 { stdenv, fetchurl, fetchpatch, replace, curl, expat, zlib, bzip2, libarchive
-, useNcurses ? false, ncurses, useQt4 ? false, qt4, wantPS ? false, ps ? null
+, useNcurses ? false, ncurses, useQt4 ? false, qt4, ps
 }:
 
 with stdenv.lib;
-
-assert wantPS -> (ps != null);
 
 let
   os = stdenv.lib.optionalString;
@@ -45,11 +43,19 @@ stdenv.mkDerivation rec {
     #      and http://www.cmake.org/gitweb?p=cmake.git;a=commitdiff;h=c5d9a8283cfac15b4a5a07f18d5eb10c1f388505#patch1
     [./cmake_find_openssl_for_openssl-1.0.1m_and_up.patch];
 
+  postPatch = ''
+    substituteInPlace Modules/Platform/Darwin.cmake \
+      --replace 'list(REMOVE_DUPLICATES _apps_paths)' ''$'if (_apps_paths)\nlist(REMOVE_DUPLICATES _apps_paths)\nendif()'
+  '' + stdenv.lib.optionalString stdenv.isDarwin ''
+    echo 'set(CURSES_CURSES_LIBRARY "${ncurses}/lib/libncursesw.dylib")' >> CompileFlags.cmake
+    echo 'set(CURSES_CURSES_H_PATH "${ncurses}/include")' >> CompileFlags.cmake
+  '';
+
   buildInputs = [ curl expat zlib bzip2 libarchive ]
     ++ optional useNcurses ncurses
     ++ optional useQt4 qt4;
 
-  propagatedBuildInputs = optional wantPS ps;
+  propagatedBuildInputs = optional stdenv.isDarwin ps;
 
   CMAKE_PREFIX_PATH = stdenv.lib.concatStringsSep ":" buildInputs;
 

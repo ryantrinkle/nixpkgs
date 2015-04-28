@@ -2,11 +2,13 @@
 , attr, libcap, vde2, alsaLib, texinfo, libuuid, flex, bison, lzo, snappy
 , libseccomp, libaio, libcap_ng, gnutls
 , makeWrapper
-, pulseSupport ? true, pulseaudio
-, sdlSupport ? true, SDL
+, pulseSupport ? !stdenv.isDarwin, pulseaudio
+, sdlSupport ? !stdenv.isDarwin, SDL
 , vncSupport ? true, libjpeg, libpng
-, spiceSupport ? true, spice, spice_protocol, usbredir
+, spiceSupport ? !stdenv.isDarwin, spice, spice_protocol, usbredir
 , x86Only ? false
+, IOKit ? null
+, libutil
 }:
 
 with stdenv.lib;
@@ -26,30 +28,31 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs =
-    [ python zlib pkgconfig glib ncurses perl pixman attr libcap
-      vde2 texinfo libuuid flex bison makeWrapper lzo snappy libseccomp
-      libcap_ng gnutls
+    [ python zlib pkgconfig glib ncurses perl pixman
+      vde2 texinfo libuuid flex bison makeWrapper lzo snappy
+      gnutls libutil
     ]
     ++ optionals pulseSupport [ pulseaudio ]
     ++ optionals sdlSupport [ SDL ]
     ++ optionals vncSupport [ libjpeg libpng ]
     ++ optionals spiceSupport [ spice_protocol spice usbredir ]
-    ++ optionals (hasSuffix "linux" stdenv.system) [ alsaLib libaio ];
+    ++ optionals stdenv.isLinux [ alsaLib libaio libcap libcap_ng libseccomp attr ]
+    ++ optionals stdenv.isDarwin [ IOKit ];
 
   enableParallelBuilding = true;
 
   patches = [ ./no-etc-install.patch ];
 
   configureFlags =
-    [ "--enable-seccomp"
-      "--smbd=smbd" # use `smbd' from $PATH
+    [ "--smbd=smbd" # use `smbd' from $PATH
       "--audio-drv-list=${audio}"
       "--sysconfdir=/etc"
       "--localstatedir=/var"
     ]
     ++ optional spiceSupport "--enable-spice"
     ++ optional x86Only "--target-list=i386-softmmu,x86_64-softmmu"
-    ++ optional (hasSuffix "linux" stdenv.system) "--enable-linux-aio";
+    ++ optionals stdenv.isLinux [ "--enable-linux-aio" "--enable-seccomp" ]
+    ++ optionals stdenv.isDarwin [ "--cpu=x86_64" "--disable-cocoa" ]; # TODO: enable Cocoa
 
   postInstall =
     ''
@@ -65,6 +68,6 @@ stdenv.mkDerivation rec {
     description = "A generic and open source machine emulator and virtualizer";
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [ viric shlevy eelco ];
-    platforms = platforms.linux;
+    platforms = platforms.linux ++ platforms.darwin;
   };
 }

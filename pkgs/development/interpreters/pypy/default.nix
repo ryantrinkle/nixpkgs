@@ -103,6 +103,7 @@ let
       isPypy = true;
       buildEnv = callPackage ../python/wrapper.nix { python = self; };
       interpreter = "${self}/bin/${executable}";
+      sitePackages = "lib/${libPrefix}/site-packages";
     };
 
     enableParallelBuilding = true;  # almost no parallelization without STM

@@ -216,6 +216,12 @@ stdenv.mkDerivation ({
 
   inherit patches;
 
+  prePatch = if stdenv.isDarwin then
+    ''
+      substituteInPlace gcc/config/darwin-c.c \
+        --replace "add_system_framework_path (str);" ""
+    '' else null;
+
   postPatch =
     if (stdenv.isGNU
         || (libcCross != null                  # e.g., building `gcc.crossDrv'
@@ -286,10 +292,6 @@ stdenv.mkDerivation ({
     ++ (optionals (cross != null) [binutilsCross])
     ++ (optionals langAda [gnatboot])
     ++ (optionals langVhdl [gnat])
-
-    # The builder relies on GNU sed (for instance, Darwin's `sed' fails with
-    # "-i may not be used with stdin"), and `stdenvNative' doesn't provide it.
-    ++ (optional stdenv.isDarwin gnused)
     ;
 
   NIX_LDFLAGS = stdenv.lib.optionalString  stdenv.isSunOS "-lm -ldl";
@@ -300,14 +302,7 @@ stdenv.mkDerivation ({
     export CXXFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $CXXFLAGS_FOR_TARGET"
     export CFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $CFLAGS_FOR_TARGET"
   '' + stdenv.lib.optionalString stdenv.isDarwin ''
-    if SDKROOT=$(/usr/bin/xcrun --show-sdk-path); then
-      configureFlagsArray+=(--with-native-system-header-dir=$SDKROOT/usr/include)
-      makeFlagsArray+=( \
-       CFLAGS_FOR_BUILD=-F$SDKROOT/System/Library/Frameworks \
-       CFLAGS_FOR_TARGET=-F$SDKROOT/System/Library/Frameworks \
-       FLAGS_FOR_TARGET=-F$SDKROOT/System/Library/Frameworks \
-      )
-    fi
+    configureFlagsArray+=(--with-native-system-header-dir=${stdenv.cc.libc}/include)
   '';
 
   dontDisableStatic = true;

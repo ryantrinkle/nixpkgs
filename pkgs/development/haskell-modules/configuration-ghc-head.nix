@@ -54,6 +54,8 @@ self: super: {
     patchPhase = "sed -i -e 's|base >= 3 && < 4.8|base|' utf8-string.cabal";
   });
 
+  bytestring-builder = dontHaddock super.bytestring-builder;
+
   # bos/attoparsec#92
   attoparsec = dontCheck super.attoparsec;
 
@@ -81,4 +83,27 @@ self: super: {
   # The compat library is empty in the presence of mtl 2.2.x.
   mtl-compat = dontHaddock super.mtl-compat;
 
+  # Test suite fails in "/tokens_bytestring_unicode.g.bin".
+  alex = dontCheck super.alex;
+
+  # Test suite hangs silently without consuming any CPU.
+  # https://github.com/ndmitchell/extra/issues/4
+  extra = dontCheck super.extra;
+
+  smallcheck = overrideCabal super.smallcheck (drv: {
+    patchPhase = ''
+      substituteInPlace Test/SmallCheck/Property.hs \
+        --replace 'm ~ n' 'Monad n, m ~ n'
+    '';
+  });
+  stringsearch = appendPatch super.stringsearch (pkgs.fetchpatch {
+    url = "https://bitbucket.org/api/2.0/repositories/dafis/stringsearch/pullrequests/3/patch";
+    sha256 = "1j2a327m3bjl8k4dipc52nlh2ilg94gdcj9hdmdq62yh2drslvgx";
+  });
+  contravariant = overrideCabal super.contravariant (drv: {
+    patchPhase = ''
+      substituteInPlace src/Data/Functor/Contravariant/Compose.hs \
+        --replace '<$>' '`fmap`'
+    '';
+  });
 }

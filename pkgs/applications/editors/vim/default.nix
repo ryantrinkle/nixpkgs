@@ -1,4 +1,4 @@
-{ stdenv, fetchhg, ncurses, gettext, pkgconfig }:
+{ stdenv, fetchhg, ncurses, gettext, pkgconfig, libobjc, CoreServices, Cocoa, Foundation, CoreData }:
 
 stdenv.mkDerivation rec {
   name = "vim-${version}";
@@ -11,15 +11,22 @@ stdenv.mkDerivation rec {
     sha256 = "1z0qarf6a2smab28g9dnxklhfayn85wx48bnddmyhb9kqzjgqgjc";
   };
 
+  __impureHostDeps = [
+    "/System/Library/PrivateFrameworks/UIFoundation.framework/Versions/A/UIFoundation"
+    "/usr/lib/libextension.dylib"
+  ];
+
   enableParallelBuilding = true;
 
-  buildInputs = [ ncurses pkgconfig ];
+  buildInputs = [ ncurses pkgconfig ] ++ stdenv.lib.optionals stdenv.isDarwin [
+    CoreServices Cocoa Foundation CoreData libobjc
+  ];
   nativeBuildInputs = [ gettext ];
 
   configureFlags = [
     "--enable-multibyte"
     "--enable-nls"
-  ];
+  ] ++ stdenv.lib.optional stdenv.isDarwin "--enable-gui=no";
 
   postInstall = "ln -s $out/bin/vim $out/bin/vi";
 

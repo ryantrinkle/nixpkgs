@@ -1,6 +1,6 @@
 { stdenv, fetchurl, ghc, perl, gmp, ncurses, libiconv }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (rec {
   version = "7.8.4";
   name = "ghc-${version}";
 
@@ -45,4 +45,6 @@ stdenv.mkDerivation rec {
     inherit (ghc.meta) license platforms;
   };
 
-}
+} // stdenv.lib.optionalAttrs stdenv.isDarwin {
+  patches = [ ./hpc-7.8.4.patch ];
+})

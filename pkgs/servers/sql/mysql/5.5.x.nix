@@ -11,11 +11,6 @@ stdenv.mkDerivation rec {
     sha256 = "0jn7py2wsq78rwi7vfihxs6z3h5hr338b9g46fl3z2g4ddki4yw8";
   };
 
-  preConfigure = stdenv.lib.optional stdenv.isDarwin ''
-    ln -s /bin/ps $TMPDIR/ps
-    export PATH=$PATH:$TMPDIR
-  '';
-
   buildInputs = [ cmake bison ncurses openssl readline zlib ]
      ++ stdenv.lib.optional stdenv.isDarwin perl;
 

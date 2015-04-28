@@ -1225,7 +1225,9 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   hflags = callPackage ../development/libraries/haskell/hflags {};
 
-  hfsevents = callPackage ../development/libraries/haskell/hfsevents {};
+  hfsevents = callPackage ../development/libraries/haskell/hfsevents {
+    inherit (pkgs.darwin.apple_sdk.frameworks) CoreServices;
+  };
 
   HFuse = callPackage ../development/libraries/haskell/HFuse {};
 
@@ -3228,7 +3230,9 @@ self : let callPackage = x : y : modifyPrio (newScope self x y); in
 
   githubBackup = callPackage ../applications/version-management/git-and-tools/github-backup {};
 
-  hobbes = callPackage ../development/tools/haskell/hobbes {};
+  hobbes = callPackage ../development/tools/haskell/hobbes {
+    inherit (pkgs.darwin.apple_sdk.frameworks) Cocoa AppKit CoreData;
+  };
 
   jailbreakCabal = callPackage ../development/tools/haskell/jailbreak-cabal {};
 

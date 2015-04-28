@@ -70,4 +70,9 @@ self: super: {
   # Needs hashable on pre 7.10.x compilers.
   nats = addBuildDepend super.nats self.hashable;
 
+  # these conditionally depend on tagged
+  contravariant = addBuildDepend super.contravariant self.tagged;
+
+  # old haddock can't handle reflection.cabal's code blocks
+  reflection = dontHaddock (addBuildDepend super.reflection self.tagged);
 }

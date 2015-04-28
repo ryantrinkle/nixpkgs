@@ -15,6 +15,7 @@ cabal.mkDerivation (self: {
     filepath HUnit shelly testFramework testFrameworkHunit text
     transformers
   ];
+  doCheck = !self.stdenv.isDarwin;
   meta = {
     homepage = "https://github.com/haskell/c2hs";
     description = "C->Haskell FFI tool that gives some cross-language type safety";

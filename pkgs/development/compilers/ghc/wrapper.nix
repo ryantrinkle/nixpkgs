@@ -1,4 +1,4 @@
-{ stdenv, ghc, makeWrapper, coreutils, writeScript }:
+{ stdenv, ghc, makeWrapper, coreutils, writeScript, libiconv }:
 
 let
   ghc761OrLater = !stdenv.lib.versionOlder ghc.version "7.6.1";
@@ -59,7 +59,7 @@ stdenv.mkDerivation {
 
     mkdir -p $out/bin
     for prg in ghc ghci ghc-${ghc.version} ghci-${ghc.version}; do
-      makeWrapper $ghc/bin/$prg $out/bin/$prg --add-flags "\$(${GHCGetPackages} ${ghc.version} \"\$(dirname \$0)\")"
+      makeWrapper $ghc/bin/$prg $out/bin/$prg --add-flags "\$(${GHCGetPackages} ${ghc.version} \"\$(dirname \$0)\")" --prefix DYLD_LIBRARY_PATH : "${libiconv}/lib:${stdenv.libc}/lib"
     done
     for prg in runghc runhaskell; do
       makeWrapper $ghc/bin/$prg $out/bin/$prg --add-flags "\$(${GHCGetPackages} ${ghc.version} \"\$(dirname \$0)\" \" ${packageDBFlag} --ghc-arg=\")"

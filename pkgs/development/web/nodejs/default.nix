@@ -1,13 +1,9 @@
 { stdenv, fetchurl, openssl, python, zlib, libuv, v8, utillinux, http-parser
-, pkgconfig, runCommand, which, unstableVersion ? false
+, pkgconfig, runCommand, which, unstableVersion ? stdenv.isDarwin
+, libtool, CoreServices, ApplicationServices
 }:
 
 let
-  dtrace = runCommand "dtrace-native" {} ''
-    mkdir -p $out/bin
-    ln -sv /usr/sbin/dtrace $out/bin
-  '';
-
   version = "0.12.0";
 
   deps = {
@@ -35,7 +31,13 @@ in stdenv.mkDerivation {
     sha256 = "0cifd2qhpyrbxx71a4hsagzk24qas8m5zvwcyhx69cz9yhxf404p";
   };
 
-  configureFlags = concatMap sharedConfigureFlags (builtins.attrNames deps);
+  __propagatedImpureHostDeps = [
+    "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation"
+    "/usr/lib/libicucore.A.dylib"
+    "/usr/lib/libz.1.dylib"
+  ];
+
+  configureFlags = concatMap sharedConfigureFlags (builtins.attrNames deps) ++ [ "--without-dtrace" ];
 
   prePatch = ''
     sed -e 's|^#!/usr/bin/env python$|#!${python}/bin/python|g' -i configure
@@ -47,10 +49,16 @@ in stdenv.mkDerivation {
     (cd tools/gyp; patch -Np1 -i ${../../python-modules/gyp/no-darwin-cflags.patch})
   '' else null;
 
+  preBuild = if stdenv.isDarwin then ''
+    sed -e 's|^#!/usr/bin/env python$|#!${python}/bin/python|g' -i out/gyp-mac-tool
+  '' else null;
+
   buildInputs = [ python which ]
     ++ (optional stdenv.isLinux utillinux)
-    ++ optionals stdenv.isDarwin [ pkgconfig openssl dtrace ];
+    ++ optionals stdenv.isDarwin [ pkgconfig openssl libtool CoreServices ApplicationServices ];
   setupHook = ./setup-hook.sh;
+
+  enableParallelBuilding = true;
 
   passthru.interpreterName = "nodejs";
 

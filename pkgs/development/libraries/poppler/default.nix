@@ -33,7 +33,9 @@ stdenv.mkDerivation rec {
     ]
     ++ stdenv.lib.optional (!utils) "--disable-utils";
 
-  enableParallelBuilding = true;
+    cmakeFlags = "-DENABLE_XPDF_HEADERS=ON -DENABLE_LIBCURL=ON -DENABLE_ZLIB=ON"
+      # otherwise, cmake finds /Library/Frameworks/freetype.framework
+      + stdenv.lib.optionalString stdenv.isDarwin " -DCMAKE_FIND_FRAMEWORK=NEVER";
 
   meta = {
     homepage = http://poppler.freedesktop.org/;

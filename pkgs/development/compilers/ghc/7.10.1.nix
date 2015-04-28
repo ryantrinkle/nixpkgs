@@ -32,6 +32,7 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs = [ ghc perl ];
+  patches = [ ./osx-dylib-resolver.patch ];
 
   enableParallelBuilding = true;
 

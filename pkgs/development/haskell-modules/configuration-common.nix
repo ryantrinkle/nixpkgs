@@ -10,6 +10,11 @@ self: super: {
   Cabal_1_22_3_0 = dontCheck super.Cabal_1_22_3_0;
   cabal-install = dontCheck (super.cabal-install.override { Cabal = self.Cabal_1_22_3_0; });
 
+  # These fail in the darwin sandbox.
+  network = dontCheckOn "x86_64-darwin" super.network;
+  yaml = dontCheckOn "x86_64-darwin" super.yaml;
+  http-reverse-proxy = dontCheckOn "x86_64-darwin" super.http-reverse-proxy;
+
   # Break infinite recursions.
   digest = super.digest.override { inherit (pkgs) zlib; };
   Dust-crypto = dontCheck super.Dust-crypto;
@@ -40,11 +45,11 @@ self: super: {
   zeromq4-haskell = super.zeromq4-haskell.override { zeromq = pkgs.zeromq4; };
 
   # These changes are required to support Darwin.
-  git-annex = (disableSharedExecutables super.git-annex).override {
+  git-annex = addBuildDepends((disableSharedExecutables super.git-annex).override {
     dbus = if pkgs.stdenv.isLinux then self.dbus else null;
     fdo-notify = if pkgs.stdenv.isLinux then self.fdo-notify else null;
     hinotify = if pkgs.stdenv.isLinux then self.hinotify else self.fsnotify;
-  };
+  }) (pkgs.lib.optionals pkgs.stdenv.isDarwin [pkgs.darwin.apple_sdk.frameworks.Cocoa]);
 
   # CUDA needs help finding the SDK headers and libraries.
   cuda = overrideCabal super.cuda (drv: {
@@ -155,6 +160,15 @@ self: super: {
     patchPhase = "sed -i -e 's|random.*==.*|random|' -e 's|text.*>=.*,|text,|' -e s'|terminfo == .*|terminfo|' darcs.cabal";
   });
 
+  # clang has libc++
+  double-conversion = if pkgs.stdenv.isDarwin
+    then overrideCabal super.double-conversion (drv: {
+      patchPhase = ''
+        sed -i "s/stdc++/c++/" double-conversion.cabal
+      '';
+    })
+    else super.double-conversion;
+
   # The test suite imposes too narrow restrictions on the version of
   # Cabal that can be used to build this package.
   cabal-test-quickcheck = dontCheck super.cabal-test-quickcheck;
@@ -175,7 +189,19 @@ self: super: {
 
   # cabal2nix likes to generate dependencies on hinotify when hfsevents is really required
   # on darwin: https://github.com/NixOS/cabal2nix/issues/146
-  hinotify = if pkgs.stdenv.isDarwin then super.hfsevents else super.hinotify;
+  hinotify = if pkgs.stdenv.isDarwin then self.hfsevents else super.hinotify;
+
+  # c2hs is hard-coded to look for gcc, which it won't find on pure-darwin;
+  # this is fine if we don't run the tests, since many of the packages which
+  # depend on c2hs do not find this to be a problem.  The proper answer is to
+  # either build gcc just to satisfy the dependencies, or change the tests to
+  # work with clang.
+  c2hs = if pkgs.stdenv.isDarwin then dontCheck super.c2hs else super.c2hs;
+
+  hfsevents =
+    if pkgs.stdenv.isDarwin
+    then addBuildDepends super.hfsevents [pkgs.darwin.apple_sdk.frameworks.CoreServices]
+    else super.hfsevents;
 
   # FSEvents API is very buggy and tests are unreliable. See
   # http://openradar.appspot.com/10207999 and similar issues
@@ -450,6 +476,7 @@ self: super: {
   webdriver-angular = dontCheck super.webdriver-angular;
   webdriver = dontCheck super.webdriver;
   xsd = dontCheck super.xsd;
+  yesod-pagination = dontCheck super.yesod-pagination;
 
   # https://bitbucket.org/wuzzeb/webdriver-utils/issue/1/hspec-webdriver-101-cant-compile-its-test
   hspec-webdriver = markBroken super.hspec-webdriver;
@@ -729,6 +756,10 @@ self: super: {
 
   # https://github.com/haskell/haddock/issues/378
   haddock-library = dontCheck super.haddock-library;
+
+  system-fileio = if pkgs.stdenv.isDarwin
+    then dontCheck super.system-fileio
+    else super.system-fileio;
 
   # Already fixed in upstream darcs repo.
   xmonad-contrib = overrideCabal super.xmonad-contrib (drv: {

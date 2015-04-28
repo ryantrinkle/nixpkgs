@@ -9,7 +9,6 @@ cabal.mkDerivation (self: {
   sha256 = "1s5xm205k3pvndn21vd0y9mnggrm91psf64mw445r08xasi658vl";
   isLibrary = true;
   isExecutable = true;
-  buildTools = [ gcc ];
   buildDepends = [
     binary deepseq extra filepath hashable jsFlot jsJquery random time
     transformers unorderedContainers utf8String

@@ -45,8 +45,8 @@ in stdenv.mkDerivation rec {
     "-DBUILD_SHARED_LIBS=ON"
     "-DLLVM_BINUTILS_INCDIR=${binutils}/include"
   ] ++ stdenv.lib.optionals ( isDarwin) [
-    "-DCMAKE_CXX_FLAGS=-stdlib=libc++"
     "-DCAN_TARGET_i386=false"
+    "-DCMAKE_CXX_FLAGS=-stdlib=libc++"
   ];
 
   postBuild = ''

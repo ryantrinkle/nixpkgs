@@ -15,16 +15,14 @@ let
 
   self = {
     llvm = callPackage ./llvm.nix {
-      inherit compiler-rt_src stdenv;
+      inherit compiler-rt_src;
     };
 
     clang-unwrapped = callPackage ./clang {
-      inherit clang-tools-extra_src stdenv;
+      inherit clang-tools-extra_src;
     };
 
     clang = wrapCC self.clang-unwrapped;
-
-    stdenv = overrideCC stdenv self.clang;
 
     lldb = callPackage ./lldb.nix {};
 
@@ -32,4 +30,4 @@ let
 
     libcxxabi = callPackage ./libc++abi.nix {};
   };
-in self
+in self // { stdenv = overrideCC stdenv self.clang; }

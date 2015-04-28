@@ -3,6 +3,7 @@
 { cabal, aeson, aesonQq, attoparsec, conduit, enclosedExceptions
 , filepath, hspec, hspecExpectations, HUnit, resourcet, scientific
 , text, transformers, unorderedContainers, vector
+, stdenv
 }:
 
 cabal.mkDerivation (self: {
@@ -19,6 +20,7 @@ cabal.mkDerivation (self: {
     aeson aesonQq conduit hspec hspecExpectations HUnit resourcet text
     transformers unorderedContainers vector
   ];
+  doCheck = !stdenv.isDarwin;
   meta = {
     homepage = "http://github.com/snoyberg/yaml/";
     description = "Support for parsing and rendering YAML documents";

@@ -1,4 +1,4 @@
-{stdenv, fetchurl, ghc, perl, gmp, ncurses}:
+{stdenv, fetchurl, ghc, perl, gmp, ncurses, libiconv}:
 
 stdenv.mkDerivation rec {
   version = "6.12.3";

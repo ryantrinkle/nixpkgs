@@ -76,7 +76,10 @@ let
 
   defaultConfigureFlags = [
     "--verbose" "--prefix=$out" "--libdir=\\$prefix/lib/\\$compiler" "--libsubdir=\\$pkgid"
-    "--with-gcc=$CC"            # Clang won't work without that extra information.
+    (if stdenv.lib.versionOlder ghc.version "7.8" && stdenv.isDarwin
+      then "--with-gcc=${./gcc-clang-wrapper.sh}"
+      # Clang won't work without that extra information.
+      else "--with-gcc=$CC")
     "--package-db=$packageConfDir"
     (optionalString (enableSharedExecutables && stdenv.isLinux) "--ghc-option=-optl=-Wl,-rpath=$out/lib/${ghc.name}/${pname}-${version}")
     (optionalString (enableSharedExecutables && stdenv.isDarwin) "--ghc-option=-optl=-Wl,-headerpad_max_install_names")
@@ -225,7 +228,8 @@ stdenv.mkDerivation ({
     ${optionalString (doHaddock && hasActiveLibrary) ''
       ./Setup haddock --html \
         ${optionalString doHoogle "--hoogle"} \
-        ${optionalString (hasActiveLibrary && hyperlinkSource) "--hyperlink-source"}
+        ${optionalString (hasActiveLibrary && hyperlinkSource) "--hyperlink-source"} \
+        ${optionalString (stdenv.lib.versionOlder "6.12" ghc.version) "--ghc-options=-optP-P"}
     ''}
     runHook postHaddock
   '';

@@ -94,7 +94,7 @@ stdenv.mkDerivation rec {
     ./MathInstaller -auto -createdir=y -execdir=$out/bin -targetdir=$out/libexec/Mathematica -platforms=${platform} -silent
   '';
 
-  preFixup = ''
+  preFixup = stdenv.lib.optionalString stdenv.isLinux ''
     echo "=== PatchElfing away ==="
     find $out/libexec/Mathematica/SystemFiles -type f -perm +100 | while read f; do
       type=$(readelf -h "$f" 2>/dev/null | grep 'Type:' | sed -e 's/ *Type: *\([A-Z]*\) (.*/\1/')

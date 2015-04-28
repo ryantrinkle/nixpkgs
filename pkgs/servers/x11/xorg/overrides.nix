@@ -87,6 +87,11 @@ in
     patches = [ ./libpciaccess-apple.patch ];
   };
 
+  libAppleWM = attrs@{ buildInputs ? [], ... } : attrs // {
+    buildInputs = buildInputs ++ stdenv.lib.optionals stdenv.isDarwin
+      (with args.frameworks; [ CoreServices ApplicationServices ]);
+  };
+
   libX11 = attrs: attrs // {
     preConfigure = setMalloc0ReturnsNullCrossCompiling + ''
       sed 's,^as_dummy.*,as_dummy="\$PATH",' -i configure
@@ -270,7 +275,9 @@ in
   xorgserver = with xorg; attrs: attrs //
     (let
       version = (builtins.parseDrvName attrs.name).version;
-      commonBuildInputs = attrs.buildInputs ++ [ xtrans ];
+      commonBuildInputs = attrs.buildInputs ++ [ xtrans ] ++
+        stdenv.lib.optionals stdenv.isDarwin
+          (with args.frameworks; [ Carbon Foundation Cocoa CoreData CoreAudio args.libobjc args.Xplugin ]);
       commonPropagatedBuildInputs = [
         args.zlib args.mesa args.dbus.libs
         xf86bigfontproto glproto xf86driproto
