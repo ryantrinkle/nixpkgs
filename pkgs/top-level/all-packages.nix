@@ -14364,6 +14364,8 @@ let
 
   zdfmediathk = callPackage ../applications/video/zdfmediathk { };
 
+  zopfli = callPackage ../tools/compression/zopfli { };
+
   myEnvFun = import ../misc/my-env {
     inherit substituteAll pkgs;
     inherit (stdenv) mkDerivation;
