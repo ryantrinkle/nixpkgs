@@ -41,22 +41,22 @@ let
   version = "0.1.0";
   ghcjsBoot = fetchgit {
     url = git://github.com/ghcjs/ghcjs-boot.git;
-    rev = "ab8765edcb507b8b810e3c324fd5bd5af2b69d8f"; # 7.10 branch
-    sha256 = "63b69a1d131cf3c7088e0f28d14750c81361dcc276fa113ad80dcccf73df5343";
+    rev = "97e9fdee3fba5b7d987ea8e26e1117ec688579b8"; # improved-base branch
+    sha256 = "8bd9757ced69793b6becf80cf67e7232c437ab3b34e674d99e7e0be64c43e084";
     fetchSubmodules = true;
   };
   shims = fetchgit {
     url = git://github.com/ghcjs/shims.git;
-    rev = "6ada4bf1a084d1b80b993303d35ed863d219b031"; # master branch
-    sha256 = "0dhfnjj3rxdbb2m1pbnjc2yp4xcgsfdrsinljgdmg0hpqkafp4vc";
+    rev = "628d878ed83956f8ab7d71be4bb8ca7c60458368"; # improved-base branch
+    sha256 = "333dcdd1d686bb3d2c8f499aa5f55ae0dad86d69c429dbdb11c7534ab35b7c69";
   };
 in mkDerivation (rec {
   pname = "ghcjs";
   inherit version;
   src = fetchgit {
     url = git://github.com/ghcjs/ghcjs.git;
-    rev = "64c3768186d73d8c185b42d4d14dfb943919ee56"; # master branch
-    sha256 = "1w7rwcqzihg6h2j0khar7kjn8vdjg9ngjk6bndpiqcgf3kwfmvhf";
+    rev = "0f49ed8ed76ae69161e1e8596c06584013e46a1c"; # improved-base branch
+    sha256 = "0agwcn08s23say9cp148dw8n3hyvyyv3k3r22y1r6yz6x77z0zbh";
   };
   isLibrary = true;
   isExecutable = true;
