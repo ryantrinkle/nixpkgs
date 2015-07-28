@@ -53,7 +53,8 @@ stdenv.mkDerivation rec {
 
   NIX_CFLAGS_COMPILE = "-Wno-error=cpp";
 
-  enableParallelBuilding = true;
+  # fails to find lex_token.h sometimes
+  enableParallelBuilding = false;
 
   outputs = [ "out" "lib" ];
 
