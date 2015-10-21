@@ -1,0 +1,209 @@
+name: cabal2nix
+version: 20150423
+cabal-version: >= 1.10
+license: BSD3
+license-file: LICENSE
+build-type: Simple
+copyright: Copyright (c) 2011-2015 by Peter Simons et al
+author: Peter Simons, Andres Loeh, Benno Fünfstück, Mateusz Kowalczyk, Mathijs Kwik, Shea Levy, Nikolay Amiantov, Aycan iRiCAN, Dmitry Malikov, John Wiegley, Corey O'Connor, Cray Elliott, Eric Seidel, Gergely Risko, John Albietz, Mark Wotton, Oliver Charles, Pascal Wittmann, Patrick John Wheeler, Raymond Gauthier, Tom Hunger, danbst, karsten gebbert, Александр Цамутали
+maintainer: Peter Simons <simons@cryp.to>
+stability: Experimental
+homepage: http://github.com/NixOS/cabal2nix/
+bug-reports: http://github.com/NixOS/cabal2nix/issues
+synopsis: Convert Cabal files into Nix build instructions.
+description:
+  Convert Cabal files into Nix build instructions.
+category: Distribution
+tested-with:
+  GHC == 7.10.1
+extra-source-files:
+  README.md
+
+Library
+  exposed-modules:
+    Cabal2Nix.CorePackages
+    Cabal2Nix.Flags
+    Cabal2Nix.Generate
+    Cabal2Nix.Hackage
+    Cabal2Nix.License
+    Cabal2Nix.Name
+    Cabal2Nix.Normalize
+    Cabal2Nix.Package
+    Cabal2Nix.PostProcess
+    Cabal2Nix.Version
+    Distribution.Nixpkgs.Fetch
+    Distribution.Nixpkgs.Haskell
+    Distribution.Nixpkgs.License
+    Distribution.Nixpkgs.Meta
+    Distribution.Nixpkgs.PackageMap
+    Distribution.Nixpkgs.Util.PrettyPrinting
+    Distribution.Nixpkgs.Util.Regex
+    Language.Nix.Identifier
+    Language.Nix.Path
+  hs-source-dirs:
+    src
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+  build-depends:
+      base < 5
+    , aeson
+    , bytestring
+    , Cabal >= 1.22.2
+    , containers
+    , deepseq-generics
+    , directory
+    , filepath
+    , hackage-db
+    , lens
+    , monad-par
+    , monad-par-extras
+    , mtl
+    , pretty >= 1.1.2
+    , process
+    , regex-posix
+    , SHA
+    , split
+    , transformers
+    , utf8-string
+
+source-repository head
+  type: git
+  location: https://github.com/NixOS/cabal2nix.git
+
+Executable cabal2nix
+  main-is: cabal2nix.hs
+  hs-source-dirs:
+    src
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+  build-depends:
+      base < 5
+    , aeson
+    , bytestring
+    , Cabal >= 1.22.2
+    , containers
+    , deepseq-generics
+    , directory
+    , filepath
+    , hackage-db
+    , lens
+    , monad-par
+    , monad-par-extras
+    , mtl
+    , pretty >= 1.1.2
+    , process
+    , regex-posix
+    , SHA
+    , split
+    , transformers
+    , utf8-string
+
+Executable hackage2nix
+  main-is: hackage2nix.hs
+  buildable: False
+  ghc-options:
+    -threaded
+    -rtsopts
+    -with-rtsopts=-N
+  hs-source-dirs:
+    src
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+  build-depends:
+      base < 5
+    , aeson
+    , bytestring
+    , Cabal >= 1.22.2
+    , containers
+    , deepseq-generics
+    , directory
+    , filepath
+    , hackage-db
+    , lens
+    , monad-par
+    , monad-par-extras
+    , mtl
+    , pretty >= 1.1.2
+    , process
+    , regex-posix
+    , SHA
+    , split
+    , transformers
+    , utf8-string
+
+Test-Suite spec
+  type: exitcode-stdio-1.0
+  main-is: spec.hs
+  hs-source-dirs:
+    test
+  build-depends:
+      deepseq
+    , doctest
+    , hspec
+    , QuickCheck
+  hs-source-dirs:
+    src
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+  build-depends:
+      base < 5
+    , aeson
+    , bytestring
+    , Cabal >= 1.22.2
+    , containers
+    , deepseq-generics
+    , directory
+    , filepath
+    , hackage-db
+    , lens
+    , monad-par
+    , monad-par-extras
+    , mtl
+    , pretty >= 1.1.2
+    , process
+    , regex-posix
+    , SHA
+    , split
+    , transformers
+    , utf8-string
+
+Test-Suite doctest
+  type: exitcode-stdio-1.0
+  main-is: doctest.hs
+  hs-source-dirs:
+    test
+  build-depends:
+      deepseq
+    , doctest
+    , hspec
+    , QuickCheck
+  hs-source-dirs:
+    src
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+  build-depends:
+      base < 5
+    , aeson
+    , bytestring
+    , Cabal >= 1.22.2
+    , containers
+    , deepseq-generics
+    , directory
+    , filepath
+    , hackage-db
+    , lens
+    , monad-par
+    , monad-par-extras
+    , mtl
+    , pretty >= 1.1.2
+    , process
+    , regex-posix
+    , SHA
+    , split
+    , transformers
+    , utf8-string

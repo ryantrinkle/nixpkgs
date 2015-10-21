@@ -11,8 +11,7 @@ mkDerivation rec {
   src = fetchgit {
     url = "http://github.com/NixOS/cabal2nix.git";
     rev = "8cfe61c222bd2750ef29f991a2a3ee353444e458";
-    sha256 = "0v4pdpr1yn92h6nmx28ph2pal15zrfy6s5nys27ylqds8i36wfca";
-    deepClone = true;
+    sha256 = "03qb2sv9k4ylkzqywhkimvlwxr2j243gwj6ja5mhh651n6sdh595";
   };
   isExecutable = true;
   enableSharedLibraries = false;
@@ -29,7 +28,11 @@ mkDerivation rec {
     split transformers utf8-string
   ];
   buildTools = [ gitMinimal makeWrapper ];
-  preConfigure = "runhaskell $setupCompileFlags generate-cabal-file --release >cabal2nix.cabal";
+  preConfigure = ''
+    ln -s ${./cabal2nix.cabal} cabal2nix.cabal
+    ln -s ${./Cabal2Nix.Version.hs} src/Cabal2Nix/Version.hs
+    ln -s ${./doctest.hs} test/doctest.hs
+  '';
   postInstall = ''
     exe=$out/libexec/${pname}-${version}/cabal2nix
     install -D $out/bin/cabal2nix $exe
