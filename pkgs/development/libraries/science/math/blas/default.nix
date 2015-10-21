@@ -1,11 +1,8 @@
 { stdenv, fetchurl, gfortran }:
 
 stdenv.mkDerivation {
-  name = "blas-20110419";
-  src = fetchurl {
-    url = "http://www.netlib.org/blas/blas.tgz";
-    sha256 = "1d931d91byv2svydpj2ipjh1f2sm1h9ns8ik2w5fwaa8qinxz1za";
-  };
+  name = "blas-3.5.0";
+  src = ./blas.3.5.0.tgz;
 
   buildInputs = [gfortran];
 
