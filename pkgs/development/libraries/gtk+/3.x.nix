@@ -3,6 +3,7 @@
 , xlibs, x11, wayland, libxkbcommon, epoxy
 , xineramaSupport ? stdenv.isLinux
 , cupsSupport ? stdenv.isLinux, cups ? null
+, darwin
 }:
 
 assert xineramaSupport -> xlibs.libXinerama != null;
@@ -27,6 +28,7 @@ stdenv.mkDerivation rec {
   propagatedBuildInputs = with xlibs; with stdenv.lib;
     [ expat glib cairo pango gdk_pixbuf atk at_spi2_atk libXrandr libXrender libXcomposite libXi libXcursor ]
     ++ optionals stdenv.isLinux [ wayland ]
+    ++ optional stdenv.isDarwin [ darwin.apple_sdk.frameworks.AppKit darwin.apple_sdk.frameworks.Cocoa ]
     ++ optional xineramaSupport libXinerama
     ++ optional cupsSupport cups;
 
@@ -36,6 +38,12 @@ stdenv.mkDerivation rec {
   preConfigure = "sed '/^SRC_SUBDIRS /s/demos//' -i Makefile.in";
 
   enableParallelBuilding = true;
+
+  configureFlags = if stdenv.isDarwin
+    then [ "--disable-debug" "--disable-dependency-tracking"
+                          "--disable-glibtest" "--with-gdktarget=quartz" "--enable-quartz-backend"
+                          ]
+    else [];
 
   postInstall = "rm -rf $out/share/gtk-doc";
 

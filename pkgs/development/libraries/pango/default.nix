@@ -29,6 +29,10 @@ stdenv.mkDerivation rec {
   # .../bin/sh: line 5: 14823 Abort trap: 6 srcdir=. PANGO_RC_FILE=./pangorc ${dir}$tst
   # FAIL: testiter
 
+  configureFlags = if stdenv.isDarwin then [
+    "--without-x"
+  ] else [];
+
   postInstall = "rm -rf $out/share/gtk-doc";
 
   meta = with stdenv.lib; {

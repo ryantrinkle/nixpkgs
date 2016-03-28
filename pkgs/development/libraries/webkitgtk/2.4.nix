@@ -1,12 +1,14 @@
 { stdenv, fetchurl, perl, python, ruby, bison, gperf, flex
 , pkgconfig, which, gettext, gobjectIntrospection
-, gtk2, gtk3, wayland, libwebp, enchant, sqlite
-, libxml2, libsoup, libsecret, libxslt, harfbuzz
+, gtk2, gtk3, libwebp, enchant, sqlite
+, libxml2, libsoup, libxslt, harfbuzz
 , gst-plugins-base
 , withGtk2 ? false
 , enableIntrospection ? true
+, readline, libedit
 }:
 
+with stdenv.lib;
 stdenv.mkDerivation rec {
   name = "webkitgtk-${version}";
   version = "2.4.9";
@@ -29,15 +31,28 @@ stdenv.mkDerivation rec {
   prePatch = ''
     patchShebangs Tools/gtk
   '';
-  patches = [ ./webcore-svg-libxml-cflags.patch ];
+  patches = [
+    ./webcore-svg-libxml-cflags.patch
+  ] ++ optionals stdenv.isDarwin [
+    ./impure-icucore.patch
+    ./quartz-webcore.patch
+    ./libc++.patch
+    ./plugin-none.patch
+  ];
 
   configureFlags = with stdenv.lib; [
+    "--disable-x11-target"
+    "--enable-quartz-target"
+    "--disable-credential-storage"
     "--disable-geolocation"
-    (optionalString enableIntrospection "--enable-introspection")
+    "--disable-webkit2"
+    "--disable-web-audio"
+    (optionalString (enableIntrospection && !stdenv.isDarwin) "--enable-introspection")
   ] ++ stdenv.lib.optional withGtk2 [
     "--with-gtk=2.0"
-    "--disable-webkit2"
   ];
+
+  NIX_CFLAGS_COMPILE = "-DU_NOEXCEPT=";
 
   dontAddDisableDepTrack = true;
 
@@ -47,9 +62,10 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    gtk2 wayland libwebp enchant
-    libxml2 libsecret libxslt
+    gtk2 libwebp enchant
+    libxml2 libxslt
     gst-plugins-base sqlite
+    readline libedit
   ];
 
   propagatedBuildInputs = [
