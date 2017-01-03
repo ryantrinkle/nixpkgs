@@ -1,0 +1,11 @@
+diff --git a/Source/WebKit2/Shared/WebKit2Initialize.cpp b/Source/WebKit2/Shared/WebKit2Initialize.cpp
+index 6e81d8a..374c43d 100644
+--- a/Source/WebKit2/Shared/WebKit2Initialize.cpp
++++ b/Source/WebKit2/Shared/WebKit2Initialize.cpp
+@@ -51,6 +51,7 @@ void InitializeWebKit2()
+ #endif
+ 
+     JSC::initializeThreading();
++    WTF::initializeThreading();
+     WTF::initializeMainThread();
+     RunLoop::initializeMainRunLoop();
