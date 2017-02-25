@@ -1,4 +1,5 @@
-{ buildPythonPackage
+{ stdenv
+, buildPythonPackage
 , fetchurl
 
 , Babel
@@ -44,14 +45,25 @@
 , sqlparse
 }:
 
-buildPythonPackage rec {
+let
   name = "pgadmin4-${version}";
   version = "1.2";
 
-  src = fetchurl {
-    url = "https://ftp.postgresql.org/pub/pgadmin3/pgadmin4/v${version}/source/${name}.tar.gz";
-    sha256 = "01wiscicmy0y75ajidzgy8danhs07kyp1mhb27r84250qjgjbbq7";
+  src = stdenv.mkDerivation {
+    name = name + "-" + version + "-src";
+    src = fetchurl {
+      url = "https://ftp.postgresql.org/pub/pgadmin3/pgadmin4/v${version}/source/${name}.tar.gz";
+      sha256 = "01wiscicmy0y75ajidzgy8danhs07kyp1mhb27r84250qjgjbbq7";
+    };
+    buildCommand = ''
+      unpackPhase
+      cp -r pgadmin4-1.2/web $out
+    '';
   };
+in
+
+buildPythonPackage {
+  inherit name version src;
 
   buildInputs = [
     Babel
