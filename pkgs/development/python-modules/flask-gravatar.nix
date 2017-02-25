@@ -16,7 +16,7 @@ buildPythonPackage rec {
   version = "0.4.2";
 
   src = fetchurl {
-    url = "https://pypi.python.org/packages/b3/7c/162f5b98b88d2088a1a451ae4a354c725c700246ae69cb8cc26175508e65/Flask-Gravatar-0.4.2.tar.gz";
+    url = "https://pypi.python.org/packages/b3/7c/162f5b98b88d2088a1a451ae4a354c725c700246ae69cb8cc26175508e65/${name}.tar.gz";
     sha256 = "1lxci96axpcszv99k6fgizh94d5dva9n2917f3isqi8jl8kx939i";
   };
 
