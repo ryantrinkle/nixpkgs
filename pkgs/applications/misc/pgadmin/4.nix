@@ -10,15 +10,15 @@
 , flask
 , flaskbabel
 , flask_gravatar
-, flask-HTMLmin   #!
+, flask_htmlmin
 , flask_login
-, flask-Mail      #!
+, flask_mail
 , flask_principal
-, flask-Security  #!
+#, flask-Security  #!
 , flask_sqlalchemy
 , flask_wtf
 , html5lib
-, importlib
+#, importlib
 , itsdangerous
 , jinja2
 , linecache2
@@ -63,15 +63,15 @@ buildPythonPackage rec {
     flask
     flaskbabel
     flask_gravatar
-    flask-HTMLmin   #!
+    flask_htmlmin
     flask_login
-    flask-Mail      #!
+    flask_mail
     flask_principal
-    flask-Security  #!
+    # flask-Security  #!
     flask_sqlalchemy
     flask_wtf
     html5lib
-    importlib
+    # importlib
     itsdangerous
     jinja2
     linecache2
