@@ -11472,26 +11472,7 @@ in {
 
   flask_ldap_login = callPackage ../development/python-modules/flask-ldap-login.nix { };
 
-  flask_mail = buildPythonPackage rec {
-    version = "0.9.1";
-    name = "Flask-Mail-${version}";
-
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/05/2f/6a545452040c2556559779db87148d2a85e78a26f90326647b51dc5e81e9/Flask-Mail-0.9.1.tar.gz";
-      sha256 = "22e5eb9a940bf407bcf30410ecc3708f3c56cc44b29c34e1726fe85006935f41";
-    };
-
-    propagatedBuildInputs = with self; [
-      flask
-      blinker
-    ];
-
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = licenses.bsdOriginal;
-      description = "Flask extension for sending email";
-    };
-  };
+  flask_mail = callPackage ../development/python-modules/flask-mail.nix { };
 
   flask_migrate = buildPythonPackage rec {
     name = "Flask-Migrate-${version}";
