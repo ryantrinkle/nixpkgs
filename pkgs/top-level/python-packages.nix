@@ -11466,6 +11466,8 @@ in {
 
   htmlmin = callPackage ../development/python-modules/htmlmin.nix { };
 
+  flask_htmlmin = callPackage ../development/python-modules/flask-htmlmin.nix { };
+
   flask_login = callPackage ../development/python-modules/flask-login.nix { };
 
   flask_ldap_login = callPackage ../development/python-modules/flask-ldap-login.nix { };
