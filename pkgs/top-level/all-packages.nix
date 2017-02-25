@@ -18101,6 +18101,8 @@ with pkgs;
 
   pgadmin = callPackage ../applications/misc/pgadmin { };
 
+  pgadmin4 = pythonPackages.pgadmin4;
+
   pgf = pgf2;
 
   # Keep the old PGF since some documents don't render properly with

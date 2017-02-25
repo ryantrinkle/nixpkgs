@@ -31919,6 +31919,8 @@ EOF
     };
   };
 
+  pgadmin4 = callPackage ../applications/misc/pgadmin/4.nix {};
+
   pwntools = buildPythonPackage rec {
     name = "pwntools-${version}";
     version = "3.1.0";
