@@ -11464,6 +11464,8 @@ in {
 
   flask_gravatar = callPackage ../development/python-modules/flask-gravatar.nix { };
 
+  htmlmin = callPackage ../development/python-modules/htmlmin.nix { };
+
   flask_login = callPackage ../development/python-modules/flask-login.nix { };
 
   flask_ldap_login = callPackage ../development/python-modules/flask-ldap-login.nix { };
