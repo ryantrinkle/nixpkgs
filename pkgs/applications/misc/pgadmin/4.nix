@@ -14,7 +14,7 @@
 , flask_login
 , flask_mail
 , flask_principal
-#, flask-Security  #!
+, flask_security
 , flask_sqlalchemy
 , flask_wtf
 , html5lib
@@ -49,7 +49,7 @@ buildPythonPackage rec {
   version = "1.2";
 
   src = fetchurl {
-    url = "https://ftp.postgresql.org/pub/pgadmin3/pgadmin4/v${version}/source/pgadmin4-${version}.tar.gz";
+    url = "https://ftp.postgresql.org/pub/pgadmin3/pgadmin4/v${version}/source/${name}.tar.gz";
     sha256 = "01wiscicmy0y75ajidzgy8danhs07kyp1mhb27r84250qjgjbbq7";
   };
 
@@ -67,7 +67,7 @@ buildPythonPackage rec {
     flask_login
     flask_mail
     flask_principal
-    # flask-Security  #!
+    flask_security
     flask_sqlalchemy
     flask_wtf
     html5lib
