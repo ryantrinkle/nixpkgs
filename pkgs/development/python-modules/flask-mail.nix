@@ -21,7 +21,7 @@ buildPythonPackage rec {
   ];
 
   meta = with stdenv.lib; {
-    homepage = "";
+    homepage = "https://github.com/rduplain/flask-mail";
     license = licenses.bsdOriginal;
     description = "Flask extension for sending email";
   };
