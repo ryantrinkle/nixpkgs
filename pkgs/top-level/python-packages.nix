@@ -11464,8 +11464,6 @@ in {
 
   flask_gravatar = callPackage ../development/python-modules/flask-gravatar.nix { };
 
-  htmlmin = callPackage ../development/python-modules/htmlmin.nix { };
-
   flask_htmlmin = callPackage ../development/python-modules/flask-htmlmin.nix { };
 
   flask_login = callPackage ../development/python-modules/flask-login.nix { };
@@ -12675,6 +12673,8 @@ in {
       maintainers = with maintainers; [ domenkozar prikhi ];
     };
   });
+
+  htmlmin = callPackage ../development/python-modules/htmlmin.nix { };
 
   http_signature = buildPythonPackage (rec {
     name = "http_signature-0.1.4";
