@@ -11462,6 +11462,8 @@ in {
 
   flask_elastic = callPackage ../development/python-modules/flask-elastic.nix { };
 
+  flask_gravatar = callPackage ../development/python-modules/flask-gravatar.nix { };
+
   flask_login = callPackage ../development/python-modules/flask-login.nix { };
 
   flask_ldap_login = callPackage ../development/python-modules/flask-ldap-login.nix { };
