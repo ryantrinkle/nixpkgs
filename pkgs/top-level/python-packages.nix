@@ -11467,6 +11467,7 @@ in {
   flask_htmlmin = callPackage ../development/python-modules/flask-htmlmin.nix { };
 
   flask_login = callPackage ../development/python-modules/flask-login.nix { };
+  flask_login_0_3_2 = callPackage ../development/python-modules/flask-login_0_3_2.nix { };
 
   flask_ldap_login = callPackage ../development/python-modules/flask-ldap-login.nix { };
 
@@ -11555,6 +11556,36 @@ in {
       license = licenses.bsd3;
       platforms = platforms.all;
       maintainers = with maintainers; [ abbradar ];
+    };
+  };
+
+  flask_security = buildPythonPackage rec {
+    version = "1.7.5";
+    name = "Flask-Security-${version}";
+
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/5c/c2/7c2311e599690b6b4a55346900523e33ce61e81be4d01fa231d2fc8ea12a/Flask-Security-1.7.5.tar.gz";
+      sha256 = "988952dba451896fd7e9dbf838d0e843844f1cbd27a8e15594a9e1d9432f435f";
+    };
+
+    # Some unused import
+    doCheck = false;
+
+    propagatedBuildInputs = with self; [
+      cffi
+      flask
+      flask_login_0_3_2
+      flask_mail
+      flask_principal
+      flask_wtf
+      itsdangerous
+      passlib
+    ];
+
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Simple security for Flask apps";
     };
   };
 
