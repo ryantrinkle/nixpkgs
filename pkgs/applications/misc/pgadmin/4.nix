@@ -9,38 +9,38 @@
 , fixtures
 , flask
 , flaskbabel
-, flask-Gravatar
-, flask-HTMLmin
-, flask-Login
-, flask-Mail
-, flask-Principal
-, flask-Security
-, flask-SQLAlchemy
-, flask-WTF
+, flask-Gravatar  #!
+, flask-HTMLmin   #!
+, flask_login
+, flask-Mail      #!
+, flask_principal
+, flask-Security  #!
+, flask_sqlalchemy
+, flask_wtf
 , html5lib
 , importlib
 , itsdangerous
-, Jinja2
+, jinja2
 , linecache2
-, MarkupSafe
+, markupsafe
 , passlib
 , pbr
 , psycopg2
 , pycrypto
 , pyrsistent
-, python-dateutil
-, python-mimeparse
+, dateutil
+, python_mimeparse
 , pytz
 , simplejson
 , six
 , speaklater
-, SQLAlchemy
+, sqlalchemy
 , testscenarios
 , testtools
 , traceback2
 , unittest2
-, Werkzeug
-, WTForms
+, werkzeug
+, wtforms
 , sqlparse
 }:
 
@@ -62,38 +62,38 @@ buildPythonPackage rec {
     fixtures
     flask
     flaskbabel
-    flask-Gravatar
-    flask-HTMLmin
-    flask-Login
-    flask-Mail
-    flask-Principal
-    flask-Security
-    flask-SQLAlchemy
-    flask-WTF
+    flask-Gravatar  #!
+    flask-HTMLmin   #!
+    flask_login
+    flask-Mail      #!
+    flask_principal
+    flask-Security  #!
+    flask_sqlalchemy
+    flask_wtf
     html5lib
     importlib
     itsdangerous
-    Jinja2
+    jinja2
     linecache2
-    MarkupSafe
+    markupsafe
     passlib
     pbr
     psycopg2
     pycrypto
     pyrsistent
-    python-dateutil
-    python-mimeparse
+    dateutil
+    python_mimeparse
     pytz
     simplejson
     six
     speaklater
-    SQLAlchemy
+    sqlalchemy
     testscenarios
     testtools
     traceback2
     unittest2
-    Werkzeug
-    WTForms
+    werkzeug
+    wtforms
     sqlparse
   ];
 }
