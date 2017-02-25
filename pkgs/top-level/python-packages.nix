@@ -11559,13 +11559,13 @@ in {
     };
   };
 
-  flask_security = buildPythonPackage rec {
-    version = "1.7.5";
-    name = "Flask-Security-${version}";
+  flask_security_fork = buildPythonPackage rec {
+    version = "2.0.1";
+    name = "Flask-Security-Fork${version}";
 
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/5c/c2/7c2311e599690b6b4a55346900523e33ce61e81be4d01fa231d2fc8ea12a/Flask-Security-1.7.5.tar.gz";
-      sha256 = "988952dba451896fd7e9dbf838d0e843844f1cbd27a8e15594a9e1d9432f435f";
+      url = "https://pypi.python.org/packages/59/a6/20fe9649768e109d122072ca23e3655381775dfd9d088915ea1cb32d422c/Flask-Security-Fork-2.0.1.tar.gz";
+      sha256 = "0y4r3pcs16zawl2aj4qbzipfg1fzc61a9iz2gimbp4crq5jphqhw";
     };
 
     # Some unused import

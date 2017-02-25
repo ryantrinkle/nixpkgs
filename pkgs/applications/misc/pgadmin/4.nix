@@ -15,7 +15,7 @@
 , flask_login
 , flask_mail
 , flask_principal
-, flask_security
+, flask_security_fork
 , flask_sqlalchemy
 , flask_wtf
 , html5lib
@@ -79,7 +79,7 @@ buildPythonPackage {
     flask_login
     flask_mail
     flask_principal
-    flask_security
+    flask_security_fork
     flask_sqlalchemy
     flask_wtf
     html5lib
