@@ -9,7 +9,7 @@
 , fixtures
 , flask
 , flaskbabel
-, flask-Gravatar  #!
+, flask_gravatar
 , flask-HTMLmin   #!
 , flask_login
 , flask-Mail      #!
@@ -62,7 +62,7 @@ buildPythonPackage rec {
     fixtures
     flask
     flaskbabel
-    flask-Gravatar  #!
+    flask_gravatar
     flask-HTMLmin   #!
     flask_login
     flask-Mail      #!
