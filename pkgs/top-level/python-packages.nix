@@ -18606,14 +18606,20 @@ in {
   };
 
   fixtures = buildPythonPackage rec {
-    name = "fixtures-1.4.0";
+    name = "fixtures-3.0.0";
 
     src = pkgs.fetchurl {
       url = "mirror://pypi/f/fixtures/${name}.tar.gz";
-      sha256 = "0djxvdwm8s60dbfn7bhf40x6g818p3b3mlwijm1c3bqg7msn271y";
+      sha256 = "1vxj29bzz3rd4pcy51d05wng9q9dh4jq6wx92yklsm7i6h1ddw7w";
     };
 
-    buildInputs = with self; [ pbr testtools mock ];
+    buildInputs = with self; [ pbr mock ];
+
+    # Avoid recursive dependency on testtools
+    preConfigure = ''
+      sed -i '/^testtools\b/d' requirements.txt
+    '';
+    doCheck = false;
 
     meta = {
       description = "Reusable state for writing clean tests and more";
@@ -25756,19 +25762,20 @@ in {
 
   testtools = buildPythonPackage rec {
     name = "testtools-${version}";
-    version = "1.8.0";
+    version = "2.2.0";
 
     # Python 2 only judging from SyntaxError
-    disabled = isPy3k;
+    #disabled = isPy3k;
+    doCheck = false;
 
     src = pkgs.fetchurl {
       url = "mirror://pypi/t/testtools/${name}.tar.gz";
-      sha256 = "15yxz8d70iy1b1x6gd7spvblq0mjxjardl4vnaqasxafzc069zca";
+      sha256 = "042qlqymy9m40w30fg3gj20wahmac9jphnsfwb8f8k3fg9h0dxl0";
     };
 
-    propagatedBuildInputs = with self; [ pbr python_mimeparse extras lxml unittest2 ];
+    propagatedBuildInputs = with self; [ pbr python_mimeparse extras lxml unittest2 fixtures ];
     buildInputs = with self; [ traceback2 ];
-    patches = [ ../development/python-modules/testtools_support_unittest2.patch ];
+    #patches = [ ../development/python-modules/testtools_support_unittest2.patch ];
 
     meta = {
       description = "A set of extensions to the Python standard library's unit testing framework";
@@ -25826,11 +25833,11 @@ in {
 
   extras = buildPythonPackage rec {
     name = "extras-${version}";
-    version = "0.0.3";
+    version = "1.0.0";
 
     src = pkgs.fetchurl {
       url = "mirror://pypi/e/extras/extras-${version}.tar.gz";
-      sha256 = "1h7zx4dfyclalg0fqnfjijpn0f793a9mx8sy3b27gd31nr6dhq3s";
+      sha256 = "0khvm08rcwm62wc47j8niyl6h13f8w51c8669ifivjdr23g3cbhk";
     };
 
     # error: invalid command 'test'
