@@ -14,6 +14,7 @@ let
 
   flushNat = ''
     iptables -w -t nat -D PREROUTING -j nixos-nat-pre 2>/dev/null|| true
+    iptables -w -t nat -D OUTPUT -j nixos-nat-pre 2>/dev/null|| true
     iptables -w -t nat -F nixos-nat-pre 2>/dev/null || true
     iptables -w -t nat -X nixos-nat-pre 2>/dev/null || true
     iptables -w -t nat -D POSTROUTING -j nixos-nat-post 2>/dev/null || true
@@ -48,9 +49,9 @@ let
     '') cfg.internalIPs}
 
     # NAT from external ports to internal ports.
-    ${concatMapStrings (fwd: ''
+    ${concatMapStrings /*TODO: Make the IP address configurable*/ (fwd: ''
       iptables -w -t nat -A nixos-nat-pre \
-        -i ${cfg.externalInterface} -p ${fwd.proto} \
+        -d 108.30.103.121 -p ${fwd.proto} \
         --dport ${builtins.toString fwd.sourcePort} \
         -j DNAT --to-destination ${fwd.destination}
     '') cfg.forwardPorts}
@@ -65,6 +66,7 @@ let
 
     # Append our chains to the nat tables
     iptables -w -t nat -A PREROUTING -j nixos-nat-pre
+    iptables -w -t nat -A OUTPUT -j nixos-nat-pre
     iptables -w -t nat -A POSTROUTING -j nixos-nat-post
   '';
 
