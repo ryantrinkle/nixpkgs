@@ -41,6 +41,7 @@ stdenv.mkDerivation rec {
 
   configureFlags =
     [ "--enable-gss"
+      "--enable-svcgss"
       "--with-statedir=/var/lib/nfs"
       "--with-krb5=${lib.getLib kerberos}"
       "--with-systemd=${placeholder "out"}/etc/systemd/system"

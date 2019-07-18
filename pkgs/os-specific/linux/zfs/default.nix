@@ -36,7 +36,7 @@ let
       name = "zfs-${configFile}-${version}${optionalString buildKernel "-${kernel.version}"}";
 
       src = fetchFromGitHub {
-        owner = "zfsonlinux";
+        owner = "ryantrinkle";
         repo = "zfs";
         inherit rev sha256;
       };
@@ -184,7 +184,8 @@ in {
     # this package should point to a version / git revision compatible with the latest kernel release
     version = "0.8.0-rc4";
 
-    sha256 = "02cdxf62758smbqy723yqv8lkch1043alvcwhdnvya21ygcgycnw";
+    rev = "e0ad3a29779b56af4384a995aaa08dc7e58fdf70";
+    sha256 = "04i52nq6vm0985liqnl7bl8gc3921807x2msd7cdknj7jymgb2ai";
     isUnstable = true;
 
     extraPatches = [

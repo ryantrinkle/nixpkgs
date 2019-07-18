@@ -95,6 +95,12 @@ in
         unitConfig.ConditionPathExists = [ "" "/etc/krb5.keytab" ];
       };
 
+    systemd.services.rpc-svcgssd =
+      { restartTriggers = [ nfsConfFile ];
+        unitConfig.ConditionPathExists = [ "" "/etc/krb5.keytab" ];
+	wantedBy = [ "multi-user.target" ];
+      };
+
     systemd.services.rpc-statd =
       { restartTriggers = [ nfsConfFile ];
 
