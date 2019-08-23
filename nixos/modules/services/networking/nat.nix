@@ -14,7 +14,6 @@ let
 
   flushNat = ''
     iptables -w -t nat -D PREROUTING -j nixos-nat-pre 2>/dev/null|| true
-    iptables -w -t nat -D OUTPUT -j nixos-nat-pre 2>/dev/null|| true
     iptables -w -t nat -F nixos-nat-pre 2>/dev/null || true
     iptables -w -t nat -X nixos-nat-pre 2>/dev/null || true
     iptables -w -t nat -D POSTROUTING -j nixos-nat-post 2>/dev/null || true
@@ -41,8 +40,6 @@ let
       iptables -w -t nat -A nixos-nat-post -m mark --mark 1 \
         ${optionalString (cfg.externalInterface != null) "-o ${cfg.externalInterface}"} ${dest}
     ''}
-      iptables -w -t nat -A nixos-nat-post -m mark --mark 1 \
-        -d 192.168.2.0/24 -j SNAT --to-source 192.168.2.1
 
     # NAT packets coming from the internal IPs.
     ${concatMapStrings (range: ''
@@ -98,7 +95,6 @@ let
 
     # Append our chains to the nat tables
     iptables -w -t nat -A PREROUTING -j nixos-nat-pre
-    iptables -w -t nat -A OUTPUT -j nixos-nat-pre
     iptables -w -t nat -A POSTROUTING -j nixos-nat-post
   '';
 
