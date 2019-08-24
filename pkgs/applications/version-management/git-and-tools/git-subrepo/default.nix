@@ -1,13 +1,13 @@
 { stdenv, fetchFromGitHub, git, which }:
 
 stdenv.mkDerivation rec {
-  name = "git-subrepo-${version}";
+  pname = "git-subrepo";
   version = "0.4.0";
 
   src = fetchFromGitHub {
     owner = "ingydotnet";
     repo = "git-subrepo";
-    rev = "${version}";
+    rev = version;
     sha256 = "05m2dm9gq2nggwnxxdyq2kjj584sn2lxk66pr1qhjxnk81awj9l7";
   };
 
@@ -16,9 +16,9 @@ stdenv.mkDerivation rec {
   ];
 
   makeFlags = [
-    "PREFIX=$(out)"
-    "INSTALL_LIB=$(out)/bin"
-    "INSTALL_MAN=$(out)/share/man/man1"
+    "PREFIX=${placeholder ''out''}"
+    "INSTALL_LIB=${placeholder ''out''}/bin"
+    "INSTALL_MAN=${placeholder ''out''}/share/man/man1"
   ];
 
   patches = [
