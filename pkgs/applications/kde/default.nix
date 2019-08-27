@@ -86,6 +86,7 @@ let
       incidenceeditor = callPackage ./incidenceeditor.nix {};
       k3b = callPackage ./k3b.nix {};
       kaddressbook = callPackage ./kaddressbook.nix {};
+      kajongg = callPackage ./kajongg.nix {};
       kalarm = callPackage ./kalarm.nix {};
       kalarmcal = callPackage ./kalarmcal.nix {};
       kate = callPackage ./kate.nix {};
@@ -156,6 +157,7 @@ let
       libkgapi = callPackage ./libkgapi.nix {};
       libkipi = callPackage ./libkipi.nix {};
       libkleo = callPackage ./libkleo.nix {};
+      libkmahjongg = callPackage ./libkmahjongg.nix {};
       libkomparediff2 = callPackage ./libkomparediff2.nix {};
       libksane = callPackage ./libksane.nix {};
       libksieve = callPackage ./libksieve.nix {};
