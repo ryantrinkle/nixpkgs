@@ -50,8 +50,14 @@ let
     # NAT from external ports to internal ports.
     ${concatMapStrings (fwd: ''
       iptables -w -t nat -A nixos-nat-pre \
-        -i ${toString cfg.externalInterface} -p ${fwd.proto} \
-        --dport ${builtins.toString fwd.sourcePort} \
+        ${concatMapStrings (ip: "\! -d ${ip} ") cfg.internalIPs} \
+        -m addrtype --dst-type LOCAL \
+        -p ${fwd.proto} --dport ${builtins.toString fwd.sourcePort} \
+        -j MARK --set-mark 1
+      iptables -w -t nat -A nixos-nat-pre \
+        ${concatMapStrings (ip: "\! -d ${ip} ") cfg.internalIPs} \
+        -m addrtype --dst-type LOCAL \
+        -p ${fwd.proto} --dport ${builtins.toString fwd.sourcePort} \
         -j DNAT --to-destination ${fwd.destination}
 
       ${concatMapStrings (loopbackip:
