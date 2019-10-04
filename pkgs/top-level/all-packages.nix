@@ -1302,6 +1302,8 @@ in
 
   cardpeek = callPackage ../applications/misc/cardpeek { };
 
+  cawbird = callPackage ../applications/networking/cawbird { };
+
   cde = callPackage ../tools/package-management/cde { };
 
   cdemu-daemon = callPackage ../misc/emulators/cdemu/daemon.nix { };
@@ -1375,8 +1377,6 @@ in
   consul-template = callPackage ../tools/system/consul-template { };
 
   copyright-update = callPackage ../tools/text/copyright-update { };
-
-  corebird = callPackage ../applications/networking/corebird { };
 
   inherit (callPackage ../tools/misc/coreboot-utils { })
     msrtool
@@ -4410,10 +4410,6 @@ in
 
   nodejs-10_x = callPackage ../development/web/nodejs/v10.nix { };
   nodejs-slim-10_x = callPackage ../development/web/nodejs/v10.nix {
-    enableNpm = false;
-  };
-  nodejs-11_x = callPackage ../development/web/nodejs/v11.nix { };
-  nodejs-slim-11_x = callPackage ../development/web/nodejs/v11.nix {
     enableNpm = false;
   };
   nodejs-12_x = callPackage ../development/web/nodejs/v12.nix { };
@@ -20621,7 +20617,7 @@ in
   syncthing-tray = callPackage ../applications/misc/syncthing-tray { };
 
   syncthingtray = libsForQt5.callPackage ../applications/misc/syncthingtray { };
-  syncthingtray-minumal = libsForQt5.callPackage ../applications/misc/syncthingtray {
+  syncthingtray-minimal = libsForQt5.callPackage ../applications/misc/syncthingtray {
     webviewSupport = false;
     jsSupport = false;
     kioPluginSupport = false;
@@ -24109,7 +24105,9 @@ in
 
   pgmanage = callPackage ../applications/misc/pgmanage { };
 
-  pgadmin = callPackage ../applications/misc/pgadmin { };
+  pgadmin = callPackage ../applications/misc/pgadmin {
+    openssl = openssl_1_0_2;
+  };
 
   pgf = pgf2;
 
