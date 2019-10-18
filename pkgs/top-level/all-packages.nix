@@ -611,7 +611,7 @@ in
   inherit (callPackages ../servers/nosql/arangodb { }) arangodb_3_3 arangodb_3_4 arangodb_3_5;
   arangodb = arangodb_3_4;
 
-  arcanist = callPackage ../development/tools/misc/arcanist {};
+  arcanist = callPackage ../development/tools/misc/arcanist { php = php72; };
 
   arduino = arduino-core.override { withGui = true; };
 
@@ -652,6 +652,8 @@ in
     texLive = texlive.combine { inherit (texlive) scheme-small epsf cm-super; };
     gsl = gsl_1;
   };
+
+  atinout = callPackage ../tools/networking/atinout { };
 
   atomicparsley = callPackage ../tools/video/atomicparsley {
     inherit (darwin.apple_sdk.frameworks) Cocoa;
@@ -5624,7 +5626,7 @@ in
 
   pwnat = callPackage ../tools/networking/pwnat { };
 
-  pwndbg = python3Packages.callPackage ../development/tools/misc/pwndbg { };
+  pwndbg = callPackage ../development/tools/misc/pwndbg { };
 
   pycangjie = pythonPackages.pycangjie;
 
@@ -5822,7 +5824,7 @@ in
 
   reptyr = callPackage ../os-specific/linux/reptyr {};
 
-  rescuetime = callPackage ../applications/misc/rescuetime { };
+  rescuetime = libsForQt5.callPackage ../applications/misc/rescuetime { };
 
   reuse = callPackage ../tools/package-management/reuse { };
 
@@ -7159,7 +7161,7 @@ in
 
   zbackup = callPackage ../tools/backup/zbackup {};
 
-  zbar = callPackage ../tools/graphics/zbar { };
+  zbar = libsForQt5.callPackage ../tools/graphics/zbar { };
 
   zdelta = callPackage ../tools/compression/zdelta { };
 
@@ -8034,8 +8036,6 @@ in
       });
 
   javacard-devkit = pkgsi686Linux.callPackage ../development/compilers/javacard-devkit { };
-
-  jikes = callPackage ../development/compilers/jikes { };
 
   julia_07 = callPackage ../development/compilers/julia/0.7.nix {
     gmp = gmp6;
@@ -15689,15 +15689,8 @@ in
       ];
   };
 
-  linux_5_2 = callPackage ../os-specific/linux/kernel/linux-5.2.nix {
-    kernelPatches =
-      [ kernelPatches.bridge_stp_helper
-        kernelPatches.modinst_arg_list_too_long
-        kernelPatches.export_kernel_fpu_functions
-      ];
-  };
-
-  linux_5_3 = callPackage ../os-specific/linux/kernel/linux-5.3.nix {
+  # Update this when adding the newest kernel major version!
+  linux_latest = callPackage ../os-specific/linux/kernel/linux-5.3.nix {
     kernelPatches = [ kernelPatches.bridge_stp_helper ];
   };
 
@@ -15755,8 +15748,6 @@ in
     beegfs-module = callPackage ../os-specific/linux/beegfs/kernel-module.nix { };
 
     ati_drivers_x11 = callPackage ../os-specific/linux/ati-drivers { };
-
-    blcr = if stdenv.lib.versionOlder "3.18" kernel.version then callPackage ../os-specific/linux/blcr { } else null;
 
     chipsec = callPackage ../tools/security/chipsec {
       inherit kernel;
@@ -15894,19 +15885,14 @@ in
   linuxPackages = linuxPackages_4_19;
   linux = linuxPackages.kernel;
 
-  # Update this when adding the newest kernel major version!
-  linuxPackages_latest = linuxPackages_5_3;
-  linux_latest = linuxPackages_latest.kernel;
-
   # Build the kernel modules for the some of the kernels.
+  linuxPackages_latest = linuxPackagesFor pkgs.linux_latest;
   linuxPackages_mptcp = linuxPackagesFor pkgs.linux_mptcp;
   linuxPackages_rpi = linuxPackagesFor pkgs.linux_rpi;
   linuxPackages_4_4 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_4);
   linuxPackages_4_9 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_9);
   linuxPackages_4_14 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_14);
   linuxPackages_4_19 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_19);
-  linuxPackages_5_2 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_5_2);
-  linuxPackages_5_3 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_5_3);
 
   # When adding to this list:
   # - Update linuxPackages_latest to the latest version
@@ -21665,7 +21651,7 @@ in
   namecoin  = callPackage ../applications/blockchains/namecoin.nix  { withGui = true; };
   namecoind = callPackage ../applications/blockchains/namecoin.nix { withGui = false; };
 
-  pivx = libsForQt59.callPackage ../applications/blockchains/pivx.nix { withGui = true; };
+  pivx = libsForQt5.callPackage ../applications/blockchains/pivx.nix { withGui = true; };
   pivxd = callPackage ../applications/blockchains/pivx.nix { withGui = false; };
 
   ethabi = callPackage ../applications/blockchains/ethabi.nix { };
@@ -22005,9 +21991,8 @@ in
 
   hawkthorne = callPackage ../games/hawkthorne { love = love_0_9; };
 
-  hedgewars = callPackage ../games/hedgewars {
+  hedgewars = libsForQt5.callPackage ../games/hedgewars {
     inherit (haskellPackages) ghcWithPackages;
-    ffmpeg = ffmpeg_2;
   };
 
   hexen = callPackage ../games/hexen { };
@@ -23333,8 +23318,10 @@ in
   caffeine-ng = callPackage ../tools/X11/caffeine-ng {};
 
   cntk = callPackage ../applications/science/math/cntk {
+    stdenv = gcc7Stdenv;
     inherit (linuxPackages) nvidia_x11;
     opencv3 = opencv3WithoutCuda; # Used only for image loading.
+    cudaSupport = pkgs.config.cudaSupport or false;
   };
 
   ecm = callPackage ../applications/science/math/ecm { };
@@ -24243,8 +24230,8 @@ in
   sct = callPackage ../tools/X11/sct {};
 
   scylladb = callPackage ../servers/scylladb {
-   thrift = thrift-0_10;
-   };
+    thrift = thrift-0_10;
+  };
 
   seafile-shared = callPackage ../misc/seafile-shared { };
 

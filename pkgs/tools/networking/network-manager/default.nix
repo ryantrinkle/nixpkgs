@@ -10,11 +10,11 @@ let
   pythonForDocs = python3.withPackages (pkgs: with pkgs; [ pygobject3 ]);
 in stdenv.mkDerivation rec {
   pname = "network-manager";
-  version = "1.18.2";
+  version = "1.18.4";
 
   src = fetchurl {
     url = "mirror://gnome/sources/NetworkManager/${stdenv.lib.versions.majorMinor version}/NetworkManager-${version}.tar.xz";
-    sha256 = "1hx5dx5dgdqh3p8fq7q1pxy2bx2iymc74lj60ycrf7ydfjlprnad";
+    sha256 = "0pnh1wr2p1fqa5pr945fr3lngfc5ccfrmgddqsg55lxnjpv0ggd3";
   };
 
   outputs = [ "out" "dev" "devdoc" "man" "doc" ];
@@ -94,13 +94,6 @@ in stdenv.mkDerivation rec {
     # We are using a symlink that will be overridden during installation.
     mkdir -p ${placeholder "out"}/lib
     ln -s $PWD/libnm/libnm.so.0 ${placeholder "out"}/lib/libnm.so.0
-  '';
-
-  postInstall = ''
-    # Add the legacy service name from before #51382 to prevent NetworkManager
-    # from not starting back up:
-    # TODO: remove this once 19.10 is released
-    ln -s $out/etc/systemd/system/NetworkManager.service $out/etc/systemd/system/network-manager.service
   '';
 
   passthru = {
