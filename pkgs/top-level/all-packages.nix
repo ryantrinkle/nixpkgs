@@ -922,6 +922,8 @@ in
 
   m-cli = callPackage ../os-specific/darwin/m-cli { };
 
+  pebble = callPackage ../tools/admin/pebble { };
+
   reattach-to-user-namespace = callPackage ../os-specific/darwin/reattach-to-user-namespace {};
 
   skhd = callPackage ../os-specific/darwin/skhd {
@@ -8307,6 +8309,9 @@ in
 
   defaultCrateOverrides = callPackage ../build-support/rust/default-crate-overrides.nix { };
 
+  cargo-audit = callPackage ../tools/package-management/cargo-audit {
+    inherit (darwin.apple_sdk.frameworks) Security;
+  };
   cargo-download = callPackage ../tools/package-management/cargo-download { };
   cargo-edit = callPackage ../tools/package-management/cargo-edit { };
   cargo-graph = callPackage ../tools/package-management/cargo-graph { };
@@ -12902,7 +12907,6 @@ in
   openvdb = callPackage ../development/libraries/openvdb {};
 
   inherit (callPackages ../development/libraries/libressl { })
-    libressl_2_8
     libressl_2_9
     libressl_3_0;
 
@@ -13644,6 +13648,7 @@ in
   stxxl = callPackage ../development/libraries/stxxl { parallel = true; };
 
   sqlite = lowPrio (callPackage ../development/libraries/sqlite { });
+  sqlite_3_30 = callPackage ../development/libraries/sqlite/3-30.nix { };
 
   sqlite-analyzer = lowPrio (callPackage ../development/libraries/sqlite/analyzer.nix { });
 
@@ -13672,6 +13677,14 @@ in
       echo "D 2019-03-09T15:45:46" > manifest
       echo -n "8250984a368079bb1838d48d99f8c1a6282e00bc" > manifest.uuid
     '';
+
+    patchFlags = "-p0";
+    patches = [
+      # Fixes CVE-2019-16168 for non-amalgamated 3.27.2 as the other patch used
+      # within the sqlite package itself does not apply here.
+      ../development/libraries/sqlite/CVE-2019-16168_3_27_backport.patch
+    ];
+
   });
 
   dqlite = callPackage ../development/libraries/dqlite { };
@@ -15278,6 +15291,7 @@ in
     server = server-pgsql;
   };
 
+  zabbix44 = zabbixFor "v44";
   zabbix42 = zabbixFor "v42";
   zabbix40 = zabbixFor "v40";
   zabbix30 = zabbixFor "v30";
@@ -18226,6 +18240,7 @@ in
       libpng = libpng_apng;
       python = python2;
       gnused = gnused_422;
+      sqlite = sqlite_3_30;
       inherit (darwin.apple_sdk.frameworks) CoreMedia ExceptionHandling
                                             Kerberos AVFoundation MediaToolbox
                                             CoreLocation Foundation AddressBook;
@@ -22336,7 +22351,7 @@ in
 
   superTuxKart = callPackage ../games/super-tux-kart { };
 
-  synthv1 = callPackage ../applications/audio/synthv1 { };
+  synthv1 = libsForQt5.callPackage ../applications/audio/synthv1 { };
 
   t4kcommon = callPackage ../games/t4kcommon { };
 
@@ -23261,7 +23276,9 @@ in
   # Since version 8 Eagle requires an Autodesk account and a subscription
   # in contrast to single payment for the charged editions.
   # This is the last version with the old model.
-  eagle7 = callPackage ../applications/science/electronics/eagle/eagle7.nix { };
+  eagle7 = callPackage ../applications/science/electronics/eagle/eagle7.nix {
+    openssl = openssl_1_0_2;
+  };
 
   eagle = libsForQt5.callPackage ../applications/science/electronics/eagle/eagle.nix { };
 
