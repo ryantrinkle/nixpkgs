@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, autoconf, automake, pkgconfig, libtool }:
+{ stdenv, fetchFromGitHub, autoconf, automake, pkgconfig, libtool, fuse }:
 
 stdenv.mkDerivation rec {
   version = "3.2p1";
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
     platforms = platforms.unix;
   };
 
-  buildInputs = [ libtool ];
+  buildInputs = [ libtool fuse ];
 
   preConfigure = "./bootstrap";
 
@@ -30,14 +30,15 @@ stdenv.mkDerivation rec {
       "--disable-owphp"
       "--disable-owpython"
       "--disable-zero"
-      "--disable-owshell"
-      "--disable-owhttpd"
+      "--enable-owshell"
+      "--enable-owhttpd"
       "--disable-owftpd"
-      "--disable-owserver"
+      "--enable-owserver"
       "--disable-owperl"
       "--disable-owtcl"
       "--disable-owtap"
       "--disable-owmon"
       "--disable-owexternal"
+      "--enable-owfs"
     ];
 }
