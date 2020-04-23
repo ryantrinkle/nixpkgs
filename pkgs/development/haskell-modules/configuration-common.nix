@@ -726,7 +726,7 @@ self: super: {
           owner = "haskell-servant";
           repo = "servant";
           rev = "v${ver}";
-          sha256 = "0kqglih3rv12nmkzxvalhfaaafk4b2irvv9x5xmc48i1ns71y23l";
+          sha256 = "0xk3czk3jhqjxhy0g8r2248m8yxgvmqhgn955k92z0h7p02lfs89";
         }}/doc";
         # Needed after sphinx 1.7.9 -> 1.8.3
         postPatch = ''
@@ -1222,5 +1222,11 @@ self: super: {
       done
     '';
   });
+
+  # https://github.com/brendanhay/amazonka/commit/657b70d174fe5cb61e56cb8b9c5e57f1ec216f2b
+  amazonka = appendPatch super.amazonka ./patches/amazonka-Allow-http-client-0.6.patch;
+
+  # https://github.com/brendanhay/amazonka/commit/657b70d174fe5cb61e56cb8b9c5e57f1ec216f2b
+  amazonka-core = appendPatch super.amazonka-core ./patches/amazonka-core-Allow-http-client-0.6.patch;
 
 } // import ./configuration-tensorflow.nix {inherit pkgs haskellLib;} self super

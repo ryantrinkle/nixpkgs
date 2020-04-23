@@ -8,10 +8,21 @@
 , libjpeg, zlib, dbus, dbus-glib, bzip2, xorg
 , freetype, fontconfig, file, nspr, nss, libnotify
 , yasm, libGLU_combined, sqlite, unzip, makeWrapper
-, hunspell, libXdamage, libevent, libstartup_notification, libvpx
+, hunspell, libXdamage, libevent, libstartup_notification
+, libvpx, libvpx_1_8
 , icu, libpng, jemalloc, glib
 , autoconf213, which, gnused, cargo, rustc, llvmPackages
 , rust-cbindgen, nodejs, nasm, fetchpatch
+
+# backports of newer libraries for stable firefox >= 70
+, nss_3_51
+, sqlite_3_31_1
+, nspr_4_25
+, rustc_1_41
+, cargo_1_41
+, rust-cbindgen_0_1_13
+, nodejs-12_x
+
 , debugBuild ? false
 
 ### optionals
@@ -95,7 +106,7 @@ let
   browserPatches = [
     ./env_var_for_system_dir.patch
   ]
-  ++ lib.optional (lib.versionAtLeast ffversion "63" && lib.versionOlder ffversion "69")
+  ++ lib.optional (lib.versionAtLeast ffversion "63" && lib.versionOlder ffversion "68.3.0")
     (fetchpatch { # https://bugzilla.mozilla.org/show_bug.cgi?id=1500436#c29
       name = "write_error-parallel_make.diff";
       url = "https://hg.mozilla.org/mozilla-central/raw-diff/562655fe/python/mozbuild/mozbuild/action/node.py";
@@ -110,11 +121,20 @@ let
       url = "https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/09c7fa0dc1d87922e3b464c0fa084df1227fca79/extra/firefox/build-arm-libopus.patch";
       sha256 = "1zg56v3lc346fkzcjjx21vjip2s9hb2xw4pvza1dsfdnhsnzppfp";
     })
-  ] ++ patches;
+  ]
+  ++ patches;
+
+  nss_pkg = if lib.versionAtLeast ffversion "71" then nss_3_51 else nss;
+  nspr_pkg = if lib.versionAtLeast ffversion "71" then nspr_4_25 else nspr;
+  sqlite_pkg = if lib.versionAtLeast ffversion "70" then sqlite_3_31_1 else sqlite;
+  rustc_pkg = if lib.versionAtLeast ffversion "73" then rustc_1_41 else rustc;
+  cargo_pkg = if lib.versionAtLeast ffversion "73" then cargo_1_41 else cargo;
+  cbindgen_pkg = if lib.versionAtLeast ffversion "73" then rust-cbindgen_0_1_13 else rust-cbindgen;
+  nodejs_pkg = if lib.versionAtLeast ffversion "75" then nodejs-12_x else nodejs;
 
 in
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (rec {
   name = "${pname}-unwrapped-${version}";
   version = browserVersion;
 
@@ -133,11 +153,11 @@ stdenv.mkDerivation rec {
     xorg.libX11 xorg.libXrender xorg.libXft xorg.libXt file
     libnotify xorg.pixman yasm libGLU_combined
     xorg.libXScrnSaver xorg.xorgproto
-    xorg.libXext sqlite unzip makeWrapper
-    libevent libstartup_notification libvpx /* cairo */
+    xorg.libXext sqlite_pkg unzip makeWrapper
+    libevent libstartup_notification /* cairo */
     icu libpng jemalloc glib
   ]
-  ++ lib.optionals (!isTorBrowserLike) [ nspr nss ]
+  ++ lib.optionals (!isTorBrowserLike) [ nspr_pkg nss_pkg ]
   ++ lib.optional (lib.versionOlder ffversion "53") libXdamage
   ++ lib.optional (lib.versionOlder ffversion "61") hunspell
 
@@ -146,6 +166,8 @@ stdenv.mkDerivation rec {
   # https://bugzilla.mozilla.org/show_bug.cgi?id=1501796
   # https://groups.google.com/forum/#!msg/mozilla.dev.platform/o-8levmLU80/SM_zQvfzCQAJ
   ++ lib.optional (lib.versionAtLeast ffversion "66") nasm
+  ++ lib.optionals  (lib.versionOlder ffversion "75") [ libvpx sqlite ]
+  ++ lib.optional  (lib.versionAtLeast ffversion "75.0") libvpx_1_8
   ++ lib.optional  alsaSupport alsaLib
   ++ lib.optional  pulseaudioSupport libpulseaudio # only headers are needed
   ++ lib.optional  gtk3Support gtk3
@@ -154,6 +176,7 @@ stdenv.mkDerivation rec {
   ++ lib.optionals stdenv.isDarwin [ CoreMedia ExceptionHandling Kerberos
                                      AVFoundation MediaToolbox CoreLocation
                                      Foundation libobjc AddressBook cups ];
+
 
   NIX_CFLAGS_COMPILE = [
     "-I${glib.dev}/include/gio-unix-2.0"
@@ -169,11 +192,11 @@ stdenv.mkDerivation rec {
   '';
 
   nativeBuildInputs =
-    [ autoconf213 which gnused pkgconfig perl python2 cargo rustc ]
+    [ autoconf213 which gnused pkgconfig perl python2 cargo_pkg rustc_pkg ]
     ++ lib.optional gtk3Support wrapGAppsHook
     ++ lib.optionals stdenv.isDarwin [ xcbuild rsync ]
     ++ lib.optional  (lib.versionAtLeast ffversion "61.0") [ python3 ]
-    ++ lib.optionals (lib.versionAtLeast ffversion "63.0") [ rust-cbindgen nodejs ]
+    ++ lib.optionals (lib.versionAtLeast ffversion "63.0") [ cbindgen_pkg nodejs_pkg ]
     ++ lib.optionals (lib.versionAtLeast ffversion "67.0") [ llvmPackages.llvm ] # llvm-objdump is required in version >=67.0
     ++ extraNativeBuildInputs;
 
@@ -237,7 +260,6 @@ stdenv.mkDerivation rec {
     "--with-system-icu"
     "--enable-system-ffi"
     "--enable-system-pixman"
-    "--enable-system-sqlite"
     #"--enable-system-cairo"
     "--enable-startup-notification"
     #"--enable-content-sandbox" # TODO: probably enable after 54
@@ -258,6 +280,8 @@ stdenv.mkDerivation rec {
   ++ lib.optionals (lib.versionAtLeast ffversion "57" && lib.versionOlder ffversion "69") [
     "--enable-webrender=build"
   ]
+  ++ lib.optional (lib.versionOlder ffversion "75") "--enable-system-sqlite"
+  ++ lib.optional (stdenv.isDarwin) "--disable-xcode-checks"
 
   # TorBrowser patches these
   ++ lib.optionals (!isTorBrowserLike) [
@@ -359,4 +383,21 @@ stdenv.mkDerivation rec {
     inherit browserName;
   } // lib.optionalAttrs gtk3Support { inherit gtk3; };
 
-}
+} //
+lib.optionalAttrs (lib.versionAtLeast ffversion "74") {
+  hardeningDisable = [ "format" ]; # -Werror=format-security
+} //
+# the build system verifies checksums of the bundled rust sources
+# ./third_party/rust is be patched by our libtool fixup code in stdenv
+# unfortunately we can't just set this to `false` when we do not want it.
+# See https://github.com/NixOS/nixpkgs/issues/77289 for more details
+lib.optionalAttrs (lib.versionAtLeast ffversion "72") {
+  # Ideally we would figure out how to tell the build system to not
+  # care about changed hashes as we are already doing that when we
+  # fetch the sources. Any further modifications of the source tree
+  # is on purpose by some of our tool (or by accident and a bug?).
+  dontFixLibtool = true;
+
+  # on aarch64 this is also required
+  dontUpdateAutotoolsGnuConfigScripts = true;
+})
