@@ -1,0 +1,12 @@
+diff -ru a/src/sources/avstream/v4l2.c b/src/sources/avstream/v4l2.c
+--- a/src/sources/avstream/v4l2.c 2019-04-23 05:19:12.000000000 -0400
++++ b/src/sources/avstream/v4l2.c 2020-03-23 18:12:40.489006865 -0400
+@@ -1055,6 +1055,8 @@
+     struct mw_v4l2_channel *vch = pipe->mw_vch;
+ 
+     xi_driver_get_video_caps(vch->driver, &video_caps);
++    video_caps.wMaxOutputWidth = 1920;
++    video_caps.wMaxOutputHeight = 1080;
+ 
+     for (i = 0; i < ARRAY_SIZE(formats); i++)
+         if (formats[i].fourcc == fsize->pixel_format)
