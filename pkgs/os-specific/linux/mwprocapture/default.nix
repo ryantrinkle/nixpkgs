@@ -36,6 +36,10 @@ stdenv.mkDerivation rec {
     "KERNELDIR=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
   ];
 
+  patches = [
+    ./limit-frame-to-1080p.patch
+  ];
+
   postInstall = ''
     cd ../
     mkdir -p $out/bin
