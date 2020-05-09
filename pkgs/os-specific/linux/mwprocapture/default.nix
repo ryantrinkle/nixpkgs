@@ -15,11 +15,11 @@ let
 in
 stdenv.mkDerivation rec {
   name = "mwprocapture-1.2.${version}-${kernel.version}";
-  version = "4054";
+  version = "4068";
 
   src = fetchurl {
     url = "http://www.magewell.com/files/drivers/ProCaptureForLinux_${version}.tar.gz";
-    sha256 = "0ylx75jcwlqds8w6lm11nxdlzxvy7xlz4rka2k5d6gmqa5fv19c2";
+    sha256 = "0y6kjqhziii0gb0xp7ijbg7pzh6rwny10hj7d1plfbfgxmdl0rqr";
   };
 
   nativeBuildInputs = [ kernel.moduleBuildDependencies ];
