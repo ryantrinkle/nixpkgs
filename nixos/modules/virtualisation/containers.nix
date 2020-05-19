@@ -68,7 +68,41 @@ let
   nspawnExtraVethArgs = (name: cfg: "--network-veth-extra=${name}");
 
   startScript = cfg:
-    ''
+    let
+      ipcall = cfg: ipcmd: variable: attribute:
+        if cfg.${attribute} == null then
+          ''
+            if [ -n "${variable}" ]; then
+              ${ipcmd} add ${variable} dev $ifaceHost
+            fi
+          ''
+        else
+          ''${ipcmd} add ${cfg.${attribute}} dev $ifaceHost'';
+      renderExtraVeth = name: cfg:
+        if cfg.hostBridge != null then
+          ''
+            # Add ${name} to bridge ${cfg.hostBridge}
+            ip link set dev ${name} master ${cfg.hostBridge} up
+          ''
+        else
+          ''
+            echo "Bring ${name} up"
+            ip link set dev ${name} up
+            # Set IPs and routes for ${name}
+            ${optionalString (cfg.hostAddress != null) ''
+              ip addr add ${cfg.hostAddress} dev ${name}
+            ''}
+            ${optionalString (cfg.hostAddress6 != null) ''
+              ip -6 addr add ${cfg.hostAddress6} dev ${name}
+            ''}
+            ${optionalString (cfg.localAddress != null) ''
+              ip route add ${cfg.localAddress} dev ${name}
+            ''}
+            ${optionalString (cfg.localAddress6 != null) ''
+              ip -6 route add ${cfg.localAddress6} dev ${name}
+            ''}
+          '';
+    in ''
       mkdir -p -m 0755 "$root/etc" "$root/var/lib"
       mkdir -p -m 0700 "$root/var/lib/private" "$root/root" /run/containers
       if ! [ -e "$root/etc/os-release" ]; then
@@ -126,6 +160,22 @@ let
         fi
       ''}
 
+      (
+        if [ -n "$HOST_ADDRESS" ]  || [ -n "$LOCAL_ADDRESS" ] ||
+           [ -n "$HOST_ADDRESS6" ] || [ -n "$LOCAL_ADDRESS6" ]; then
+          if [ -z "$HOST_BRIDGE" ]; then
+            ifaceHost=ve-$INSTANCE
+            ip link set dev $ifaceHost up
+
+            ${ipcall cfg "ip addr" "$HOST_ADDRESS" "hostAddress"}
+            ${ipcall cfg "ip -6 addr" "$HOST_ADDRESS6" "hostAddress6"}
+            ${ipcall cfg "ip route" "$LOCAL_ADDRESS" "localAddress"}
+            ${ipcall cfg "ip -6 route" "$LOCAL_ADDRESS6" "localAddress6"}
+          fi
+          ${concatStringsSep "\n" (mapAttrsToList renderExtraVeth cfg.extraVeths)}
+        fi
+      ) &
+
       # Run systemd-nspawn without startup notification (we'll
       # wait for the container systemd to signal readiness).
       exec ${config.systemd.package}/bin/systemd-nspawn \
@@ -174,59 +224,6 @@ let
         ) cfg.extraVeths
       )}
    '';
-
-  postStartScript = (cfg:
-    let
-      ipcall = cfg: ipcmd: variable: attribute:
-        if cfg.${attribute} == null then
-          ''
-            if [ -n "${variable}" ]; then
-              ${ipcmd} add ${variable} dev $ifaceHost
-            fi
-          ''
-        else
-          ''${ipcmd} add ${cfg.${attribute}} dev $ifaceHost'';
-      renderExtraVeth = name: cfg:
-        if cfg.hostBridge != null then
-          ''
-            # Add ${name} to bridge ${cfg.hostBridge}
-            ip link set dev ${name} master ${cfg.hostBridge} up
-          ''
-        else
-          ''
-            echo "Bring ${name} up"
-            ip link set dev ${name} up
-            # Set IPs and routes for ${name}
-            ${optionalString (cfg.hostAddress != null) ''
-              ip addr add ${cfg.hostAddress} dev ${name}
-            ''}
-            ${optionalString (cfg.hostAddress6 != null) ''
-              ip -6 addr add ${cfg.hostAddress6} dev ${name}
-            ''}
-            ${optionalString (cfg.localAddress != null) ''
-              ip route add ${cfg.localAddress} dev ${name}
-            ''}
-            ${optionalString (cfg.localAddress6 != null) ''
-              ip -6 route add ${cfg.localAddress6} dev ${name}
-            ''}
-          '';
-    in
-      ''
-        if [ -n "$HOST_ADDRESS" ]  || [ -n "$LOCAL_ADDRESS" ] ||
-           [ -n "$HOST_ADDRESS6" ] || [ -n "$LOCAL_ADDRESS6" ]; then
-          if [ -z "$HOST_BRIDGE" ]; then
-            ifaceHost=ve-$INSTANCE
-            ip link set dev $ifaceHost up
-
-            ${ipcall cfg "ip addr" "$HOST_ADDRESS" "hostAddress"}
-            ${ipcall cfg "ip -6 addr" "$HOST_ADDRESS6" "hostAddress6"}
-            ${ipcall cfg "ip route" "$LOCAL_ADDRESS" "localAddress"}
-            ${ipcall cfg "ip -6 route" "$LOCAL_ADDRESS6" "localAddress6"}
-          fi
-          ${concatStringsSep "\n" (mapAttrsToList renderExtraVeth cfg.extraVeths)}
-        fi
-      ''
-  );
 
   serviceDirectives = cfg: {
     ExecReload = pkgs.writeScript "reload-container"
@@ -707,8 +704,6 @@ in
 
       script = startScript dummyConfig;
 
-      postStart = postStartScript dummyConfig;
-
       preStop = "machinectl poweroff $INSTANCE";
 
       restartIfChanged = false;
@@ -736,7 +731,6 @@ in
           recursiveUpdate unit {
             preStart = preStartScript containerConfig;
             script = startScript containerConfig;
-            postStart = postStartScript containerConfig;
             serviceConfig = serviceDirectives containerConfig;
             unitConfig.RequiresMountsFor = lib.optional (!containerConfig.ephemeral) "/var/lib/containers/%i";
             environment.root = if containerConfig.ephemeral then "/run/containers/%i" else "/var/lib/containers/%i";
