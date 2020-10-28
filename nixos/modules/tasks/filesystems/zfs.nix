@@ -422,11 +422,6 @@ in
             fi
             ${if isBool cfgZfs.requestEncryptionCredentials
               then optionalString cfgZfs.requestEncryptionCredentials ''
-                for trial in `seq 1 60`; do
-                  [ -f /tank/keys/backed-up.hex ] && break
-                  echo "Waiting for keys to be available"
-                  sleep 1
-                done
                 zfs load-key -a
               ''
               else concatMapStrings (fs: ''
@@ -543,6 +538,11 @@ in
                         ${config.systemd.package}/bin/systemd-ask-password "Enter key for $ds:" | ${packages.zfsUser}/sbin/zfs load-key "$ds"
                         ;;
                       * )
+                        for trial in `seq 1 60`; do
+                          [ -f /tank/keys/backed-up.hex ] && break
+                          echo "Waiting for keys to be available"
+                          sleep 1
+                        done
                         ${packages.zfsUser}/sbin/zfs load-key "$ds"
                         ;;
                     esac) < /dev/null # To protect while read ds kl in case anything reads stdin
