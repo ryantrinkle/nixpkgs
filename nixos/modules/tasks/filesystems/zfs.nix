@@ -422,6 +422,7 @@ in
             fi
             ${if isBool cfgZfs.requestEncryptionCredentials
               then optionalString cfgZfs.requestEncryptionCredentials ''
+                sleep 1 # Wait for filesystems to mount, in case they contain the keyfiles
                 zfs load-key -a
               ''
               else concatMapStrings (fs: ''
