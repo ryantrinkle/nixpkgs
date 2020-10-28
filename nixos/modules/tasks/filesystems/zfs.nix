@@ -422,7 +422,11 @@ in
             fi
             ${if isBool cfgZfs.requestEncryptionCredentials
               then optionalString cfgZfs.requestEncryptionCredentials ''
-                sleep 1 # Wait for filesystems to mount, in case they contain the keyfiles
+                for trial in `seq 1 60`; do
+                  [ -f /tank/keys/backed-up.hex ] && break
+                  echo "Waiting for keys to be available"
+                  sleep 1
+                done
                 zfs load-key -a
               ''
               else concatMapStrings (fs: ''
