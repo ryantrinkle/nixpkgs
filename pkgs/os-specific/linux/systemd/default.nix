@@ -1,7 +1,7 @@
 { stdenv, lib, fetchFromGitHub, pkgconfig, intltool, gperf, libcap
 , curl, kmod, gnupg, gnutar, xz, pam, acl, libuuid, m4, e2fsprogs, utillinux, libffi
 , glib, kbd, libxslt, coreutils, libgcrypt, libgpgerror, libidn2, libapparmor
-, audit, lz4, bzip2, pcre2
+, audit, lz4, bzip2, libmicrohttpd, pcre2
 , linuxHeaders ? stdenv.cc.libc.linuxHeaders
 , iptables, gnu-efi, bashInteractive
 , gettext, docbook_xsl, docbook_xml_dtd_42, docbook_xml_dtd_45
@@ -18,7 +18,7 @@
 }:
 
 let
-  version = "246.4";
+  version = "246.6";
 in stdenv.mkDerivation {
   inherit version;
   pname = "systemd";
@@ -29,7 +29,7 @@ in stdenv.mkDerivation {
     owner = "systemd";
     repo = "systemd-stable";
     rev = "v${version}";
-    sha256 = "0ns12w55yv680p4l7f2i9il7scdph7hips68d9k8cyvxk2w9xg0x";
+    sha256 = "1yhj2jlighqqpw1xk9q52f3pncjn47ipi224k35d6syb94q2b988";
   };
 
   # If these need to be regenerated, `git am path/to/00*.patch` them into a
@@ -83,7 +83,7 @@ in stdenv.mkDerivation {
   buildInputs =
     [ linuxHeaders libcap curl.dev kmod xz pam acl
       cryptsetup libuuid glib libgcrypt libgpgerror libidn2
-      pcre2 ] ++
+      libmicrohttpd pcre2 ] ++
       stdenv.lib.optional withKexectools kexectools ++
       stdenv.lib.optional withLibseccomp libseccomp ++
     [ libffi audit lz4 bzip2 libapparmor
@@ -112,7 +112,7 @@ in stdenv.mkDerivation {
     "-Dhostnamed=true"
     "-Dnetworkd=true"
     "-Dportabled=false"
-    "-Dremote=false"
+    "-Dremote=true"
     "-Dsysusers=false"
     "-Dtimedated=true"
     "-Dtimesyncd=true"
