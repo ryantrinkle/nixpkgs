@@ -154,9 +154,6 @@ let
         substituteInPlace $i --replace "zfs-import-cache.service" "zfs-import.target"
         done
 
-        # Fix pkgconfig.
-        ln -s ../share/pkgconfig $out/lib/pkgconfig
-
         # Remove tests because they add a runtime dependency on gcc
         rm -rf $out/share/zfs/zfs-tests
 
@@ -186,7 +183,6 @@ let
         license = licenses.cddl;
         platforms = platforms.linux;
         maintainers = with maintainers; [ jcumming wizeman fpletz globin ];
-        broken = if kernel == null then false else kernel.kernelAtLeast "5.9";
       };
     };
 in {
@@ -198,10 +194,9 @@ in {
     # incompatibleKernelVersion = "4.20";
 
     # this package should point to the latest release.
-    version = "0.8.4";
+    version = "0.8.6";
 
-    sha256 = "1hl4n900d24gl4vd65qdzq4m62b7bpvckldazcbd1xqcn8xhi6wp";
-    extraPatches = [ ./BACKPORT-Linux-5.8-compat-__vmalloc.patch ];
+    sha256 = "1mp27midxfhzzbsd84dcc10wrs3fx6hfmkayyw58s3q2mxbrghn2";
   };
 
   zfsUnstable = common {
@@ -209,9 +204,9 @@ in {
     # incompatibleKernelVersion = "4.19";
 
     # this package should point to a version / git revision compatible with the latest kernel release
-    version = "2.0.0-rc3";
+    version = "2.0.0";
 
-    sha256 = "00fljxs6vacfhzc13bgsrmq6p3agpzcq6waw4iv2m58dr90jhlcz";
+    sha256 = "1kriz6pg8wj98izvjc60wp23lgcp4k3mzhpkgj74np73rzgy6v8r";
     isUnstable = true;
   };
 }
