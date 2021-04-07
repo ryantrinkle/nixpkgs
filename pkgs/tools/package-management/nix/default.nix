@@ -13,8 +13,8 @@ common =
   , bash, coreutils, gzip, gnutar
   , pkgconfig, boehmgc, perlPackages, libsodium, brotli, boost, editline, nlohmann_json
   , autoreconfHook, autoconf-archive, bison, flex
-  , jq, libarchive
-  , lowdown, mdbook
+  , jq, libarchive, libcpuid
+  , lowdown_0_8, mdbook
   # Used by tests
   , gmock
   , busybox-sandbox-shell
@@ -45,7 +45,7 @@ common =
           [ autoreconfHook
             autoconf-archive
             bison flex
-            lowdown mdbook
+            lowdown_0_8 mdbook
             jq
            ];
 
@@ -54,7 +54,8 @@ common =
           brotli boost editline
         ]
         ++ lib.optional (stdenv.isLinux || stdenv.isDarwin) libsodium
-        ++ lib.optionals is24 [ libarchive gmock ]
+        ++ lib.optionals is24 [ libarchive gmock lowdown_0_8 ]
+        ++ lib.optional (is24 && stdenv.isx86_64) libcpuid
         ++ lib.optional withLibseccomp libseccomp
         ++ lib.optional withAWS
             ((aws-sdk-cpp.override {
@@ -207,23 +208,14 @@ in rec {
 
   nixUnstable = lib.lowPrio (callPackage common rec {
     name = "nix-2.4${suffix}";
-    suffix = "pre20201201_5a6ddb3";
+    suffix = "pre20210326_dd77f71";
 
     src = fetchFromGitHub {
       owner = "NixOS";
       repo = "nix";
-      rev = "5a6ddb3de14a1684af6c793d663764d093fa7846";
-      sha256 = "0qhd3nxvqzszzsfvh89xhd239ycqb0kq2n0bzh9br78pcb60vj3g";
+      rev = "dd77f71afe6733e9790dd001125c423cb648b7ce";
+      sha256 = "rVHzrsCtdiWjyLuHnDplG2mx+7dw5VyzZ9ReXxuCvHY=";
     };
-
-    patches = [
-      # Fix the ETag bug. PR merged. Remove when updating to >= 20210125
-      # https://github.com/NixOS/nixpkgs/pull/109309#issuecomment-768331750
-      (fetchpatch {
-        url = "https://github.com/NixOS/nix/commit/c5b42c5a42138329c6d02da0d8a53cb59c6077f4.patch";
-        sha256 = "sha256-d4RNOKMxa4NMbFgYcqWRv2ByHt8F/XUWV+6P9qHz7S4=";
-      })
-    ];
 
     inherit storeDir stateDir confDir boehmgc;
   });

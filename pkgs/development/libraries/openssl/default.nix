@@ -160,8 +160,8 @@ in {
   };
 
   openssl_1_1 = common {
-    version = "1.1.1i";
-    sha256 = "0hjj1phcwkz69lx1lrvr9grhpl4y529mwqycqc1hdla1zqsnmgp8";
+    version = "1.1.1k";
+    sha256 = "1rdfzcrxy9y38wqdw5942vmdax9hjhgrprzxm42csal7p5shhal9";
     patches = [
       ./1.1/nix-ssl-cert-file.patch
 
