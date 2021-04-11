@@ -40,7 +40,7 @@ in
   # collections of packages.  These collection of packages are part of the
   # fix-point made by Nixpkgs.
   overlays ? let
-      isDir = path: pathExists (toPath path + "/.");
+      isDir = path: pathExists (path + "/.");
       pathOverlays = try (toString <nixpkgs-overlays>) "";
       homeOverlaysFile = homeDir + "/.config/nixpkgs/overlays.nix";
       homeOverlaysDir = homeDir + "/.config/nixpkgs/overlays";
