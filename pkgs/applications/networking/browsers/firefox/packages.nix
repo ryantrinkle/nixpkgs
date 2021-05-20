@@ -7,10 +7,10 @@ in
 rec {
   firefox = commonCP rec {
     pname = "firefox";
-    ffversion = "87.0";
+    ffversion = "88.0.1";
     src = fetchurl {
       url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "c1c08be2283e7a162c8be2f2647ec2bb85cab592738dc45e4b4ffb72969229cc0019a30782a4cb27f09a13b088c63841071dd202b3543dfba295140a7d6246a4";
+      sha512 = "e2d7fc950ba49f225c83ee1d799d6318fcf16c33a3b7f40b85c49d5b7865f7e632c703e5fd227a303b56e2565d0796283ebb12d7fd1a02781dcaa45e84cea934";
     };
 
     meta = {
@@ -33,10 +33,10 @@ rec {
 
   firefox-esr-78 = commonCP rec {
     pname = "firefox-esr";
-    ffversion = "78.9.0esr";
+    ffversion = "78.10.1esr";
     src = fetchurl {
       url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "28582fc0a03fb50c0a817deb1083817bb7f2f5d38e98439bf655ed4ee18c83568b3002a59ef76edf357bfb11f55832a221d14130f116aac19d850768fba3ac8b";
+      sha512 = "a22773d9b3f0dca253805257f358a906769d23f15115e3a8851024f701e27dee45f056f7d34ebf1fcde0a3f91ec299639c2a12556e938a232cdea9e59835fde1";
     };
 
     meta = {
