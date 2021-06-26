@@ -1,30 +1,29 @@
-{ stdenv
+{ lib
 , fetchFromGitHub
 , rustPlatform
 , bubblewrap
 , makeWrapper
-, lib
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "pipr";
-  version = "0.0.12";
+  version = "0.0.15";
 
   src = fetchFromGitHub {
     owner = "ElKowar";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0l7yvpc59mbzh87lngj6pj8w586fwa07829l5x9mmxnkf6srapmc";
+    sha256 = "1pbj198nqi27kavz9bm31a3h7h70by6l00046x09yf9n8qjpp01w";
   };
 
-  cargoSha256 = "1xzc1x5mjvj2jgdhwmjbdbqi8d7ln1ss7akn72d96kmy1wsj1qsa";
+  cargoSha256 = "05ryaxi479fxzdcl51r1xlqbiasfzxcxgvl4wnxync8qi8q2yqk0";
 
   nativeBuildInputs = [ makeWrapper ];
   postFixup = ''
     wrapProgram "$out/bin/pipr" --prefix PATH : ${lib.makeBinPath [ bubblewrap ]}
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A commandline-tool to interactively write shell pipelines";
     homepage = "https://github.com/ElKowar/pipr";
     license = licenses.mit;

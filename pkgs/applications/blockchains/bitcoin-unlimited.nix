@@ -1,25 +1,25 @@
-{ stdenv, fetchFromGitHub, pkgconfig, autoreconfHook, openssl, db48, boost
-, zlib, miniupnpc, utillinux, protobuf, qrencode, libevent, python3
+{ lib, stdenv, fetchFromGitHub, pkg-config, autoreconfHook, openssl, db48, boost
+, zlib, miniupnpc, util-linux, protobuf, qrencode, libevent, python3
 , withGui, wrapQtAppsHook ? null, qtbase ? null, qttools ? null
 , Foundation, ApplicationServices, AppKit }:
 
-with stdenv.lib;
+with lib;
 
 stdenv.mkDerivation rec {
   name = "bitcoin" + (toString (optional (!withGui) "d")) + "-unlimited-" + version;
-  version = "1.8.0.0";
+  version = "1.9.1.1";
 
   src = fetchFromGitHub {
     owner = "bitcoinunlimited";
     repo = "bitcoinunlimited";
     rev = "BCHunlimited${version}";
-    sha256 = "01qi15li5x9fvhsmvx7ai5fz6yzqqd3r9yv7081h75jn0nxai49q";
+    sha256 = "sha256-K15SI1F/xI4SkX4a41QHLn89YaHCgrlv+wcbkpwGKhI=";
   };
 
-  nativeBuildInputs = [ pkgconfig autoreconfHook python3 ]
+  nativeBuildInputs = [ pkg-config autoreconfHook python3 ]
     ++ optionals withGui [ wrapQtAppsHook qttools ];
   buildInputs = [ openssl db48 boost zlib
-                  miniupnpc utillinux protobuf libevent ]
+                  miniupnpc util-linux protobuf libevent ]
                   ++ optionals withGui [ qtbase qttools qrencode ]
                   ++ optionals stdenv.isDarwin [ Foundation ApplicationServices AppKit ];
 

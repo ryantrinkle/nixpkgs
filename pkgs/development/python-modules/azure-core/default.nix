@@ -14,14 +14,14 @@
 }:
 
 buildPythonPackage rec {
-  version = "1.8.0";
+  version = "1.14.0";
   pname = "azure-core";
   disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
     extension = "zip";
-    sha256 = "c89bbdcdc13ad45fe57d775ed87b15baf6d0b039a1ecd0a1bc91d2f713cb1f08";
+    sha256 = "f32bb64aabe61f496255c16dd6c555a027da628109460bf27311cee0caf78f96";
   };
 
   propagatedBuildInputs = [
@@ -45,6 +45,13 @@ buildPythonPackage rec {
   pytestFlagsArray = [ "tests/" ];
   # disable tests which touch network
   disabledTests = [ "aiohttp" "multipart_send" "response" "request" "timeout" ];
+  disabledTestPaths = [
+    # requires testing modules which aren't published, and likely to create cyclic dependencies
+    "tests/test_connection_string_parsing.py"
+    # wants network
+    "tests/async_tests/test_streaming_async.py"
+    "tests/test_streaming.py"
+  ];
 
   meta = with lib; {
     description = "Microsoft Azure Core Library for Python";

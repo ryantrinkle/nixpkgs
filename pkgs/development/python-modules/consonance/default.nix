@@ -1,11 +1,10 @@
 { buildPythonPackage, lib, fetchFromGitHub, pytest, dissononce, python-axolotl-curve25519
-, transitions, protobuf, nose, isPy27
+, transitions, protobuf, nose
 }:
 
 buildPythonPackage rec {
   pname = "consonance";
   version = "0.1.3";
-  disabled = isPy27;
 
   src = fetchFromGitHub {
     owner = "tgalal";

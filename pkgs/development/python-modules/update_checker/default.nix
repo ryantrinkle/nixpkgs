@@ -1,4 +1,5 @@
-{ stdenv, buildPythonPackage, fetchPypi, isPy27, requests}:
+{ lib, buildPythonPackage, fetchPypi, requests, isPy27
+}:
 
 buildPythonPackage rec {
   pname = "update_checker";
@@ -15,7 +16,7 @@ buildPythonPackage rec {
   # requires network
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A python module that will check for package updates";
     homepage = "https://github.com/bboe/update_checker";
     license = licenses.bsd2;

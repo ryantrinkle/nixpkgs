@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, elfutils
+{ lib, stdenv, fetchurl, elfutils
 , xorg, patchelf, openssl, libdrm, udev
 , libxcb, libxshmfence, epoxy, perl, zlib
 , ncurses
@@ -7,7 +7,7 @@
 
 assert (!libsOnly) -> kernel != null;
 
-with stdenv.lib;
+with lib;
 
 let
 
@@ -171,7 +171,7 @@ in stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "AMDGPU-PRO drivers";
     homepage =  "http://support.amd.com/en-us/kb-articles/Pages/AMDGPU-PRO-Beta-Driver-for-Vulkan-Release-Notes.aspx";
     license = licenses.unfree;
@@ -179,6 +179,5 @@ in stdenv.mkDerivation rec {
     maintainers = with maintainers; [ corngood ];
     # Copied from the nvidia default.nix to prevent a store collision.
     priority = 4;
-    broken = true;
   };
 }

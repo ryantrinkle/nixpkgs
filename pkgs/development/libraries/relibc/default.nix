@@ -1,16 +1,16 @@
-{ stdenvNoCC, buildPackages, makeRustPlatform }:
+{ lib, stdenvNoCC, buildPackages, makeRustPlatform }:
 
 let
-  rpath = stdenvNoCC.lib.makeLibraryPath [
+  rpath = lib.makeLibraryPath [
     buildPackages.stdenv.cc.libc
     "$out"
   ];
   bootstrapCrossRust = stdenvNoCC.mkDerivation {
     name = "binary-redox-rust";
-    
-    src = fetchTarball {
-      name = "redox-rust-toolchain-bin.tar.gz";
-      url = "https://www.dropbox.com/s/33r92en0t47l1ei/redox-rust-toolchain-bin.tar.gz?dl=1";
+
+    src = buildPackages.fetchzip {
+      name = "redox-rust-toolchain.tar.gz";
+      url = "https://www.dropbox.com/s/qt7as0j7cwnin8z/redox-rust-toolchain.tar.gz?dl=1";
       sha256 = "1g17qp2q6b88p04yclkw6amm374pqlakrmw9kd86vw8z4g70jkxm";
     };
 
@@ -30,7 +30,7 @@ let
           "{}" \;
     '';
 
-    meta.platforms = with stdenvNoCC.lib; platforms.redox ++ platforms.linux;
+    meta.platforms = with lib; platforms.redox ++ platforms.linux;
   };
 
   redoxRustPlatform = buildPackages.makeRustPlatform {
@@ -63,11 +63,12 @@ redoxRustPlatform.buildRustPackage rec {
     DESTDIR=$out make install
   '';
 
-  TARGET = buildPackages.rust.toRustTarget stdenvNoCC.targetPlatform;
+  # TODO: should be hostPlatform
+  TARGET = buildPackages.rust.toRustTargetSpec stdenvNoCC.targetPlatform;
 
   cargoSha256 = "1fzz7ba3ga57x1cbdrcfrdwwjr70nh4skrpxp4j2gak2c3scj6rz";
 
-  meta = with stdenvNoCC.lib; {
+  meta = with lib; {
     homepage = "https://gitlab.redox-os.org/redox-os/relibc";
     description = "C Library in Rust for Redox and Linux";
     license = licenses.mit;

@@ -1,6 +1,6 @@
 { version, sha256 }:
 
-{ stdenv, buildPackages, fetchurl, perl, xz
+{ lib, stdenv, buildPackages, fetchurl, perl, xz, gettext
 
 # we are a dependency of gcc, this simplifies bootstraping
 , interactive ? false, ncurses, procps
@@ -15,7 +15,7 @@ let
   crossBuildTools = stdenv.hostPlatform != stdenv.buildPlatform;
 in
 
-with stdenv.lib;
+with lib;
 
 stdenv.mkDerivation {
   name = "texinfo-${optionalString interactive "interactive-"}${version}";
@@ -39,10 +39,11 @@ stdenv.mkDerivation {
 
   buildInputs = [ xz.bin ]
     ++ optionals stdenv.isSunOS [ libiconv gawk ]
+    ++ optionals stdenv.isDarwin [ gettext ]
     ++ optional interactive ncurses;
 
   configureFlags = [ "PERL=${buildPackages.perl}/bin/perl" ]
-    ++ stdenv.lib.optional stdenv.isSunOS "AWK=${gawk}/bin/awk";
+    ++ lib.optional stdenv.isSunOS "AWK=${gawk}/bin/awk";
 
   installFlags = [ "TEXMF=$(out)/texmf-dist" ];
   installTargets = [ "install" "install-tex" ];

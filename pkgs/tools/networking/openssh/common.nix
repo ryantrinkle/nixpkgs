@@ -8,6 +8,9 @@
 }:
 
 { lib, stdenv
+# This *is* correct, though unusual. as a way of getting krb5-config from the
+# package without splicing See: https://github.com/NixOS/nixpkgs/pull/107606
+, pkgs
 , fetchurl
 , fetchpatch
 , zlib
@@ -16,9 +19,10 @@
 , pkg-config
 , pam
 , etcDir ? null
-, withKerberos ? true
-, kerberos
+, withKerberos ? !(stdenv.hostPlatform.isDarwin && stdenv.hostPlatform.isAarch64)
+, libkrb5
 , libfido2
+, nixosTests
 , withFIDO ? stdenv.hostPlatform.isUnix && !stdenv.hostPlatform.isMusl
 , linkOpenssl ? true
 }:
@@ -42,11 +46,14 @@ stdenv.mkDerivation rec {
     '';
 
   nativeBuildInputs = [ pkg-config ]
-    ++ optional withKerberos kerberos.dev
+    # This is not the same as the libkrb5 from the inputs! pkgs.libkrb5 is
+    # needed here to access krb5-config in order to cross compile. See:
+    # https://github.com/NixOS/nixpkgs/pull/107606
+    ++ optional withKerberos pkgs.libkrb5
     ++ extraNativeBuildInputs;
   buildInputs = [ zlib openssl libedit ]
     ++ optional withFIDO libfido2
-    ++ optional withKerberos kerberos
+    ++ optional withKerberos libkrb5
     ++ optional stdenv.isLinux pam;
 
   preConfigure = ''
@@ -64,7 +71,7 @@ stdenv.mkDerivation rec {
   # Kerberos can be found either by krb5-config or by fall-back shell
   # code in openssh's configure.ac. Neither of them support static
   # build, but patching code for krb5-config is simpler, so to get it
-  # into PATH, kerberos.dev is added into buildInputs.
+  # into PATH, libkrb5.dev is added into buildInputs.
   + optionalString stdenv.hostPlatform.isStatic ''
     sed -i "s,PKGCONFIG --libs,PKGCONFIG --libs --static,g" configure
     sed -i 's#KRB5CONF --libs`#KRB5CONF --libs` -lkrb5support -lkeyutils#g' configure
@@ -83,7 +90,7 @@ stdenv.mkDerivation rec {
     (if stdenv.isLinux then "--with-pam" else "--without-pam")
   ] ++ optional (etcDir != null) "--sysconfdir=${etcDir}"
     ++ optional withFIDO "--with-security-key-builtin=yes"
-    ++ optional withKerberos (assert kerberos != null; "--with-kerberos5=${kerberos}")
+    ++ optional withKerberos (assert libkrb5 != null; "--with-kerberos5=${libkrb5}")
     ++ optional stdenv.isDarwin "--disable-libutil"
     ++ optional (!linkOpenssl) "--without-openssl";
 
@@ -104,6 +111,10 @@ stdenv.mkDerivation rec {
   installFlags = [
     "sysconfdir=\${out}/etc/ssh"
   ];
+
+  passthru.tests = {
+    borgbackup-integration = nixosTests.borgbackup;
+  };
 
   meta = {
     description = "An implementation of the SSH protocol${extraDesc}";

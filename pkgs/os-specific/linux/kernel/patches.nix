@@ -1,6 +1,19 @@
 { lib, fetchpatch, fetchurl }:
 
 {
+  ath_regd_optional = rec {
+    name = "ath_regd_optional";
+    patch = fetchpatch {
+      name = name + ".patch";
+      url = "https://github.com/openwrt/openwrt/raw/ed2015c38617ed6624471e77f27fbb0c58c8c660/package/kernel/mac80211/patches/ath/402-ath_regd_optional.patch";
+      sha256 = "1ssDXSweHhF+pMZyd6kSrzeW60eb6MO6tlf0il17RC0=";
+      postFetch = ''
+        sed -i 's/CPTCFG_/CONFIG_/g' $out
+        sed -i '/--- a\/local-symbols/,$d' $out
+      '';
+    };
+  };
+
   bridge_stp_helper =
     { name = "bridge-stp-helper";
       patch = ./bridge-stp-helper.patch;
@@ -72,9 +85,30 @@
     };
   };
 
+  # Adapted for Linux 5.4 from:
+  # https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=04896832c94aae4842100cafb8d3a73e1bed3a45
+  rtl8761b_support =
+    { name = "rtl8761b-support";
+      patch = ./rtl8761b-support.patch;
+    };
+
+  export-rt-sched-migrate = {
+    name = "export-rt-sched-migrate";
+    patch = ./export-rt-sched-migrate.patch;
+  };
+
   # patches from https://lkml.org/lkml/2019/7/15/1748
   mac_nvme_t2 = rec {
     name = "mac_nvme_t2";
     patch = ./mac-nvme-t2.patch;
+  };
+
+  rtnetlink_fix_regression_in_bridge_vlan_configuration = rec {
+    name = "rtnetlink_fix_regression_in_bridge_vlan_configuration";
+    patch = fetchpatch {
+      name = name + ".patch";
+      url = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/patch/?id=d2e381c4963663bca6f30c3b996fa4dbafe8fcb5";
+      sha256 = "0ragdi13yh5ypp9x49vrdjqx8ddh7sq7i1qjp8fyrbk3n0jdaac3";
+    };
   };
 }

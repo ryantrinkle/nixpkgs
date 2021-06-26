@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   pname = "jackett";
-  version = "0.16.1057";
+  version = "0.18.95";
 
   src = fetchurl {
     url = "https://github.com/Jackett/Jackett/releases/download/v${version}/Jackett.Binaries.Mono.tar.gz";
-    sha256 = "0scc7xjyr7igbnmkg67lmzijvkgv3si1r502npnxamiflic59rnx";
+    sha256 = "sha256-8TkIixPot4V0h4MBh/+WdrWhjgsqyq9wHQyGyfxqZ6s=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
@@ -17,13 +17,13 @@ stdenv.mkDerivation rec {
 
     makeWrapper "${mono}/bin/mono" $out/bin/Jackett \
       --add-flags "$out/share/${pname}-${version}/JackettConsole.exe" \
-      --prefix LD_LIBRARY_PATH : ${stdenv.lib.makeLibraryPath [ curl icu60 openssl zlib ]}
+      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ curl icu60 openssl zlib ]}
   '';
 
-  meta = with stdenv.lib; {
-    description = "API Support for your favorite torrent trackers.";
+  meta = with lib; {
+    description = "API Support for your favorite torrent trackers";
     homepage = "https://github.com/Jackett/Jackett/";
-    license = licenses.gpl2;
+    license = licenses.gpl2Only;
     maintainers = with maintainers; [ edwtjo nyanloutre purcell ];
     platforms = platforms.all;
   };

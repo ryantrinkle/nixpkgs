@@ -3,7 +3,7 @@
 , fetchFromGitHub
 , numpy
 , scipy
-, scikitlearn
+, scikit-learn
 , matplotlib
 , numba
 , umap-learn
@@ -32,7 +32,7 @@ buildPythonPackage rec {
   propagatedBuildInputs = [
     numpy
     scipy
-    scikitlearn
+    scikit-learn
     matplotlib
     numba
     umap-learn
@@ -56,7 +56,6 @@ buildPythonPackage rec {
   doCheck = false;
 
   meta = with lib; {
-    broken = true;
     description = "Topological Data Analysis for humans";
     homepage = "https://github.com/scikit-tda/scikit-tda";
     license = licenses.mit;

@@ -12,6 +12,12 @@ buildPythonPackage rec {
     sha256 = "017i2yxgjrisaifxqnl3ym8ijl63l2yl6a3474dsqhlyqz2nx2ll";
   };
 
+  outputs = [ "out" "dev" ];
+
+  preConfigure = ''
+    cmakeFlagsArray=("-DCMAKE_INSTALL_PREFIX=$dev")
+  '';
+
   nativeBuildInputs = [ cmake ];
 
   buildInputs = [ qt4 ];
@@ -19,7 +25,6 @@ buildPythonPackage rec {
   propagatedBuildInputs = [ pyside pysideShiboken ];
 
   meta = with lib; {
-    broken = true;
     description = "Development tools (pyside-uic/rcc/lupdate) for PySide, the LGPL-licensed Python bindings for the Qt framework";
     license = licenses.gpl2;
     homepage = "https://wiki.qt.io/PySide";

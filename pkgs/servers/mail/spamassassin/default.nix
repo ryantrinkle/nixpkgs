@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, perlPackages, makeWrapper, gnupg }:
+{ lib, fetchurl, perlPackages, makeWrapper, gnupg, re2c, gcc, gnumake }:
 
 perlPackages.buildPerlPackage rec {
   pname = "SpamAssassin";
@@ -9,7 +9,8 @@ perlPackages.buildPerlPackage rec {
     sha256 = "0qsl18p2swdbq4zizvs9ahl2bkilpcyzq817lk16jj5g4rqzivb7";
   };
 
-  buildInputs = [ makeWrapper ] ++ (with perlPackages; [
+  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = (with perlPackages; [
     HTMLParser NetCIDRLite NetDNS NetAddrIP DBFile HTTPDate MailDKIM LWP
     IOSocketSSL DBI EncodeDetect IPCountry NetIdent Razor2ClientAgent MailSPF
     NetDNSResolverProgrammable Socket6
@@ -28,15 +29,15 @@ perlPackages.buildPerlPackage rec {
     mv "rules/"* $out/share/spamassassin/
 
     for n in "$out/bin/"*; do
-      wrapProgram "$n" --prefix PERL5LIB : "$PERL5LIB" --prefix PATH : "${gnupg}/bin"
+      wrapProgram "$n" --prefix PERL5LIB : "$PERL5LIB" --prefix PATH : ${lib.makeBinPath [ gnupg re2c gcc gnumake ]}
     done
   '';
 
   meta = {
     homepage = "http://spamassassin.apache.org/";
     description = "Open-Source Spam Filter";
-    license = stdenv.lib.licenses.asl20;
-    platforms = stdenv.lib.platforms.unix;
-    maintainers = with stdenv.lib.maintainers; [ peti qknight qyliss ];
+    license = lib.licenses.asl20;
+    platforms = lib.platforms.unix;
+    maintainers = with lib.maintainers; [ peti qknight qyliss ];
   };
 }

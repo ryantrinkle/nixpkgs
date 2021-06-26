@@ -15,6 +15,7 @@ let
     networkmanager-openconnect
     networkmanager-openvpn
     networkmanager-vpnc
+    networkmanager-sstp
    ] ++ optional (!delegateWireless && !enableIwd) wpa_supplicant;
 
   delegateWireless = config.networking.wireless.enable == true && cfg.unmanaged != [];
@@ -386,6 +387,9 @@ in {
 
       "NetworkManager/VPN/nm-iodine-service.name".source =
         "${networkmanager-iodine}/lib/NetworkManager/VPN/nm-iodine-service.name";
+
+      "NetworkManager/VPN/nm-sstp-service.name".source =
+        "${networkmanager-sstp}/lib/NetworkManager/VPN/nm-sstp-service.name";
       }
       // optionalAttrs (cfg.appendNameservers != [] || cfg.insertNameservers != [])
          {
@@ -461,7 +465,7 @@ in {
       restartTriggers = [ configFile overrideNameserversScript ];
 
       # useful binaries for user-specified hooks
-      path = [ pkgs.iproute pkgs.utillinux pkgs.coreutils ];
+      path = [ pkgs.iproute2 pkgs.util-linux pkgs.coreutils ];
       aliases = [ "dbus-org.freedesktop.nm-dispatcher.service" ];
     };
 
@@ -479,6 +483,8 @@ in {
         wireless.iwd.enable = true;
       })
     ];
+
+    boot.kernelModules = [ "ctr" ];
 
     security.polkit.extraConfig = polkitConf;
 

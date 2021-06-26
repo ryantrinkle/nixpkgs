@@ -1,7 +1,6 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
-, isPy27
 , zope_interface
 , webob
 }:
@@ -9,7 +8,6 @@
 buildPythonPackage rec {
   pname = "repoze.who";
   version = "2.4";
-  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
@@ -18,7 +16,7 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [ zope_interface webob ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "WSGI Authentication Middleware / API";
     homepage = "http://www.repoze.org";
     license = licenses.bsd0;

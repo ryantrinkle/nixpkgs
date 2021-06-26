@@ -22,18 +22,18 @@
 , coreutils
 , pciutils
 , procps
-, utillinux
+, util-linux
 , pulseaudioSupport ? true, libpulseaudio ? null
 }:
 
 assert pulseaudioSupport -> libpulseaudio != null;
 
 let
-  version = "5.6.16775.0418";
+  version = "5.6.16888.0424";
   srcs = {
     x86_64-linux = fetchurl {
       url = "https://zoom.us/client/${version}/zoom_x86_64.pkg.tar.xz";
-      sha256 = "twtxzniojgyLTx6Kda8Ej96uyw2JQB/jIhLdTgTqpCo=";
+      sha256 = "H/G9cSVmxYM0AVfrdpXzm7ohssDbKq2xdvIBc4d+elc=";
     };
   };
 
@@ -106,7 +106,7 @@ in stdenv.mkDerivation rec {
       --run "cd $out/opt/zoom" \
       --unset QML2_IMPORT_PATH \
       --unset QT_PLUGIN_PATH \
-      --prefix PATH : ${lib.makeBinPath [ coreutils glib.dev pciutils procps utillinux ]} \
+      --prefix PATH : ${lib.makeBinPath [ coreutils glib.dev pciutils procps util-linux ]} \
       --prefix LD_LIBRARY_PATH ":" ${libs}
 
     # Backwards compatiblity: we used to call it zoom-us
@@ -121,8 +121,8 @@ in stdenv.mkDerivation rec {
   meta = {
     homepage = "https://zoom.us/";
     description = "zoom.us video conferencing application";
-    license = stdenv.lib.licenses.unfree;
+    license = lib.licenses.unfree;
     platforms = builtins.attrNames srcs;
-    maintainers = with stdenv.lib.maintainers; [ danbst tadfisher doronbehar ];
+    maintainers = with lib.maintainers; [ danbst tadfisher doronbehar ];
   };
 }

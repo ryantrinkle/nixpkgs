@@ -1,10 +1,17 @@
-{
+version: {
   x86_64-linux-37 = {
-    url = "https://download.pytorch.org/whl/cu102/torch-1.6.0-cp37-cp37m-linux_x86_64.whl";
-    sha256 = "0xhwv68j8gvahfzcp43bqp2x71iwv6zjhkw2f1hb82xps40mrml7";
+    name = "torch-${version}-cp37-cp37m-linux_x86_64.whl";
+    url = "https://download.pytorch.org/whl/cu111/torch-${version}%2Bcu111-cp37-cp37m-linux_x86_64.whl";
+    hash = "sha256-lxj066PiB+S88GqQnXKgd9RCiKkMk3mctx/eBieZjAk=";
   };
   x86_64-linux-38 = {
-    url = "https://download.pytorch.org/whl/cu102/torch-1.6.0-cp38-cp38-linux_x86_64.whl";
-    sha256 = "05m2l04wqzw5xvjam6zwvlmc3979cksl3hrdqc2aikrv4hz8fmsk";
+    name = "torch-${version}-cp38-cp38-linux_x86_64.whl";
+    url = "https://download.pytorch.org/whl/cu111/torch-${version}%2Bcu111-cp38-cp38-linux_x86_64.whl";
+    hash = "sha256-qvTQMLz4CQPgalzUyYwz6rm+ExyWlIzI+FSMQhxM4eM=";
+  };
+  x86_64-linux-39 = {
+    name = "torch-${version}-cp39-cp39-linux_x86_64.whl";
+    url = "https://download.pytorch.org/whl/cu111/torch-${version}%2Bcu111-cp39-cp39-linux_x86_64.whl";
+    hash = "sha256-z0pzEiljU+E2x2SuOEAg86dmVY1iFZSDOCfoOAFhLQo=";
   };
 }

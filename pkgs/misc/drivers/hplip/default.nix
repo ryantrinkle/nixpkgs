@@ -1,9 +1,9 @@
-{ stdenv, fetchurl, substituteAll
-, pkgconfig
+{ lib, stdenv, fetchurl, substituteAll
+, pkg-config
 , cups, zlib, libjpeg, libusb1, python3Packages, sane-backends
 , dbus, file, ghostscript, usbutils
 , net-snmp, openssl, perl, nettools, avahi
-, bash, coreutils, utillinux
+, bash, coreutils, util-linux
 # To remove references to gcc-unwrapped
 , removeReferencesTo, qt5
 , withQt5 ? true
@@ -36,13 +36,13 @@ let
     x86_64-linux = "x86_64";
     armv6l-linux = "arm32";
     armv7l-linux = "arm32";
-    aarch64-linux = "aarch64";
+    aarch64-linux = "arm64";
   };
 
   hplipArch = hplipPlatforms.${stdenv.hostPlatform.system}
     or (throw "HPLIP not supported on ${stdenv.hostPlatform.system}");
 
-  pluginArches = [ "x86_32" "x86_64" "arm32" "aarch64" ];
+  pluginArches = [ "x86_32" "x86_64" "arm32" "arm64" ];
 
 in
 
@@ -69,9 +69,9 @@ python3Packages.buildPythonApplication {
   ];
 
   nativeBuildInputs = [
-    pkgconfig
+    pkg-config
     removeReferencesTo
-  ] ++ stdenv.lib.optional withQt5 qt5.wrapQtAppsHook;
+  ] ++ lib.optional withQt5 qt5.wrapQtAppsHook;
 
   pythonPath = with python3Packages; [
     dbus
@@ -79,9 +79,9 @@ python3Packages.buildPythonApplication {
     pygobject3
     reportlab
     usbutils
-    sip
+    sip_4
     dbus-python
-  ] ++ stdenv.lib.optionals withQt5 [
+  ] ++ lib.optionals withQt5 [
     pyqt5
     enum-compat
   ];
@@ -127,9 +127,9 @@ python3Packages.buildPythonApplication {
       --with-systraydir=$out/xdg/autostart
       --with-mimedir=$out/etc/cups
       --enable-policykit
-      ${stdenv.lib.optionalString withStaticPPDInstall "--enable-cups-ppd-install"}
+      ${lib.optionalString withStaticPPDInstall "--enable-cups-ppd-install"}
       --disable-qt4
-      ${stdenv.lib.optionalString withQt5 "--enable-qt5"}
+      ${lib.optionalString withQt5 "--enable-qt5"}
     "
 
     export makeFlags="
@@ -155,7 +155,7 @@ python3Packages.buildPythonApplication {
   # Running `hp-diagnose_plugin -g` can be used to diagnose
   # issues with plugins.
   #
-  postInstall = stdenv.lib.optionalString withPlugin ''
+  postInstall = lib.optionalString withPlugin ''
     sh ${plugin} --noexec --keep
     cd plugin_tmp
 
@@ -226,10 +226,10 @@ python3Packages.buildPythonApplication {
     substituteInPlace $out/etc/udev/rules.d/56-hpmud.rules \
       --replace {,${bash}}/bin/sh \
       --replace /usr/bin/nohup "" \
-      --replace {,${utillinux}/bin/}logger \
+      --replace {,${util-linux}/bin/}logger \
       --replace {/usr,$out}/bin
     remove-references-to -t ${stdenv.cc.cc} $(readlink -f $out/lib/*.so)
-  '' + stdenv.lib.optionalString withQt5 ''
+  '' + lib.optionalString withQt5 ''
     for f in $out/bin/hp-*;do
       wrapQtApp $f
     done
@@ -240,7 +240,7 @@ python3Packages.buildPythonApplication {
     "share/hplip" "lib/cups/backend" "lib/cups/filter" python3Packages.python.sitePackages "lib/sane"
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Print, scan and fax HP drivers for Linux";
     homepage = "https://developers.hp.com/hp-linux-imaging-and-printing";
     downloadPage = "https://sourceforge.net/projects/hplip/files/hplip/";

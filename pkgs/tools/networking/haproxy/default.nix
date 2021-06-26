@@ -1,7 +1,7 @@
 { useLua ? !stdenv.isDarwin
 , usePcre ? true
 , withPrometheusExporter ? true
-, stdenv, lib, fetchurl
+, stdenv, lib, fetchurl, nixosTests
 , openssl, zlib
 , lua5_3 ? null, pcre ? null, systemd ? null
 }:
@@ -11,11 +11,11 @@ assert usePcre -> pcre != null;
 
 stdenv.mkDerivation rec {
   pname = "haproxy";
-  version = "2.2.2";
+  version = "2.3.10";
 
   src = fetchurl {
-    url = "https://www.haproxy.org/download/${stdenv.lib.versions.majorMinor version}/src/${pname}-${version}.tar.gz";
-    sha256 = "1mjld865p4f7i465fcc5c4jclih1c3345a3ylriql8668rd7071r";
+    url = "https://www.haproxy.org/download/${lib.versions.majorMinor version}/src/${pname}-${version}.tar.gz";
+    sha256 = "sha256-mUbgz8g/KQcrNDHjckYiHPnUqdKKFYwHVxTTRSZvTzU=";
   };
 
   buildInputs = [ openssl zlib ]
@@ -40,6 +40,7 @@ stdenv.mkDerivation rec {
     "USE_PCRE_JIT=yes"
   ] ++ lib.optionals useLua [
     "USE_LUA=yes"
+    "LUA_LIB_NAME=lua"
     "LUA_LIB=${lua5_3}/lib"
     "LUA_INC=${lua5_3}/include"
   ] ++ lib.optionals stdenv.isLinux [
@@ -47,9 +48,11 @@ stdenv.mkDerivation rec {
     "USE_GETADDRINFO=1"
   ] ++ lib.optionals withPrometheusExporter [
     "EXTRA_OBJS=contrib/prometheus-exporter/service-prometheus.o"
-  ] ++ lib.optional stdenv.isDarwin "CC=cc";
+  ] ++ [ "CC=${stdenv.cc.targetPrefix}cc" ];
 
   enableParallelBuilding = true;
+
+  passthru.tests.haproxy = nixosTests.haproxy;
 
   meta = with lib; {
     description = "Reliable, high performance TCP/HTTP load balancer";

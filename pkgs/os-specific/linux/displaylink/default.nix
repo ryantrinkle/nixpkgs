@@ -1,14 +1,24 @@
-{ stdenv, lib, unzip, utillinux,
-  libusb1, evdi, systemd, makeWrapper, requireFile, substituteAll }:
+{ stdenv
+, lib
+, unzip
+, util-linux
+, libusb1
+, evdi
+, systemd
+, makeWrapper
+, requireFile
+, substituteAll
+}:
 let
   arch =
     if stdenv.hostPlatform.system == "x86_64-linux" then "x64"
     else if stdenv.hostPlatform.system == "i686-linux" then "x86"
     else throw "Unsupported architecture";
   bins = "${arch}-ubuntu-1604";
-  libPath = lib.makeLibraryPath [ stdenv.cc.cc utillinux libusb1 evdi ];
+  libPath = lib.makeLibraryPath [ stdenv.cc.cc util-linux libusb1 evdi ];
 
-in stdenv.mkDerivation rec {
+in
+stdenv.mkDerivation rec {
   pname = "displaylink";
   version = "5.4.0-55.153";
 
@@ -55,7 +65,7 @@ in stdenv.mkDerivation rec {
   dontPatchELF = true;
 
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "DisplayLink DL-5xxx, DL-41xx and DL-3x00 Driver for Linux";
     maintainers = with maintainers; [ nshalman abbradar peterhoeg eyjhb ];
     platforms = [ "x86_64-linux" "i686-linux" ];

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, pkg-config, pcre, perl, flex, bison, gettext, libpcap, libnl, c-ares
+{ lib, stdenv, fetchurl, pkg-config, pcre, perl, flex, bison, gettext, libpcap, libnl, c-ares
 , gnutls, libgcrypt, libgpgerror, geoip, openssl, lua5, python3, libcap, glib
 , libssh, nghttp2, zlib, cmake, makeWrapper
 , withQt ? true, qt5 ? null
@@ -7,12 +7,11 @@
 
 assert withQt  -> qt5  != null;
 
-with stdenv.lib;
+with lib;
 
 let
-  version = "3.4.5";
+  version = "3.4.6";
   variant = if withQt then "qt" else "cli";
-  pcap = libpcap.override { withBluez = stdenv.isLinux; };
 
 in stdenv.mkDerivation {
   pname = "wireshark-${variant}";
@@ -21,7 +20,7 @@ in stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://www.wireshark.org/download/src/all-versions/wireshark-${version}.tar.xz";
-    sha256 = "sha256-3hqv0QCh4SB8hQ0YDpfdkauNoPXra+7FRfclzbFF0zM=";
+    sha256 = "0a26kcj3n1a2kw1f3fc6s1x3rw3f3bj2cq6rp7k0kc4ciwh7i9hj";
   };
 
   cmakeFlags = [
@@ -75,7 +74,7 @@ in stdenv.mkDerivation {
     install -Dm644 ../image/wsicon.svg $out/share/icons/wireshark.svg
     mkdir $dev/include/{epan/{wmem,ftypes,dfilter},wsutil,wiretap} -pv
 
-    cp config.h $dev/include/
+    cp config.h $dev/include/wireshark/
     cp ../ws_*.h $dev/include
     cp ../epan/*.h $dev/include/epan/
     cp ../epan/wmem/*.h $dev/include/epan/wmem/
@@ -85,8 +84,6 @@ in stdenv.mkDerivation {
     cp ../wiretap/*.h $dev/include/wiretap
   '');
 
-  enableParallelBuilding = true;
-
   dontFixCmake = true;
 
   shellHook = ''
@@ -94,8 +91,9 @@ in stdenv.mkDerivation {
     export WIRESHARK_RUN_FROM_BUILD_DIRECTORY=1
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://www.wireshark.org/";
+    changelog = "https://www.wireshark.org/docs/relnotes/wireshark-${version}.html";
     description = "Powerful network protocol analyzer";
     license = licenses.gpl2Plus;
 

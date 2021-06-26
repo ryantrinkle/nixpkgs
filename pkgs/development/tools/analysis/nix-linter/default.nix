@@ -17,6 +17,7 @@
 , containers
 , hnix
 , bytestring
+, fetchpatch
 }:
 
 mkDerivation rec {
@@ -35,6 +36,14 @@ mkDerivation rec {
   libraryHaskellDepends = [ fixplate ];
   executableHaskellDepends = [ streamly mtl path pretty-terminal text base aeson cmdargs containers hnix bytestring path-io ];
   testHaskellDepends = [ tasty tasty-hunit tasty-th ];
+
+  patches = [
+    # Fix compatibility with hnix≥0.13.0 https://github.com/Synthetica9/nix-linter/pull/51
+    (fetchpatch {
+      url = "https://github.com/Synthetica9/nix-linter/commit/f73acacd8623dc25c9a35f8e04e4ff33cc596af8.patch";
+      sha256 = "139fm21hdg3vcw8hv35kxj4awd52bjqbb76mpzx191hzi9plj8qc";
+    })
+  ];
 
   description = "Linter for Nix(pkgs), based on hnix";
   homepage = "https://github.com/Synthetica9/nix-linter";

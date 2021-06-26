@@ -28,13 +28,13 @@ with lib;
         "systemd-resolved.service"
       ];
       path = [
-        pkgs.iproute
+        pkgs.iproute2
         # Needed for ping
         "/run/wrappers"
       ];
+      startLimitBurst = 5;
+      startLimitIntervalSec = 20;
       serviceConfig = {
-        StartLimitBurst = 5;
-        StartLimitIntervalSec = 20;
         ExecStart = "${pkgs.mullvad-vpn}/bin/mullvad-daemon -v --disable-stdout-timestamps";
         Restart = "always";
         RestartSec = 1;

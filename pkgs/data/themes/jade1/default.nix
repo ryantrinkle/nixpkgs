@@ -1,27 +1,29 @@
-{ stdenv, fetchFromGitHub, gtk-engine-murrine }:
+{ lib, stdenv, fetchurl, gtk-engine-murrine }:
 
 stdenv.mkDerivation rec {
   pname = "theme-jade1";
-  version = "1.8";
+  version = "1.13";
 
-  src = fetchFromGitHub {
-    owner = "madmaxms";
-    repo = "theme-jade-1";
-    rev = "v${version}";
-    sha256 = "1nvn2ghkdhilrsjpvl7r92aldvbs0nx0xc82jwrfaahi87dgfs8x";
+  src = fetchurl {
+    url = "https://github.com/madmaxms/theme-jade-1/releases/download/v${version}/jade-1-theme.tar.xz";
+    sha256 = "04a9c56w4hm8lwa8hzy5lwj4yli19gzy5wp5iinsm61qas9xgy69";
   };
+
+  sourceRoot = ".";
 
   propagatedUserEnvPkgs = [ gtk-engine-murrine ];
 
   installPhase = ''
+    runHook preInstall
     mkdir -p $out/share/themes
     cp -a Jade* $out/share/themes
+    runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Based on Linux Mint theme with dark menus and more intensive green";
     homepage = "https://github.com/madmaxms/theme-jade-1";
-    license = with licenses; [ gpl3 ];
+    license = with licenses; [ gpl3Only ];
     platforms = platforms.linux;
     maintainers = [ maintainers.romildo ];
   };

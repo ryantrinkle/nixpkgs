@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, fetchpatch, cmake, nasm, numactl
+{ lib, stdenv, fetchFromBitbucket, cmake, nasm, numactl
 , numaSupport ? stdenv.hostPlatform.isLinux && (stdenv.hostPlatform.isx86 || stdenv.hostPlatform.isAarch64)  # Enabled by default on NUMA platforms
 , debugSupport ? false # Run-time sanity checks (debugging)
 , werrorSupport ? false # Warnings as errors
@@ -21,33 +21,26 @@ let
     (mkFlag custatsSupport "DETAILED_CU_STATS")
     (mkFlag unittestsSupport "ENABLE_TESTS")
     (mkFlag werrorSupport "WARNINGS_AS_ERRORS")
+  ] ++ lib.optionals stdenv.hostPlatform.isPower [
+    "-DENABLE_ALTIVEC=OFF"
   ];
 
-  version = "3.2";
+  version = "3.4";
 
-  src = fetchurl {
-    urls = [
-      "https://get.videolan.org/x265/x265_${version}.tar.gz"
-      "ftp://ftp.videolan.org/pub/videolan/x265/x265_${version}.tar.gz"
-    ];
-    sha256 = "0fqkhfhr22gzavxn60cpnj3agwdf5afivszxf3haj5k1sny7jk9n";
+  src = fetchFromBitbucket {
+    owner = "multicoreware";
+    repo = "x265_git";
+    rev = version;
+    sha256 = "1jzgv2hxhcwmsdf6sbgyzm88a46dp09ll1fqj92g9vckvh9a7dsn";
   };
-
-  patches = [
-    # Fix build on ARM (#406)
-    (fetchpatch {
-      url = "https://bitbucket.org/multicoreware/x265_git/issues/attachments/406/multicoreware/x265_git/1599791236.73/406/X265-2.8-asm-primitives.patch";
-      sha256 = "1vf8bpl37gbd9dcbassgkq9i0rp24qm3bl6hx9zv325174bn402v";
-    })
-  ];
 
   buildLib = has12Bit: stdenv.mkDerivation rec {
     name = "libx265-${if has12Bit then "12" else "10"}-${version}";
-    inherit src patches;
-    enableParallelBuilding = true;
+    inherit src;
 
     postPatch = ''
       sed -i 's/unknown/${version}/g' source/cmake/version.cmake
+      sed -i 's/0.0/${version}/g' source/cmake/version.cmake
     '';
 
     cmakeLibFlags = [
@@ -63,7 +56,7 @@ let
       cd source
     '';
 
-    nativeBuildInputs = [cmake nasm] ++ stdenv.lib.optional numaSupport numactl;
+    nativeBuildInputs = [cmake nasm] ++ lib.optional numaSupport numactl;
   };
 
   libx265-10 = buildLib false;
@@ -72,19 +65,18 @@ in
 
 stdenv.mkDerivation rec {
   pname = "x265";
-  inherit version src patches;
-
-  enableParallelBuilding = true;
+  inherit version src;
 
   postPatch = ''
     sed -i 's/unknown/${version}/g' source/cmake/version.cmake
+    sed -i 's/0.0/${version}/g' source/cmake/version.cmake
   '';
 
   cmakeFlags = [
     "-DENABLE_SHARED=ON"
     "-DHIGH_BIT_DEPTH=OFF"
     "-DENABLE_HDR10_PLUS=OFF"
-  ] ++ stdenv.lib.optionals is64bit [
+  ] ++ lib.optionals (is64bit && !(stdenv.isAarch64 && stdenv.isLinux)) [
     "-DEXTRA_LIB=${libx265-10}/lib/libx265.a;${libx265-12}/lib/libx265.a"
     "-DLINKED_10BIT=ON"
     "-DLINKED_12BIT=ON"
@@ -100,9 +92,9 @@ stdenv.mkDerivation rec {
     rm $out/lib/*.a
   '';
 
-  nativeBuildInputs = [ cmake nasm ] ++ stdenv.lib.optional numaSupport numactl;
+  nativeBuildInputs = [ cmake nasm ] ++ lib.optional numaSupport numactl;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Library for encoding h.265/HEVC video streams";
     homepage    = "http://x265.org";
     license     = licenses.gpl2;

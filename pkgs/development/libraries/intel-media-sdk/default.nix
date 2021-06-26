@@ -1,16 +1,18 @@
-{ stdenv, fetchurl, cmake, pkgconfig, gtest, libdrm, libpciaccess, libva, libX11
+{ lib, stdenv, fetchFromGitHub, cmake, pkg-config, gtest, libdrm, libpciaccess, libva, libX11
 , libXau, libXdmcp, libpthreadstubs }:
 
 stdenv.mkDerivation rec {
   pname = "intel-media-sdk";
-  version = "20.2.1";
+  version = "21.2.0";
 
-  src = fetchurl {
-    url = "https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-${version}.tar.gz";
-    sha256 = "0m3ipfdknpgrdwiywlinl4sfkfrvyv7wmq1j83pmbr54z067sgg1";
+  src = fetchFromGitHub {
+    owner = "Intel-Media-SDK";
+    repo = "MediaSDK";
+    rev = "intel-mediasdk-${version}";
+    sha256 = "sha256-LusgmvlWOMEQjy47IpA9IYcl/cUTSMmvxSwvV/ihs2g=";
   };
 
-  nativeBuildInputs = [ cmake pkgconfig ];
+  nativeBuildInputs = [ cmake pkg-config ];
   buildInputs = [
     libdrm libva libpciaccess libX11 libXau libXdmcp libpthreadstubs
   ];
@@ -24,8 +26,8 @@ stdenv.mkDerivation rec {
 
   doCheck = true;
 
-  meta = with stdenv.lib; {
-    description = "Intel Media SDK.";
+  meta = with lib; {
+    description = "Intel Media SDK";
     license = licenses.mit;
     maintainers = with maintainers; [ midchildan ];
     platforms = [ "x86_64-linux" ];

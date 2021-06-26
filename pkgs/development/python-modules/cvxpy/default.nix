@@ -1,52 +1,58 @@
 { lib
+, stdenv
 , pythonOlder
 , buildPythonPackage
 , fetchPypi
 , cvxopt
 , ecos
-, multiprocess
 , numpy
 , osqp
 , scipy
 , scs
-, six
+, useOpenmp ? (!stdenv.isDarwin)
   # Check inputs
 , pytestCheckHook
-, nose
 }:
 
 buildPythonPackage rec {
   pname = "cvxpy";
-  version = "1.1.5";
+  version = "1.1.12";
+  format = "pyproject";
 
   disabled = pythonOlder "3.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "7c826a874db2e4cefe54e63ebd3a3763d0d72e55a17c7d1cfec80008a87b8d81";
+    hash = "sha256-tJnr+uT8ZF6VI2IVc//LHFtoVKG1wM4dZqippFhgWAc=";
   };
 
   propagatedBuildInputs = [
     cvxopt
     ecos
-    multiprocess
     numpy
     osqp
     scipy
     scs
-    six
   ];
 
-  checkInputs = [ pytestCheckHook nose ];
+  # Required flags from https://github.com/cvxgrp/cvxpy/releases/tag/v1.1.11
+  preBuild = lib.optional useOpenmp ''
+    export CFLAGS="-fopenmp"
+    export LDFLAGS="-lgomp"
+  '';
+
+  checkInputs = [ pytestCheckHook ];
   pytestFlagsArray = [ "./cvxpy" ];
   # Disable the slowest benchmarking tests, cuts test time in half
   disabledTests = [
     "test_tv_inpainting"
     "test_diffcp_sdp_example"
+  ] ++ lib.optionals stdenv.isAarch64 [
+    "test_ecos_bb_mi_lp_2" # https://github.com/cvxgrp/cvxpy/issues/1241#issuecomment-780912155
   ];
 
   meta = with lib; {
-    description = "A domain-specific language for modeling convex optimization problems in Python.";
+    description = "A domain-specific language for modeling convex optimization problems in Python";
     homepage = "https://www.cvxpy.org/";
     downloadPage = "https://github.com/cvxgrp/cvxpy/releases";
     changelog = "https://github.com/cvxgrp/cvxpy/releases/tag/v${version}";

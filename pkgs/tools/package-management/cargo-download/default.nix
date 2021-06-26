@@ -9,7 +9,6 @@
     cargo-download = attrs: {
       buildInputs = lib.optional stdenv.isDarwin
         darwin.apple_sdk.frameworks.Security;
-      meta.broken = true;
     };
   };
 }

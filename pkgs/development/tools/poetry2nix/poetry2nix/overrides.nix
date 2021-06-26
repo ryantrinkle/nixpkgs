@@ -39,56 +39,92 @@ self: super:
 
   ansible-lint = super.ansible-lint.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ self.setuptools-scm-git-archive ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.setuptools-scm-git-archive ];
       preBuild = ''
         export HOME=$(mktemp -d)
       '';
     }
   );
 
+  anyio = super.anyio.overridePythonAttrs (old: {
+    postPatch = ''
+      substituteInPlace setup.py --replace 'setup()' 'setup(version="${old.version}")'
+    '';
+  });
+
   astroid = super.astroid.overridePythonAttrs (
     old: rec {
-      buildInputs = old.buildInputs ++ [ self.pytest-runner ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
       doCheck = false;
     }
   );
 
   av = super.av.overridePythonAttrs (
     old: {
-      nativeBuildInputs = old.nativeBuildInputs ++ [
-        pkgs.pkgconfig
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+        pkgs.pkg-config
       ];
-      buildInputs = old.buildInputs ++ [ pkgs.ffmpeg_4 ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.ffmpeg_4 ];
     }
   );
 
   bcrypt = super.bcrypt.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ pkgs.libffi ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.libffi ];
+    }
+  );
+
+  cairocffi = super.cairocffi.overridePythonAttrs (
+    old: {
+      inherit (pkgs.python3.pkgs.cairocffi) patches;
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+    }
+  );
+
+  cairosvg = super.cairosvg.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+    }
+  );
+
+  celery = super.celery.overridePythonAttrs (old: {
+    propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools ];
+  });
+
+  cssselect2 = super.cssselect2.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
     }
   );
 
   cffi =
     # cffi is bundled with pypy
-    if self.python.implementation == "pypy" then null else (
+    if self.python.implementation == "pypy" then null else
+    (
       super.cffi.overridePythonAttrs (
         old: {
-          buildInputs = old.buildInputs ++ [ pkgs.libffi ];
+          buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.libffi ];
         }
       )
     );
 
   cftime = super.cftime.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         self.cython
       ];
     }
   );
 
+  colour = super.colour.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.d2to1 ];
+    }
+  );
+
   configparser = super.configparser.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         self.toml
       ];
 
@@ -100,7 +136,41 @@ self: super:
 
   cryptography = super.cryptography.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ pkgs.openssl ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ])
+        ++ lib.optional (lib.versionAtLeast old.version "3.4") [ self.setuptools-rust ]
+        ++ lib.optional (stdenv.buildPlatform != stdenv.hostPlatform) self.python.pythonForBuild.pkgs.cffi;
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openssl ];
+    } // lib.optionalAttrs (lib.versionAtLeast old.version "3.4" && lib.versionOlder old.version "3.5") {
+      CRYPTOGRAPHY_DONT_BUILD_RUST = "1";
+    }
+  );
+
+  daphne = super.daphne.overridePythonAttrs (old: {
+    postPatch = ''
+      substituteInPlace setup.py --replace 'setup_requires=["pytest-runner"],' ""
+    '';
+  });
+
+  datadog-lambda = super.datadog-lambda.overridePythonAttrs (old: {
+    postPatch = ''
+      substituteInPlace setup.py --replace "setuptools==" "setuptools>="
+    '';
+    buildInputs = (old.buildInputs or [ ]) ++ [ self.setuptools ];
+  });
+
+  dcli = super.dcli.overridePythonAttrs (old: {
+    propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools ];
+  });
+
+  ddtrace = super.ddtrace.overridePythonAttrs (old: {
+    buildInputs = (old.buildInputs or [ ]) ++
+      (pkgs.lib.optionals pkgs.stdenv.isDarwin [ pkgs.darwin.IOKit ]) ++ [ self.cython ];
+  });
+
+  dictdiffer = super.dictdiffer.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+      propagatedBuildInputs = old.propagatedBuildInputs ++ [ self.setuptools ];
     }
   );
 
@@ -131,17 +201,35 @@ self: super:
       enableParallelBuilding = true;
       dontUseCmakeConfigure = true;
 
-      nativeBuildInputs = old.nativeBuildInputs ++ pkgs.dlib.nativeBuildInputs;
-      buildInputs = old.buildInputs ++ pkgs.dlib.buildInputs;
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ pkgs.dlib.nativeBuildInputs;
+      buildInputs = (old.buildInputs or [ ]) ++ pkgs.dlib.buildInputs;
     }
   );
 
   # Environment markers are not always included (depending on how a dep was defined)
   enum34 = if self.pythonAtLeast "3.4" then null else super.enum34;
 
+  eth-hash = super.eth-hash.overridePythonAttrs {
+    preConfigure = ''
+      substituteInPlace setup.py --replace \'setuptools-markdown\' ""
+    '';
+  };
+
+  eth-keyfile = super.eth-keyfile.overridePythonAttrs {
+    preConfigure = ''
+      substituteInPlace setup.py --replace \'setuptools-markdown\' ""
+    '';
+  };
+
+  eth-keys = super.eth-keys.overridePythonAttrs {
+    preConfigure = ''
+      substituteInPlace setup.py --replace \'setuptools-markdown\' ""
+    '';
+  };
+
   faker = super.faker.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ self.pytest-runner ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
       doCheck = false;
     }
   );
@@ -158,16 +246,51 @@ self: super:
 
   fastparquet = super.fastparquet.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ self.pytest-runner ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+    }
+  );
+
+  fiona = super.fiona.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.gdal_2 ];
+      nativeBuildInputs = [
+        pkgs.gdal_2 # for gdal-config
+      ];
+    }
+  );
+
+  gdal = super.gdal.overridePythonAttrs (
+    old: {
+      preBuild = (old.preBuild or "") + ''
+        substituteInPlace setup.cfg \
+          --replace "../../apps/gdal-config" '${pkgs.gdal}/bin/gdal-config'
+      '';
     }
   );
 
   grandalf = super.grandalf.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ self.pytest-runner ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
       doCheck = false;
     }
   );
+
+  grpcio = super.grpcio.overridePythonAttrs (old: {
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ self.cython pkgs.pkg-config ];
+    buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.c-ares pkgs.openssl pkgs.zlib ];
+
+    outputs = [ "out" "dev" ];
+
+    GRPC_BUILD_WITH_BORING_SSL_ASM = "";
+    GRPC_PYTHON_BUILD_SYSTEM_OPENSSL = 1;
+    GRPC_PYTHON_BUILD_SYSTEM_ZLIB = 1;
+    GRPC_PYTHON_BUILD_SYSTEM_CARES = 1;
+    DISABLE_LIBC_COMPATIBILITY = 1;
+  });
+
+  grpcio-tools = super.grpcio-tools.overridePythonAttrs (old: {
+    outputs = [ "out" "dev" ];
+  });
 
   h3 = super.h3.overridePythonAttrs (
     old: {
@@ -180,19 +303,39 @@ self: super:
 
   h5py = super.h5py.overridePythonAttrs (
     old:
-    if old.format != "wheel" then rec {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.pkgconfig ];
-      buildInputs = old.buildInputs ++ [ pkgs.hdf5 self.pkgconfig self.cython ];
-      configure_flags = "--hdf5=${pkgs.hdf5}";
-      postConfigure = ''
-        ${self.python.executable} setup.py configure ${configure_flags}
-      '';
-    } else old
+    if old.format != "wheel" then
+      (
+        let
+          mpi = pkgs.hdf5.mpi;
+          mpiSupport = pkgs.hdf5.mpiSupport;
+        in
+        {
+          nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
+          buildInputs =
+            (old.buildInputs or [ ])
+            ++ [ pkgs.hdf5 self.pkg-config self.cython ]
+            ++ lib.optional mpiSupport mpi
+          ;
+          propagatedBuildInputs =
+            old.propagatedBuildInputs
+            ++ lib.optionals mpiSupport [ self.mpi4py self.openssh ]
+          ;
+          preBuild = if mpiSupport then "export CC=${mpi}/bin/mpicc" else "";
+          HDF5_DIR = "${pkgs.hdf5}";
+          HDF5_MPI = if mpiSupport then "ON" else "OFF";
+          # avoid strict pinning of numpy
+          postPatch = ''
+            substituteInPlace setup.py \
+              --replace "numpy ==" "numpy >="
+          '';
+          pythonImportsCheck = [ "h5py" ];
+        }
+      ) else old
   );
 
   horovod = super.horovod.overridePythonAttrs (
     old: {
-      propagatedBuildInputs = old.propagatedBuildInputs ++ [ pkgs.openmpi ];
+      propagatedBuildInputs = old.propagatedBuildInputs ++ [ pkgs.mpi ];
     }
   );
 
@@ -201,7 +344,7 @@ self: super:
       patchPhase = ''
         substituteInPlace setup.py \
           --replace "/usr/include/openjpeg-2.3" \
-                    "${pkgs.openjpeg.dev}/include/openjpeg-2.3"
+                    "${pkgs.openjpeg.dev}/include/${pkgs.openjpeg.dev.incDir}
         substituteInPlace setup.py \
           --replace "/usr/include/jxrlib" \
                     "$out/include/libjxr"
@@ -222,7 +365,7 @@ self: super:
 
       '';
 
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         # Commented out packages are declared required, but not actually
         # needed to build. They are not yet packaged for nixpkgs.
         # bitshuffle
@@ -272,6 +415,48 @@ self: super:
     }
   );
 
+  jaraco-functools = super.jaraco-functools.overridePythonAttrs (
+    old: {
+      # required for the extra "toml" dependency in setuptools_scm[toml]
+      buildInputs = (old.buildInputs or [ ]) ++ [
+        self.toml
+      ];
+      # disable the removal of pyproject.toml, required because of setuptools_scm
+      dontPreferSetupPy = true;
+    }
+  );
+
+  jira = super.jira.overridePythonAttrs (
+    old: {
+      inherit (pkgs.python3Packages.jira) patches;
+      buildInputs = (old.buildInputs or [ ]) ++ [
+        self.pytestrunner
+        self.cryptography
+        self.pyjwt
+      ];
+    }
+  );
+
+  jsondiff = super.jsondiff.overridePythonAttrs (
+    old: {
+      preBuild = (old.preBuild or "") + ''
+        substituteInPlace setup.py \
+          --replace "'jsondiff=jsondiff.cli:main_deprecated'," ""
+      '';
+    }
+  );
+
+  jsonpickle = super.jsonpickle.overridePythonAttrs (
+    old: {
+      dontPreferSetupPy = true;
+    }
+  );
+
+  jsonslicer = super.jsonslicer.overridePythonAttrs (old: {
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
+    buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.yajl ];
+  });
+
   jupyter = super.jupyter.overridePythonAttrs (
     old: rec {
       # jupyter is a meta-package. Everything relevant comes from the
@@ -281,9 +466,20 @@ self: super:
     }
   );
 
+  keyring = super.keyring.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [
+        self.toml
+      ];
+      postPatch = ''
+        substituteInPlace setup.py --replace 'setuptools.setup()' 'setuptools.setup(version="${old.version}")'
+      '';
+    }
+  );
+
   kiwisolver = super.kiwisolver.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         self.cppy
       ];
     }
@@ -298,13 +494,13 @@ self: super:
   );
 
   libvirt-python = super.libvirt-python.overridePythonAttrs ({ nativeBuildInputs ? [ ], ... }: {
-    nativeBuildInputs = nativeBuildInputs ++ [ pkgs.pkgconfig ];
+    nativeBuildInputs = nativeBuildInputs ++ [ pkgs.pkg-config ];
     propagatedBuildInputs = [ pkgs.libvirt ];
   });
 
   llvmlite = super.llvmlite.overridePythonAttrs (
     old: {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.llvm ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.llvm ];
 
       # Disable static linking
       # https://github.com/numba/llvmlite/issues/93
@@ -316,10 +512,10 @@ self: super:
 
       # Set directory containing llvm-config binary
       preConfigure = ''
-        export LLVM_CONFIG=${pkgs.llvm}/bin/llvm-config
+        export LLVM_CONFIG=${pkgs.llvm.dev}/bin/llvm-config
       '';
 
-      __impureHostDeps = pkgs.stdenv.lib.optionals pkgs.stdenv.isDarwin [ "/usr/lib/libm.dylib" ];
+      __impureHostDeps = lib.optionals pkgs.stdenv.isDarwin [ "/usr/lib/libm.dylib" ];
 
       passthru = old.passthru // { llvm = pkgs.llvm; };
     }
@@ -333,8 +529,8 @@ self: super:
 
   lxml = super.lxml.overridePythonAttrs (
     old: {
-      nativeBuildInputs = with pkgs; old.nativeBuildInputs ++ [ pkgconfig libxml2.dev libxslt.dev ];
-      buildInputs = with pkgs; old.buildInputs ++ [ libxml2 libxslt ];
+      nativeBuildInputs = with pkgs; (old.nativeBuildInputs or [ ]) ++ [ pkg-config libxml2.dev libxslt.dev ];
+      buildInputs = with pkgs; (old.buildInputs or [ ]) ++ [ libxml2 libxslt ];
     }
   );
 
@@ -355,16 +551,16 @@ self: super:
       inherit (pkgs.darwin.apple_sdk.frameworks) Cocoa;
     in
     {
-      NIX_CFLAGS_COMPILE = stdenv.lib.optionalString stdenv.isDarwin "-I${pkgs.libcxx}/include/c++/v1";
+      NIX_CFLAGS_COMPILE = lib.optionalString stdenv.isDarwin "-I${pkgs.libcxx}/include/c++/v1";
 
       XDG_RUNTIME_DIR = "/tmp";
 
-      buildInputs = old.buildInputs
+      buildInputs = (old.buildInputs or [ ])
         ++ lib.optional enableGhostscript pkgs.ghostscript
         ++ lib.optional stdenv.isDarwin [ Cocoa ];
 
-      nativeBuildInputs = old.nativeBuildInputs ++ [
-        pkgs.pkgconfig
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+        pkgs.pkg-config
       ];
 
       postPatch = ''
@@ -378,9 +574,9 @@ self: super:
         pkgs.libpng
         pkgs.freetype
       ]
-        ++ stdenv.lib.optionals enableGtk3 [ pkgs.cairo self.pycairo pkgs.gtk3 pkgs.gobject-introspection self.pygobject3 ]
-        ++ stdenv.lib.optionals enableTk [ pkgs.tcl pkgs.tk self.tkinter pkgs.libX11 ]
-        ++ stdenv.lib.optionals enableQt [ self.pyqt5 ]
+        ++ lib.optionals enableGtk3 [ pkgs.cairo self.pycairo pkgs.gtk3 pkgs.gobject-introspection self.pygobject3 ]
+        ++ lib.optionals enableTk [ pkgs.tcl pkgs.tk self.tkinter pkgs.libX11 ]
+        ++ lib.optionals enableQt [ self.pyqt5 ]
       ;
 
       inherit (super.matplotlib) patches;
@@ -394,39 +590,95 @@ self: super:
 
   mccabe = super.mccabe.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ self.pytest-runner ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
       doCheck = false;
     }
   );
 
   mip = super.mip.overridePythonAttrs (
     old: {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.autoPatchelfHook ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.autoPatchelfHook ];
 
-      buildInputs = old.buildInputs ++ [ pkgs.zlib self.cppy ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.zlib self.cppy ];
     }
   );
 
   molecule =
-    if lib.versionOlder super.molecule.version "3.0.0" then (super.molecule.overridePythonAttrs (
-      old: {
-        patches = (old.patches or [ ]) ++ [
-          # Fix build with more recent setuptools versions
-          (pkgs.fetchpatch {
-            url = "https://github.com/ansible-community/molecule/commit/c9fee498646a702c77b5aecf6497cff324acd056.patch";
-            sha256 = "1g1n45izdz0a3c9akgxx14zhdw6c3dkb48j8pq64n82fa6ndl1b7";
-            excludes = [ "pyproject.toml" ];
-          })
-        ];
-        buildInputs = old.buildInputs ++ [ self.setuptools-scm-git-archive ];
-      }
-    )) else super.molecule.overridePythonAttrs (old: {
-      buildInputs = old.buildInputs ++ [ self.setuptools-scm-git-archive ];
-    });
+    if lib.versionOlder super.molecule.version "3.0.0" then
+      (super.molecule.overridePythonAttrs (
+        old: {
+          patches = (old.patches or [ ]) ++ [
+            # Fix build with more recent setuptools versions
+            (pkgs.fetchpatch {
+              url = "https://github.com/ansible-community/molecule/commit/c9fee498646a702c77b5aecf6497cff324acd056.patch";
+              sha256 = "1g1n45izdz0a3c9akgxx14zhdw6c3dkb48j8pq64n82fa6ndl1b7";
+              excludes = [ "pyproject.toml" ];
+            })
+          ];
+          buildInputs = (old.buildInputs or [ ]) ++ [ self.setuptools-scm-git-archive ];
+        }
+      )) else
+      super.molecule.overridePythonAttrs (old: {
+        buildInputs = (old.buildInputs or [ ]) ++ [ self.setuptools-scm-git-archive ];
+      });
+
+  mongomock = super.mongomock.overridePythonAttrs (oa: {
+    buildInputs = oa.buildInputs ++ [ self.pbr ];
+  });
+
+  moto = super.moto.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++
+        [ self.sshpubkeys ];
+    }
+  );
+
+  mpi4py = super.mpi4py.overridePythonAttrs (
+    old:
+    let
+      cfg = pkgs.writeTextFile {
+        name = "mpi.cfg";
+        text = (
+          lib.generators.toINI
+            { }
+            {
+              mpi = {
+                mpicc = "${pkgs.mpi.outPath}/bin/mpicc";
+              };
+            }
+        );
+      };
+    in
+    {
+      propagatedBuildInputs = old.propagatedBuildInputs ++ [ pkgs.mpi ];
+      enableParallelBuilding = true;
+      preBuild = ''
+        ln -sf ${cfg} mpi.cfg
+      '';
+    }
+  );
+
+  multiaddr = super.multiaddr.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+    }
+  );
+
+  munch = super.munch.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pbr ];
+    }
+  );
+
+  mysqlclient = super.mysqlclient.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.libmysqlclient ];
+    }
+  );
 
   netcdf4 = super.netcdf4.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         self.cython
       ];
 
@@ -456,21 +708,22 @@ self: super:
         name = "site.cfg";
         text = (
           lib.generators.toINI
-            { } {
-            ${blasImplementation} = {
-              include_dirs = "${blas}/include";
-              library_dirs = "${blas}/lib";
-            } // lib.optionalAttrs (blasImplementation == "mkl") {
-              mkl_libs = "mkl_rt";
-              lapack_libs = "";
-            };
-          }
+            { }
+            {
+              ${blasImplementation} = {
+                include_dirs = "${blas}/include";
+                library_dirs = "${blas}/lib";
+              } // lib.optionalAttrs (blasImplementation == "mkl") {
+                mkl_libs = "mkl_rt";
+                lapack_libs = "";
+              };
+            }
         );
       };
     in
     {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.gfortran ];
-      buildInputs = old.buildInputs ++ [ blas self.cython ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.gfortran ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ blas self.cython ];
       enableParallelBuilding = true;
       preBuild = ''
         ln -s ${cfg} site.cfg
@@ -484,14 +737,27 @@ self: super:
 
   openexr = super.openexr.overridePythonAttrs (
     old: rec {
-      buildInputs = old.buildInputs ++ [ pkgs.openexr pkgs.ilmbase ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openexr pkgs.ilmbase ];
       NIX_CFLAGS_COMPILE = [ "-I${pkgs.openexr.dev}/include/OpenEXR" "-I${pkgs.ilmbase.dev}/include/OpenEXR" ];
+    }
+  );
+
+  osqp = super.osqp.overridePythonAttrs (
+    old: {
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.cmake ];
+      dontUseCmakeConfigure = true;
     }
   );
 
   parsel = super.parsel.overridePythonAttrs (
     old: rec {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ self.pytest-runner ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ self.pytest-runner ];
+    }
+  );
+
+  pdal = super.pdal.overridePythonAttrs (
+    old: {
+      PDAL_CONFIG = "${pkgs.pdal}/bin/pdal-config";
     }
   );
 
@@ -502,8 +768,8 @@ self: super:
       withMysql = old.passthru.withMysql or false;
     in
     {
-      buildInputs = old.buildInputs ++ [ self.cython pkgs.sqlite ];
-      propagatedBuildInputs = old.propagatedBuildInputs
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.sqlite ];
+      propagatedBuildInputs = old.propagatedBuildInputs or [ ]
         ++ lib.optional withPostgres self.psycopg2
         ++ lib.optional withMysql self.mysql-connector;
     }
@@ -511,83 +777,136 @@ self: super:
 
   pillow = super.pillow.overridePythonAttrs (
     old: {
-      nativeBuildInputs = [ pkgs.pkgconfig ] ++ old.nativeBuildInputs;
-      buildInputs = with pkgs; [ freetype libjpeg zlib libtiff libwebp tcl lcms2 ] ++ old.buildInputs;
+      nativeBuildInputs = [ pkgs.pkg-config ] ++ (old.nativeBuildInputs or [ ]);
+      buildInputs = with pkgs; [ freetype libjpeg zlib libtiff libwebp tcl lcms2 ] ++ (old.buildInputs or [ ]);
+    }
+  );
+
+  # Work around https://github.com/nix-community/poetry2nix/issues/244
+  # where git deps are not picked up as they should
+  pip =
+    if lib.versionAtLeast super.pip.version "20.3" then
+      super.pip.overridePythonAttrs
+        (old:
+          let
+            pname = "pip";
+            version = "20.2.4";
+          in
+          {
+            name = pname + "-" + version;
+            inherit version;
+            src = pkgs.fetchFromGitHub {
+              owner = "pypa";
+              repo = pname;
+              rev = version;
+              sha256 = "eMVV4ftgV71HLQsSeaOchYlfaJVgzNrwUynn3SA1/Do=";
+              name = "${pname}-${version}-source";
+            };
+          }) else super.pip;
+
+  poetry-core = super.poetry-core.overridePythonAttrs (old: {
+    # "Vendor" dependencies (for build-system support)
+    postPatch = ''
+      echo "import sys" >> poetry/__init__.py
+      for path in $propagatedBuildInputs; do
+          echo "sys.path.insert(0, \"$path\")" >> poetry/__init__.py
+      done
+    '';
+
+    # Propagating dependencies leads to issues downstream
+    # We've already patched poetry to prefer "vendored" dependencies
+    postFixup = ''
+      rm $out/nix-support/propagated-build-inputs
+    '';
+  });
+
+  portend = super.portend.overridePythonAttrs (
+    old: {
+      # required for the extra "toml" dependency in setuptools_scm[toml]
+      buildInputs = (old.buildInputs or [ ]) ++ [
+        self.toml
+      ];
+      # disable the removal of pyproject.toml, required because of setuptools_scm
+      dontPreferSetupPy = true;
     }
   );
 
   psycopg2 = super.psycopg2.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs
+      buildInputs = (old.buildInputs or [ ])
         ++ lib.optional stdenv.isDarwin pkgs.openssl;
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.postgresql ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.postgresql ];
     }
   );
 
   psycopg2-binary = super.psycopg2-binary.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs
+      buildInputs = (old.buildInputs or [ ])
         ++ lib.optional stdenv.isDarwin pkgs.openssl;
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.postgresql ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.postgresql ];
     }
   );
 
   pyarrow =
-    if lib.versionAtLeast super.pyarrow.version "0.16.0" then super.pyarrow.overridePythonAttrs (
-      old:
-      let
-        parseMinor = drv: lib.concatStringsSep "." (lib.take 2 (lib.splitVersion drv.version));
+    if lib.versionAtLeast super.pyarrow.version "0.16.0" then
+      super.pyarrow.overridePythonAttrs
+        (
+          old:
+          let
+            parseMinor = drv: lib.concatStringsSep "." (lib.take 2 (lib.splitVersion drv.version));
 
-        # Starting with nixpkgs revision f149c7030a7, pyarrow takes "python3" as an argument
-        # instead of "python". Below we inspect function arguments to maintain compatibilitiy.
-        _arrow-cpp = pkgs.arrow-cpp.override (
-          builtins.intersectAttrs
-            (lib.functionArgs pkgs.arrow-cpp.override) { python = self.python; python3 = self.python; }
-        );
+            # Starting with nixpkgs revision f149c7030a7, pyarrow takes "python3" as an argument
+            # instead of "python". Below we inspect function arguments to maintain compatibilitiy.
+            _arrow-cpp = pkgs.arrow-cpp.override (
+              builtins.intersectAttrs
+                (lib.functionArgs pkgs.arrow-cpp.override)
+                { python = self.python; python3 = self.python; }
+            );
 
-        ARROW_HOME = _arrow-cpp;
-        arrowCppVersion = parseMinor pkgs.arrow-cpp;
-        pyArrowVersion = parseMinor super.pyarrow;
-        errorMessage = "arrow-cpp version (${arrowCppVersion}) mismatches pyarrow version (${pyArrowVersion})";
-      in
-      if arrowCppVersion != pyArrowVersion then throw errorMessage else {
+            ARROW_HOME = _arrow-cpp;
+            arrowCppVersion = parseMinor pkgs.arrow-cpp;
+            pyArrowVersion = parseMinor super.pyarrow;
+            errorMessage = "arrow-cpp version (${arrowCppVersion}) mismatches pyarrow version (${pyArrowVersion})";
+          in
+          if arrowCppVersion != pyArrowVersion then throw errorMessage else {
 
-        nativeBuildInputs = old.nativeBuildInputs ++ [
-          self.cython
-          pkgs.pkgconfig
-          pkgs.cmake
-        ];
+            nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+              self.cython
+              pkgs.pkg-config
+              pkgs.cmake
+            ];
 
-        preBuild = ''
-          export PYARROW_PARALLEL=$NIX_BUILD_CORES
-        '';
+            preBuild = ''
+              export PYARROW_PARALLEL=$NIX_BUILD_CORES
+            '';
 
-        PARQUET_HOME = _arrow-cpp;
-        inherit ARROW_HOME;
+            PARQUET_HOME = _arrow-cpp;
+            inherit ARROW_HOME;
 
-        buildInputs = old.buildInputs ++ [
-          pkgs.arrow-cpp
-        ];
+            buildInputs = (old.buildInputs or [ ]) ++ [
+              pkgs.arrow-cpp
+            ];
 
-        PYARROW_BUILD_TYPE = "release";
-        PYARROW_WITH_PARQUET = true;
-        PYARROW_CMAKE_OPTIONS = [
-          "-DCMAKE_INSTALL_RPATH=${ARROW_HOME}/lib"
+            PYARROW_BUILD_TYPE = "release";
+            PYARROW_WITH_PARQUET = true;
+            PYARROW_CMAKE_OPTIONS = [
+              "-DCMAKE_INSTALL_RPATH=${ARROW_HOME}/lib"
 
-          # This doesn't use setup hook to call cmake so we need to workaround #54606
-          # ourselves
-          "-DCMAKE_POLICY_DEFAULT_CMP0025=NEW"
-        ];
+              # This doesn't use setup hook to call cmake so we need to workaround #54606
+              # ourselves
+              "-DCMAKE_POLICY_DEFAULT_CMP0025=NEW"
+            ];
 
-        dontUseCmakeConfigure = true;
-      }
-    ) else super.pyarrow.overridePythonAttrs (
-      old: {
-        nativeBuildInputs = old.nativeBuildInputs ++ [
-          self.cython
-        ];
-      }
-    );
+            dontUseCmakeConfigure = true;
+          }
+        ) else
+      super.pyarrow.overridePythonAttrs (
+        old: {
+          nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+            self.cython
+          ];
+        }
+      );
 
   pycairo = (
     drv: (
@@ -599,10 +918,10 @@ self: super:
     ).overridePythonAttrs (
       old: {
 
-        nativeBuildInputs = old.nativeBuildInputs ++ [
+        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
           pkgs.meson
           pkgs.ninja
-          pkgs.pkgconfig
+          pkgs.pkg-config
         ];
 
         propagatedBuildInputs = old.propagatedBuildInputs ++ [
@@ -618,12 +937,17 @@ self: super:
 
   pycocotools = super.pycocotools.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         self.cython
         self.numpy
       ];
     }
   );
+
+  pyfuse3 = super.pyfuse3.overridePythonAttrs (old: {
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
+    buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.fuse3 ];
+  });
 
   pygame = super.pygame.overridePythonAttrs (
     old: rec {
@@ -647,47 +971,74 @@ self: super:
       # Tests fail because of no audio device and display.
       doCheck = false;
       preConfigure = ''
-        sed \
-          -e "s/origincdirs = .*/origincdirs = []/" \
-          -e "s/origlibdirs = .*/origlibdirs = []/" \
-          -e "/'\/lib\/i386-linux-gnu', '\/lib\/x86_64-linux-gnu']/d" \
-          -e "/\/include\/smpeg/d" \
-          -i buildconfig/config_unix.py
-        ${lib.concatMapStrings (dep: ''
-          sed \
-            -e "/origincdirs =/a\        origincdirs += ['${lib.getDev dep}/include']" \
-            -e "/origlibdirs =/a\        origlibdirs += ['${lib.getLib dep}/lib']" \
-            -i buildconfig/config_unix.py
-        '') buildInputs
-        }
-        LOCALBASE=/ ${self.python.interpreter} buildconfig/config.py
+                sed \
+                  -e "s/origincdirs = .*/origincdirs = []/" \
+                  -e "s/origlibdirs = .*/origlibdirs = []/" \
+                  -e "/'\/lib\/i386-linux-gnu', '\/lib\/x86_64-linux-gnu']/d" \
+                  -e "/\/include\/smpeg/d" \
+                  -i buildconfig/config_unix.py
+                ${lib.concatMapStrings
+        (dep: ''
+                  sed \
+                    -e "/origincdirs =/a\        origincdirs += ['${lib.getDev dep}/include']" \
+                    -e "/origlibdirs =/a\        origlibdirs += ['${lib.getLib dep}/lib']" \
+                    -i buildconfig/config_unix.py
+                '')
+        buildInputs
+                }
+                LOCALBASE=/ ${self.python.interpreter} buildconfig/config.py
       '';
+    }
+  );
+
+  pygeos = super.pygeos.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.geos ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.geos ];
     }
   );
 
   pygobject = super.pygobject.overridePythonAttrs (
     old: {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.pkgconfig ];
-      buildInputs = old.buildInputs ++ [ pkgs.glib pkgs.gobject-introspection ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.glib pkgs.gobject-introspection ];
     }
   );
 
   pylint = super.pylint.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ self.pytest-runner ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
       doCheck = false;
     }
   );
 
   pyopenssl = super.pyopenssl.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ pkgs.openssl ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openssl ];
+    }
+  );
+
+  pyproj = super.pyproj.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++
+        [ self.cython ];
+      PROJ_DIR = "${pkgs.proj}";
+      PROJ_LIBDIR = "${pkgs.proj}/lib";
+      PROJ_INCDIR = "${pkgs.proj.dev}/include";
+    }
+  );
+
+  python-bugzilla = super.python-bugzilla.overridePythonAttrs (
+    old: {
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+        self.docutils
+      ];
     }
   );
 
   python-ldap = super.python-ldap.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ pkgs.openldap pkgs.cyrus_sasl ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openldap pkgs.cyrus_sasl ];
     }
   );
 
@@ -709,8 +1060,10 @@ self: super:
       old: {
         format = "other";
 
-        nativeBuildInputs = old.nativeBuildInputs ++ [
-          pkgs.pkgconfig
+        dontWrapQtApps = true;
+
+        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+          pkgs.pkg-config
           pkgs.qt5.qmake
           pkgs.xorg.lndir
           pkgs.qt5.qtbase
@@ -726,7 +1079,7 @@ self: super:
           ++ lib.optional withWebSockets pkgs.qt5.qtwebsockets
         ;
 
-        buildInputs = old.buildInputs ++ [
+        buildInputs = (old.buildInputs or [ ]) ++ [
           pkgs.dbus
           pkgs.qt5.qtbase
           pkgs.qt5.qtsvg
@@ -809,30 +1162,67 @@ self: super:
 
   pytest = super.pytest.overridePythonAttrs (
     old: {
+      # Fixes https://github.com/pytest-dev/pytest/issues/7891
+      postPatch = old.postPatch or "" + ''
+        sed -i '/\[metadata\]/aversion = ${old.version}' setup.cfg
+      '';
       doCheck = false;
+    }
+  );
+
+  pytest-django = super.pytest-django.overridePythonAttrs (
+    old: {
+      postPatch = ''
+        substituteInPlace setup.py --replace "'pytest>=3.6'," ""
+        substituteInPlace setup.py --replace "'pytest>=3.6'" ""
+      '';
     }
   );
 
   pytest-runner = super.pytest-runner or super.pytestrunner;
 
+  pytest-pylint = super.pytest-pylint.overridePythonAttrs (
+    old: {
+      buildInputs = [ self.pytest-runner ];
+    }
+  );
+
+  # pytest-splinter seems to put a .marker file in an empty directory
+  # presumably so it's tracked by and can be installed with MANIFEST.in, see
+  # https://github.com/pytest-dev/pytest-splinter/commit/a48eeef662f66ff9d3772af618748e73211a186b
+  #
+  # This directory then gets used as an empty initial profile directory and is
+  # zipped up. But if the .marker file is in the Nix store, it has the
+  # creation date of 1970, and Zip doesn't work with such old files, so it
+  # fails at runtime!
+  #
+  # We fix this here by just removing the file after the installation
+  #
+  # The error you get without this is:
+  #
+  # E           ValueError: ZIP does not support timestamps before 1980
+  # /nix/store/55b9ip7xkpimaccw9pa0vacy5q94f5xa-python3-3.7.6/lib/python3.7/zipfile.py:357: ValueError
+  pytest-splinter = super.pytest-splinter.overrideAttrs (old: {
+    postInstall = old.postInstall or "" + ''
+      rm $out/${super.python.sitePackages}/pytest_splinter/profiles/firefox/.marker
+    '';
+  });
+
   python-jose = super.python-jose.overridePythonAttrs (
     old: {
-      postPath = ''
-        substituteInPlace setup.py --replace "'pytest-runner'," ""
-        substituteInPlace setup.py --replace "'pytest-runner'" ""
-      '';
+      buildInputs = [ self.pytest-runner ];
     }
   );
 
   ffmpeg-python = super.ffmpeg-python.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ self.pytest-runner ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
     }
   );
 
   python-prctl = super.python-prctl.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         pkgs.libcap
       ];
     }
@@ -840,7 +1230,7 @@ self: super:
 
   pyzmq = super.pyzmq.overridePythonAttrs (
     old: {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.pkgconfig ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
       propagatedBuildInputs = old.propagatedBuildInputs ++ [ pkgs.zeromq ];
     }
   );
@@ -863,13 +1253,13 @@ self: super:
 
   pandas = super.pandas.overridePythonAttrs (
     old: {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ self.cython ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ self.cython ];
     }
   );
 
   panel = super.panel.overridePythonAttrs (
     old: {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.nodejs ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.nodejs ];
     }
   );
 
@@ -884,14 +1274,34 @@ self: super:
     }
   );
 
+  rlp = super.rlp.overridePythonAttrs {
+    preConfigure = ''
+      substituteInPlace setup.py --replace \'setuptools-markdown\' ""
+    '';
+  };
+
+
+  rmfuse = super.rmfuse.overridePythonAttrs (old: {
+    propagatedBuildInputs = (old.propagatedBuildInputs or [ ]) ++ [ self.setuptools ];
+  });
+
+  rtree = super.rtree.overridePythonAttrs (old: {
+    propagatedNativeBuildInputs = (old.propagatedNativeBuildInputs or [ ]) ++ [ pkgs.libspatialindex ];
+    postPatch = ''
+      substituteInPlace rtree/finder.py --replace \
+        "find_library('spatialindex_c')" \
+        "'${pkgs.libspatialindex}/lib/libspatialindex_c${pkgs.stdenv.hostPlatform.extensions.sharedLibrary}'"
+    '';
+  });
+
   scipy = super.scipy.overridePythonAttrs (
     old:
     if old.format != "wheel" then {
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.gfortran ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.gfortran ];
       propagatedBuildInputs = old.propagatedBuildInputs ++ [ self.pybind11 ];
       setupPyBuildFlags = [ "--fcompiler='gnu95'" ];
       enableParallelBuilding = true;
-      buildInputs = old.buildInputs ++ [ self.numpy.blas ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.numpy.blas ];
       preConfigure = ''
         sed -i '0,/from numpy.distutils.core/s//import setuptools;from numpy.distutils.core/' setup.py
         export NPY_NUM_BUILD_JOBS=$NIX_BUILD_CORES
@@ -904,14 +1314,14 @@ self: super:
 
   scikit-learn = super.scikit-learn.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [
+      buildInputs = (old.buildInputs or [ ]) ++ [
         pkgs.gfortran
         pkgs.glibcLocales
       ] ++ lib.optionals stdenv.cc.isClang [
         pkgs.llvmPackages.openmp
       ];
 
-      nativeBuildInputs = old.nativeBuildInputs ++ [
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
         self.cython
       ];
 
@@ -921,25 +1331,37 @@ self: super:
 
   shapely = super.shapely.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ [ pkgs.geos self.cython ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.geos self.cython ];
       inherit (pkgs.python3.pkgs.shapely) patches GEOS_LIBRARY_PATH;
     }
   );
 
   shellingham =
-    if lib.versionAtLeast super.shellingham.version "1.3.2" then (
-      super.shellingham.overridePythonAttrs (
-        old: {
-          format = "pyproject";
-        }
-      )
-    ) else super.shellingham;
+    if lib.versionAtLeast super.shellingham.version "1.3.2" then
+      (
+        super.shellingham.overridePythonAttrs (
+          old: {
+            format = "pyproject";
+          }
+        )
+      ) else super.shellingham;
 
   tables = super.tables.overridePythonAttrs (
     old: {
       HDF5_DIR = "${pkgs.hdf5}";
-      nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.pkgconfig ];
-      propagatedBuildInputs = old.nativeBuildInputs ++ [ pkgs.hdf5 self.numpy self.numexpr ];
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.pkg-config ];
+      propagatedBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.hdf5 self.numpy self.numexpr ];
+    }
+  );
+
+  tempora = super.tempora.overridePythonAttrs (
+    old: {
+      # required for the extra "toml" dependency in setuptools_scm[toml]
+      buildInputs = (old.buildInputs or [ ]) ++ [
+        self.toml
+      ];
+      # disable the removal of pyproject.toml, required because of setuptools_scm
+      dontPreferSetupPy = true;
     }
   );
 
@@ -958,6 +1380,52 @@ self: super:
       '';
     }
   );
+
+  tinycss2 = super.tinycss2.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+    }
+  );
+
+  torch = lib.makeOverridable
+    ({ enableCuda ? false
+     , cudatoolkit ? pkgs.cudatoolkit_10_1
+     , pkg ? super.torch
+     }: pkg.overrideAttrs (old:
+      {
+        preConfigure =
+          if (!enableCuda) then ''
+            export USE_CUDA=0
+          '' else ''
+            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${cudatoolkit}/targets/x86_64-linux/lib"
+          '';
+        preFixup = lib.optionalString (!enableCuda) ''
+          # For some reason pytorch retains a reference to libcuda even if it
+          # is explicitly disabled with USE_CUDA=0.
+          find $out -name "*.so" -exec ${pkgs.patchelf}/bin/patchelf --remove-needed libcuda.so.1 {} \;
+        '';
+        buildInputs =
+          (old.buildInputs or [ ])
+          ++ [ self.typing-extensions ]
+          ++ lib.optionals enableCuda [
+            pkgs.linuxPackages.nvidia_x11
+            pkgs.nccl.dev
+            pkgs.nccl.out
+          ];
+        propagatedBuildInputs = [
+          self.numpy
+          self.future
+        ];
+      })
+    )
+    { };
+
+  typeguard = super.typeguard.overridePythonAttrs (old: {
+    postPatch = ''
+      substituteInPlace setup.py \
+        --replace 'setup()' 'setup(version="${old.version}")'
+    '';
+  });
 
   # nix uses a dash, poetry uses an underscore
   typing_extensions = super.typing_extensions or self.typing-extensions;
@@ -981,7 +1449,7 @@ self: super:
   vispy = super.vispy.overrideAttrs (
     old: {
       inherit (pkgs.python3.pkgs.vispy) patches;
-      nativeBuildInputs = old.nativeBuildInputs ++ [
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
         self.cython
         self.setuptools-scm-git-archive
       ];
@@ -990,7 +1458,7 @@ self: super:
 
   uvloop = super.uvloop.overridePythonAttrs (
     old: {
-      buildInputs = old.buildInputs ++ lib.optionals stdenv.isDarwin [
+      buildInputs = (old.buildInputs or [ ]) ++ lib.optionals stdenv.isDarwin [
         pkgs.darwin.apple_sdk.frameworks.ApplicationServices
         pkgs.darwin.apple_sdk.frameworks.CoreServices
       ];
@@ -1004,6 +1472,20 @@ self: super:
       python = self.python;
     }).wheel;
   };
+
+  weasyprint = super.weasyprint.overridePythonAttrs (
+    old: {
+      inherit (pkgs.python3.pkgs.weasyprint) patches;
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.pytest-runner ];
+    }
+  );
+
+  web3 = super.web3.overridePythonAttrs {
+    preConfigure = ''
+      substituteInPlace setup.py --replace \'setuptools-markdown\' ""
+    '';
+  };
+
   wheel =
     let
       isWheel = super.wheel.src.isWheel or false;
@@ -1014,21 +1496,22 @@ self: super:
         format = "wheel";
       };
       # If "wheel" is built from source
-      sourcePackage = (
+      sourcePackage = ((
         pkgs.python3.pkgs.override {
           python = self.python;
         }
-      ).wheel.overridePythonAttrs (
-        old: {
-          inherit (super.wheel) pname name version src;
-        }
-      );
+      ).wheel.override {
+        inherit (self) buildPythonPackage bootstrapped-pip setuptools;
+      }).overrideAttrs (old: {
+        inherit (super.wheel) pname name version src;
+      });
     in
     if isWheel then wheelPackage else sourcePackage;
 
-  zipp =
-    (
-      if lib.versionAtLeast super.zipp.version "2.0.0" then (
+  zipp = if super.zipp == null then null else
+  (
+    if lib.versionAtLeast super.zipp.version "2.0.0" then
+      (
         super.zipp.overridePythonAttrs (
           old: {
             prePatch = ''
@@ -1039,12 +1522,90 @@ self: super:
           }
         )
       ) else super.zipp
-    ).overridePythonAttrs (
-      old: {
-        propagatedBuildInputs = old.propagatedBuildInputs ++ [
-          self.toml
-        ];
-      }
-    );
+  ).overridePythonAttrs (
+    old: {
+      propagatedBuildInputs = old.propagatedBuildInputs ++ [
+        self.toml
+      ];
+    }
+  );
+
+  credis = super.credis.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.cython ];
+    }
+  );
+
+  hashids = super.hashids.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.flit-core ];
+    }
+  );
+
+  packaging = super.packaging.overridePythonAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ]) ++
+        # From 20.5 until 20.7, packaging used flit for packaging (heh)
+        # See https://github.com/pypa/packaging/pull/352 and https://github.com/pypa/packaging/pull/367
+        lib.optional (lib.versionAtLeast old.version "20.5" && lib.versionOlder old.version "20.8") [ self.flit-core ];
+    }
+  );
+
+  supervisor = super.supervisor.overridePythonAttrs (
+    old: {
+      propagatedBuildInputs = old.propagatedBuildInputs ++ [
+        self.meld3
+        self.setuptools
+      ];
+    }
+  );
+
+  cytoolz = super.cytoolz.overridePythonAttrs (
+    old: {
+      propagatedBuildInputs = old.propagatedBuildInputs ++ [ self.toolz ];
+    }
+  );
+
+  # For some reason the toml dependency of tqdm declared here:
+  # https://github.com/tqdm/tqdm/blob/67130a23646ae672836b971e1086b6ae4c77d930/pyproject.toml#L2
+  # is not translated correctly to a nix dependency.
+  tqdm = super.tqdm.overrideAttrs (
+    old: {
+      buildInputs = [ super.toml ] ++ (old.buildInputs or [ ]);
+    }
+  );
+
+  watchdog = super.watchdog.overrideAttrs (
+    old: {
+      buildInputs = (old.buildInputs or [ ])
+        ++ pkgs.lib.optional pkgs.stdenv.isDarwin pkgs.darwin.apple_sdk.frameworks.CoreServices;
+    }
+  );
+
+  # pyee cannot find `vcversioner` and other "setup requirements", so it tries to
+  # download them from the internet, which only works when nix sandboxing is disabled.
+  # Additionally, since pyee uses vcversioner to specify its version, we need to do this
+  # manually specify its version.
+  pyee = super.pyee.overrideAttrs (
+    old: {
+      postPatch = old.postPatch or "" + ''
+        sed -i setup.py \
+          -e '/setup_requires/,/],/d' \
+          -e 's/vcversioner={},/version="${old.version}",/'
+      '';
+    }
+  );
+
+  # nixpkgs has setuptools_scm 4.1.2
+  # but newrelic has a seemingly unnecessary version constraint for <4
+  # So we patch that out
+  newrelic = super.newrelic.overridePythonAttrs (
+    old: {
+      postPatch = old.postPatch or "" + ''
+        substituteInPlace setup.py --replace '"setuptools_scm>=3.2,<4"' '"setuptools_scm"'
+      '';
+    }
+  );
+
 
 }

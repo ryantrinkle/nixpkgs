@@ -1,6 +1,6 @@
 { lib, bundlerApp, makeWrapper,
   # Optional dependencies, can be null
-  epubcheck, kindlegen,
+  epubcheck,
   bundlerUpdateScript
 }:
 
@@ -12,7 +12,6 @@ let
     exes = [
       "asciidoctor"
       "asciidoctor-pdf"
-      "asciidoctor-safe"
       "asciidoctor-epub3"
       "asciidoctor-revealjs"
     ];
@@ -21,8 +20,7 @@ let
 
     postBuild = ''
         wrapProgram "$out/bin/asciidoctor-epub3" \
-          ${lib.optionalString (epubcheck != null) "--set EPUBCHECK ${epubcheck}/bin/epubcheck"} \
-          ${lib.optionalString (kindlegen != null) "--set KINDLEGEN ${kindlegen}/bin/kindlegen"}
+          ${lib.optionalString (epubcheck != null) "--set EPUBCHECK ${epubcheck}/bin/epubcheck"}
       '';
 
     passthru = {

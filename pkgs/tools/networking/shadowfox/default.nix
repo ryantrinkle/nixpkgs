@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, buildGoModule }:
+{ lib, fetchFromGitHub, buildGoModule }:
 
 buildGoModule rec {
   pname = "shadowfox";
@@ -15,9 +15,11 @@ buildGoModule rec {
 
   doCheck = false;
 
-  buildFlags = [ "--tags" "release" ];
+  buildFlagsArray = [
+    "-ldflags=-X main.tag=v${version}"
+  ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = ''
       This project aims at creating a universal dark theme for Firefox while
       adhering to the modern design principles set by Mozilla.

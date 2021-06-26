@@ -1,30 +1,22 @@
-{ buildGoModule, stdenv, lib, procps, fetchFromGitHub, nixosTests, fetchpatch }:
+{ buildGoModule, stdenv, lib, procps, fetchFromGitHub, nixosTests }:
 
 let
   common = { stname, target, postInstall ? "" }:
     buildGoModule rec {
-      version = "1.9.0";
-      name = "${stname}-${version}";
+      pname = stname;
+      version = "1.16.0";
 
       src = fetchFromGitHub {
         owner  = "syncthing";
         repo   = "syncthing";
         rev    = "v${version}";
-        sha256 = "1p5wmcmv72hbd3dap9hqv4ryarsj8ljn833x9mcfgh8ff4k25qwr";
+        sha256 = "sha256-AAJLtykSQLM13I77E7LD1W8hXLvZQ3XqgOWrTBGYn3k=";
       };
 
-      vendorSha256 = "1mwjfv0l2n21srxsh8w18my2j8diim91jlg00ailiq9fwnvxxn8c";
+      vendorSha256 = "sha256-cN6Dgztq0/pAwfuBGFtTzK7XKXV7LrkgDGGzjkTDUN8=";
 
       doCheck = false;
 
-      patches = [
-        ./add-stcli-target.patch
-        (fetchpatch {
-          name = "CVE-2021-21404.patch";
-          url = "https://github.com/syncthing/syncthing/commit/fb4fdaf4c0a79c22cad000c42ac1394e3ccb6a97.patch";
-          sha256 = "0xjh500fi50570dkf3xdaj2367ynn1cs95lypq6b0wi81kp7m540";
-        })
-      ];
       BUILD_USER="nix";
       BUILD_HOST="nix";
 
@@ -50,8 +42,9 @@ let
       meta = with lib; {
         homepage = "https://syncthing.net/";
         description = "Open Source Continuous File Synchronization";
+        changelog = "https://github.com/syncthing/syncthing/releases/tag/v${version}";
         license = licenses.mpl20;
-        maintainers = with maintainers; [ pshendry joko peterhoeg andrew-d ];
+        maintainers = with maintainers; [ joko peterhoeg andrew-d ];
         platforms = platforms.unix;
       };
     };
@@ -85,12 +78,6 @@ in {
                  $out/lib/systemd/user/syncthing.service \
                  --replace /usr/bin/syncthing $out/bin/syncthing
     '';
-  };
-
-  syncthing-cli = common {
-    stname = "syncthing-cli";
-
-    target = "stcli";
   };
 
   syncthing-discovery = common {

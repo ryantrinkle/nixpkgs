@@ -1,23 +1,24 @@
-{ stdenv, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
 buildGoModule rec {
   pname = "sops";
-  version = "3.6.0";
+  version = "3.7.1";
 
   src = fetchFromGitHub {
     rev = "v${version}";
     owner = "mozilla";
     repo = pname;
-    sha256 = "01skk6vdfki4a88z0snl1pby09im406qhnsfa0d2l8gp6nz8pq6j";
+    sha256 = "0z3jcyl245yjszzjf2h6l1dwa092vxzvfmnivmwi6jvpsdcv33h1";
   };
 
-  vendorSha256 = "0475y95qma5m346ng898n80xv2rxzndx89c9ygjcvjs513yzcba2";
+  vendorSha256 = "1mnwgsbpi56ql0lbpn7dkaps96x9b1lmhlk5cd6d40da7xj616n7";
 
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/mozilla/sops";
     description = "Mozilla sops (Secrets OPerationS) is an editor of encrypted files";
+    changelog = "https://github.com/mozilla/sops/raw/v${version}/CHANGELOG.rst";
     maintainers = [ maintainers.marsam ];
     license = licenses.mpl20;
   };

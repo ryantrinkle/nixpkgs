@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, nss, python3
+{ lib, stdenv, fetchurl, nss, python3
 , blacklist ? []
 
 # Used for tests only
@@ -7,22 +7,30 @@
 , openssl
 }:
 
-with stdenv.lib;
+with lib;
 
 let
+  version = "3.66";
 
-  certdata2pem = fetchurl {
-    name = "certdata2pem.py";
-    url = "https://salsa.debian.org/debian/ca-certificates/raw/debian/20170717/mozilla/certdata2pem.py";
-    sha256 = "1d4q27j1gss0186a5m8bs5dk786w07ccyq0qi6xmd2zr1a8q16wy";
-  };
-
+  underscoreVersion = builtins.replaceStrings ["."] ["_"] version;
 in
 
 stdenv.mkDerivation {
-  name = "nss-cacert-${nss.version}";
+  name = "nss-cacert-${version}";
 
-  src = nss.src;
+  src = fetchurl {
+    url = "mirror://mozilla/security/nss/releases/NSS_${underscoreVersion}_RTM/src/nss-${version}.tar.gz";
+    sha256 = "1jfdnh5l4k57r2vb07s06hqi7m2qzk0d9x25lsdsrw3cflx9x9w9";
+  };
+
+  certdata2pem = fetchurl {
+    name = "certdata2pem.py";
+    urls = [
+      "https://salsa.debian.org/debian/ca-certificates/raw/debian/20170717/mozilla/certdata2pem.py"
+      "https://git.launchpad.net/ubuntu/+source/ca-certificates/plain/mozilla/certdata2pem.py?id=47e49e1e0a8a1ca74deda27f88fe181191562957"
+    ];
+    sha256 = "1d4q27j1gss0186a5m8bs5dk786w07ccyq0qi6xmd2zr1a8q16wy";
+  };
 
   outputs = [ "out" "unbundled" ];
 
@@ -35,7 +43,8 @@ stdenv.mkDerivation {
     ${concatStringsSep "\n" (map (c: ''"${c}"'') blacklist)}
     EOF
 
-    cat ${certdata2pem} > certdata2pem.py
+    # copy from the store, otherwise python will scan it for imports
+    cat "$certdata2pem" > certdata2pem.py
   '';
 
   buildPhase = ''
@@ -59,6 +68,7 @@ stdenv.mkDerivation {
 
   setupHook = ./setup-hook.sh;
 
+  passthru.updateScript = ./update.sh;
   passthru.tests = {
     # Test that building this derivation with a blacklist works, and that UTF-8 is supported.
     blacklist-utf8 = let

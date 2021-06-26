@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -i perl -p perl perlPackages.LWPProtocolhttps perlPackages.FileSlurp
+#!nix-shell -i perl -p perl perlPackages.LWPProtocolHttps perlPackages.FileSlurp
 
 use strict;
 use List::Util qw(reduce);
@@ -61,8 +61,9 @@ sub update_nix_block {
         # try to interpret some nix
         my ($name) = $block =~ /name\s*=\s*"([^"]+)"/;
         $name =~ s/\$\{version\}/$latest_versions{$channel}/;
-        $url =~ s/\$\{name\}/$name/;
-        $url =~ s/\$\{version\}/$latest_versions{$channel}/;
+        # Some url paattern contain variables more than once
+        $url =~ s/\$\{name\}/$name/g;
+        $url =~ s/\$\{version\}/$latest_versions{$channel}/g;
         die "$url still has some interpolation" if $url =~ /\$/;
         my ($sha256) = get("$url.sha256") =~ /^([0-9a-f]{64})/;
         my $version_string = $latest_versions{$channel};

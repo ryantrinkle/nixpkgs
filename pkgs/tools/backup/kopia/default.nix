@@ -1,17 +1,17 @@
-{ lib, buildGoModule, fetchFromGitHub, coreutils }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
 buildGoModule rec {
   pname = "kopia";
-  version = "0.6.2";
+  version = "0.8.4";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "v${version}";
-    sha256 = "1wz4sqjcih1m4bjxxdrsggai931q72zz8ikf2rwkp4alz12wr355";
+    sha256 = "sha256-Or6RL6yT/X3rVIySqt5lWbXbI25f8HNLBpY3cOhMC0g=";
   };
 
-  vendorSha256 = "1npxr7gp59xv38zdx1diilfxij6lb0cmvsnzvjx6n8g0326gf2ii";
+  vendorSha256 = "sha256-1FK5IIvm2iyzGqj8IPL3/qvxFj0dC37aycQQ5MO0mBI=";
 
   doCheck = false;
 
@@ -21,17 +21,6 @@ buildGoModule rec {
     -ldflags=
        -X github.com/kopia/kopia/repo.BuildVersion=${version}
        -X github.com/kopia/kopia/repo.BuildInfo=${src.rev}
-  '';
-
-  postConfigure = ''
-    # make 'vendor' writable
-    cp -L -r vendor tmp-vendor
-    rm -rf vendor
-    mv tmp-vendor vendor
-
-    # speakeasy hardcodes /bin/stty https://github.com/bgentry/speakeasy/issues/22
-    substituteInPlace vendor/github.com/bgentry/speakeasy/speakeasy_unix.go \
-      --replace "/bin/stty" "${coreutils}/bin/stty"
   '';
 
   meta = with lib; {

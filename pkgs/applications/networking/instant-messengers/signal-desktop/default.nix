@@ -2,7 +2,7 @@
 , gnome2, gtk3, atk, at-spi2-atk, cairo, pango, gdk-pixbuf, glib, freetype, fontconfig
 , dbus, libX11, xorg, libXi, libXcursor, libXdamage, libXrandr, libXcomposite
 , libXext, libXfixes, libXrender, libXtst, libXScrnSaver, nss, nspr, alsaLib
-, cups, expat, libuuid, at-spi2-core, libappindicator-gtk3
+, cups, expat, libuuid, at-spi2-core, libappindicator-gtk3, mesa
 # Runtime dependencies:
 , systemd, libnotify, libdbusmenu, libpulseaudio
 # Unfortunately this also overwrites the UI language (not just the spell
@@ -25,7 +25,7 @@ let
       else "");
 in stdenv.mkDerivation rec {
   pname = "signal-desktop";
-  version = "5.1.0"; # Please backport all updates to the stable channel.
+  version = "5.6.2"; # Please backport all updates to the stable channel.
   # All releases have a limited lifetime and "expire" 90 days after the release.
   # When releases "expire" the application becomes unusable until an update is
   # applied. The expiration date for the current release can be extracted with:
@@ -35,7 +35,7 @@ in stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://updates.signal.org/desktop/apt/pool/main/s/signal-desktop/signal-desktop_${version}_amd64.deb";
-    sha256 = "1cirnnxy63jfkl98472k25bn1yp5apa7b5s74r42sxhlwzwkplw1";
+    sha256 = "0cdzww741l4s95n5gq5zx5l3zvxinxbqa9y6wf8wjq7rzn6bwqx3";
   };
 
   nativeBuildInputs = [
@@ -73,6 +73,7 @@ in stdenv.mkDerivation rec {
     libappindicator-gtk3
     libnotify
     libuuid
+    mesa # for libgbm
     nspr
     nss
     pango
@@ -116,9 +117,15 @@ in stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
+  # Required for $SQLCIPHER_LIB which contains "/build/" inside the path:
+  noAuditTmpdir = true;
+
   preFixup = ''
+    export SQLCIPHER_LIB="$out/lib/Signal/resources/app.asar.unpacked/node_modules/better-sqlite3/build/Release/better_sqlite3.node"
+    test -x "$SQLCIPHER_LIB" # To ensure the location hasn't changed
     gappsWrapperArgs+=(
-      --prefix LD_LIBRARY_PATH : "${stdenv.lib.makeLibraryPath [ stdenv.cc.cc ] }"
+      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ stdenv.cc.cc ] }"
+      --prefix LD_PRELOAD : "$SQLCIPHER_LIB"
       ${customLanguageWrapperArgs}
     )
 
@@ -127,7 +134,7 @@ in stdenv.mkDerivation rec {
       --replace /opt/Signal/signal-desktop $out/bin/signal-desktop
 
     autoPatchelf --no-recurse -- $out/lib/Signal/
-    patchelf --add-needed ${libpulseaudio}/lib/libpulse.so $out/lib/Signal/resources/app.asar.unpacked/node_modules/ringrtc/build/linux/libringrtc.node
+    patchelf --add-needed ${libpulseaudio}/lib/libpulse.so $out/lib/Signal/resources/app.asar.unpacked/node_modules/ringrtc/build/linux/libringrtc-x64.node
   '';
 
   # Tests if the application launches and waits for "Link your phone to Signal Desktop":

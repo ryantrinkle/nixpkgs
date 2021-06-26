@@ -70,6 +70,5 @@ buildPerlPackage rec {
     license = licenses.agpl3Plus;
     maintainers = with maintainers; [ qyliss ];
     platforms = platforms.all;
-    broken = true;
   };
 }

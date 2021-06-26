@@ -1,15 +1,15 @@
 { pname, ffversion, meta, updateScript ? null
 , src, unpackPhase ? null, patches ? []
-, extraNativeBuildInputs ? [], extraConfigureFlags ? [], extraMakeFlags ? [] }:
+, extraNativeBuildInputs ? [], extraConfigureFlags ? [], extraMakeFlags ? [], tests ? [] }:
 
-{ lib, stdenv, pkgconfig, pango, perl, python2, python3, zip
+{ lib, stdenv, pkg-config, pango, perl, python3, zip
 , libjpeg, zlib, dbus, dbus-glib, bzip2, xorg
-, freetype, fontconfig, file, nspr, nss_3_53, libnotify
+, freetype, fontconfig, file, nspr, nss, nss_3_53
 , yasm, libGLU, libGL, sqlite, unzip, makeWrapper
-, hunspell, libXdamage, libevent, libstartup_notification
+, hunspell, libevent, libstartup_notification
 , libvpx_1_8
-, icu67, libpng, jemalloc, glib
-, autoconf213, which, gnused, cargo, rustc, llvmPackages
+, icu67, libpng, jemalloc, glib, pciutils
+, autoconf213, which, gnused, rustPackages, rustPackages_1_45
 , rust-cbindgen, nodejs, nasm, fetchpatch
 , gnum4
 , debugBuild ? false
@@ -18,7 +18,6 @@
 
 ## backported libraries
 
-, nss_latest
 , rust-cbindgen_latest
 
 ## optional libraries
@@ -27,8 +26,9 @@
 , pulseaudioSupport ? stdenv.isLinux, libpulseaudio
 , ffmpegSupport ? true
 , gtk3Support ? true, gtk2, gtk3, wrapGAppsHook
-, waylandSupport ? true, libxkbcommon
-, gssSupport ? true, kerberos
+, waylandSupport ? true, libxkbcommon, libdrm
+, ltoSupport ? (stdenv.isLinux && stdenv.is64bit), overrideCC, buildPackages
+, gssSupport ? true, libkrb5
 , pipewireSupport ? waylandSupport && webrtcSupport, pipewire
 
 ## privacy-related options
@@ -77,6 +77,7 @@
 
 assert stdenv.cc.libc or null != null;
 assert pipewireSupport -> !waylandSupport || !webrtcSupport -> throw "pipewireSupport requires both wayland and webrtc support.";
+assert ltoSupport -> stdenv.isDarwin -> throw "LTO is broken on Darwin (see PR#19312).";
 
 let
   flag = tf: x: [(if tf then "--enable-${x}" else "--disable-${x}")];
@@ -93,11 +94,47 @@ let
             then "/Applications/${binaryNameCapitalized}.app/Contents/MacOS"
             else "/bin";
 
-  nss_pkg = if lib.versionAtLeast ffversion "86" then nss_latest else nss_3_53;
-  rust-cbindgen_pkg = if lib.versionAtLeast ffversion "86" then rust-cbindgen_latest else rust-cbindgen;
+  rust-cbindgen_pkg = if lib.versionAtLeast ffversion "89" then rust-cbindgen_latest else rust-cbindgen;
+
+  # 78 ESR won't build with rustc 1.47
+  inherit (if lib.versionAtLeast ffversion "82" then rustPackages else rustPackages_1_45)
+    rustc cargo;
+
+  # Darwin's stdenv provides the default llvmPackages version, match that since
+  # clang LTO on Darwin is broken so the stdenv is not being changed.
+  # Target the LLVM version that rustc -Vv reports it is built with for LTO.
+  # rustPackages_1_45 -> LLVM 10, rustPackages -> LLVM 11
+  llvmPackages0 =
+    /**/ if stdenv.isDarwin
+      then buildPackages.llvmPackages
+    else if lib.versionAtLeast rustc.llvm.version "11"
+      then buildPackages.llvmPackages_11
+    else buildPackages.llvmPackages_10;
+  # Force the use of lld and other llvm tools for LTO
+  llvmPackages = llvmPackages0.override {
+    bootBintoolsNoLibc = null;
+    bootBintools = null;
+  };
+
+  # When LTO for Darwin is fixed, the following will need updating as lld
+  # doesn't work on it. For now it is fine since ltoSupport implies no Darwin.
+  buildStdenv = if ltoSupport
+                then overrideCC stdenv llvmPackages.clangUseLLVM
+                else stdenv;
+
+  # Disable p11-kit support in nss until our cacert packages has caught up exposing CKA_NSS_MOZILLA_CA_POLICY
+  # https://github.com/NixOS/nixpkgs/issues/126065
+  nss_pkg = if lib.versionOlder ffversion "83" then nss_3_53 else nss.override { useP11kit = false; };
+
+  # --enable-release adds -ffunction-sections & LTO that require a big amount of
+  # RAM and the 32-bit memory space cannot handle that linking
+  # We also disable adding "-g" for easier linking
+  releaseFlags = if stdenv.is32bit
+                 then [ "--disable-release" "--disable-debug-symbols" ]
+                 else [ "--enable-release" ];
 in
 
-stdenv.mkDerivation ({
+buildStdenv.mkDerivation ({
   name = "${pname}-unwrapped-${ffversion}";
   version = ffversion;
 
@@ -109,9 +146,15 @@ stdenv.mkDerivation ({
   lib.optional (lib.versionAtLeast ffversion "86") ./env_var_for_system_dir-ff86.patch ++
   lib.optional (lib.versionOlder ffversion "83") ./no-buildconfig-ffx76.patch ++
   lib.optional (lib.versionAtLeast ffversion "84") ./no-buildconfig-ffx84.patch ++
+  lib.optional (ltoSupport && lib.versionOlder ffversion "84") ./lto-dependentlibs-generation-ffx83.patch ++
+  lib.optional (ltoSupport && lib.versionAtLeast ffversion "84" && lib.versionOlder ffversion "86")
+    (fetchpatch {
+      url = "https://hg.mozilla.org/mozilla-central/raw-rev/fdff20c37be3";
+      sha256 = "135n9brliqy42lj3nqgb9d9if7x6x9nvvn0z4anbyf89bikixw48";
+    })
 
   # This patch adds pipewire support for the ESR release
-  lib.optional (pipewireSupport && lib.versionOlder ffversion "83")
+  ++ lib.optional (pipewireSupport && lib.versionOlder ffversion "83")
     (fetchpatch {
       # https://src.fedoraproject.org/rpms/firefox/blob/master/f/firefox-pipewire-0-3.patch
       url = "https://src.fedoraproject.org/rpms/firefox/raw/e99b683a352cf5b2c9ff198756859bae408b5d9d/f/firefox-pipewire-0-3.patch";
@@ -130,9 +173,10 @@ stdenv.mkDerivation ({
     gtk2 perl zip libjpeg zlib bzip2
     dbus dbus-glib pango freetype fontconfig xorg.libXi xorg.libXcursor
     xorg.libX11 xorg.libXrender xorg.libXft xorg.libXt file
-    libnotify xorg.pixman yasm libGLU libGL
+    xorg.pixman yasm libGLU libGL
     xorg.xorgproto
-    xorg.libXext unzip makeWrapper
+    xorg.libXdamage
+    xorg.libXext makeWrapper
     libevent libstartup_notification /* cairo */
     libpng jemalloc glib
     nasm icu67 libvpx_1_8
@@ -145,23 +189,24 @@ stdenv.mkDerivation ({
   ++ lib.optional  alsaSupport alsaLib
   ++ lib.optional  pulseaudioSupport libpulseaudio # only headers are needed
   ++ lib.optional  gtk3Support gtk3
-  ++ lib.optional  gssSupport kerberos
-  ++ lib.optionals waylandSupport [ libxkbcommon ]
-  ++ lib.optionals pipewireSupport [ pipewire ]
-  ++ lib.optionals (lib.versionAtLeast ffversion "82") [ gnum4 ]
-  ++ lib.optionals stdenv.isDarwin [ CoreMedia ExceptionHandling Kerberos
-                                     AVFoundation MediaToolbox CoreLocation
-                                     Foundation libobjc AddressBook cups ];
+  ++ lib.optional  gssSupport libkrb5
+  ++ lib.optionals waylandSupport [ libxkbcommon libdrm ]
+  ++ lib.optional  pipewireSupport pipewire
+  ++ lib.optional  (lib.versionAtLeast ffversion "82") gnum4
+  ++ lib.optionals buildStdenv.isDarwin [ CoreMedia ExceptionHandling Kerberos
+                                          AVFoundation MediaToolbox CoreLocation
+                                          Foundation libobjc AddressBook cups ];
 
-  NIX_CFLAGS_COMPILE = toString [
-    "-I${glib.dev}/include/gio-unix-2.0"
-    "-I${nss_pkg.dev}/include/nss"
-  ];
+  NIX_LDFLAGS = lib.optionalString ltoSupport ''
+    -rpath ${llvmPackages.libunwind.out}/lib
+  '';
 
   MACH_USE_SYSTEM_PYTHON = "1";
 
   postPatch = ''
     rm -rf obj-x86_64-pc-linux-gnu
+    substituteInPlace toolkit/xre/glxtest.cpp \
+      --replace 'dlopen("libpci.so' 'dlopen("${pciutils}/lib/libpci.so'
   '' + lib.optionalString (pipewireSupport && lib.versionOlder ffversion "83") ''
     # substitute the /usr/include/ lines for the libraries that pipewire provides.
     # The patch we pick from fedora only contains the generated moz.build files
@@ -169,7 +214,7 @@ stdenv.mkDerivation ({
     substituteInPlace \
       media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_generic_gn/moz.build \
       --replace /usr/include ${pipewire.dev}/include
-  '' + lib.optionalString (lib.versionAtLeast ffversion "80") ''
+  '' + lib.optionalString (lib.versionAtLeast ffversion "80" && lib.versionOlder ffversion "81") ''
     substituteInPlace dom/system/IOUtils.h \
       --replace '#include "nspr/prio.h"'          '#include "prio.h"'
 
@@ -187,15 +232,15 @@ stdenv.mkDerivation ({
       llvmPackages.llvm # llvm-objdump
       nodejs
       perl
-      pkgconfig
-      python2
+      pkg-config
       python3
       rust-cbindgen_pkg
       rustc
       which
+      unzip
     ]
     ++ lib.optional gtk3Support wrapGAppsHook
-    ++ lib.optionals stdenv.isDarwin [ xcbuild rsync ]
+    ++ lib.optionals buildStdenv.isDarwin [ xcbuild rsync ]
     ++ extraNativeBuildInputs;
 
   preConfigure = ''
@@ -213,12 +258,12 @@ stdenv.mkDerivation ({
     # included we need to look in a few places.
     # TODO: generalize this process for other use-cases.
 
-    BINDGEN_CFLAGS="$(< ${stdenv.cc}/nix-support/libc-crt1-cflags) \
-      $(< ${stdenv.cc}/nix-support/libc-cflags) \
-      $(< ${stdenv.cc}/nix-support/cc-cflags) \
-      $(< ${stdenv.cc}/nix-support/libcxx-cxxflags) \
-      ${lib.optionalString stdenv.cc.isClang "-idirafter ${stdenv.cc.cc}/lib/clang/${lib.getVersion stdenv.cc.cc}/include"} \
-      ${lib.optionalString stdenv.cc.isGNU "-isystem ${stdenv.cc.cc}/include/c++/${lib.getVersion stdenv.cc.cc} -isystem ${stdenv.cc.cc}/include/c++/${lib.getVersion stdenv.cc.cc}/${stdenv.hostPlatform.config}"} \
+    BINDGEN_CFLAGS="$(< ${buildStdenv.cc}/nix-support/libc-crt1-cflags) \
+      $(< ${buildStdenv.cc}/nix-support/libc-cflags) \
+      $(< ${buildStdenv.cc}/nix-support/cc-cflags) \
+      $(< ${buildStdenv.cc}/nix-support/libcxx-cxxflags) \
+      ${lib.optionalString buildStdenv.cc.isClang "-idirafter ${buildStdenv.cc.cc.lib}/lib/clang/${lib.getVersion buildStdenv.cc.cc}/include"} \
+      ${lib.optionalString buildStdenv.cc.isGNU "-isystem ${lib.getDev buildStdenv.cc.cc}/include/c++/${lib.getVersion buildStdenv.cc.cc} -isystem ${buildStdenv.cc.cc}/include/c++/${lib.getVersion buildStdenv.cc.cc}/${buildStdenv.hostPlatform.config}"} \
       $NIX_CFLAGS_COMPILE"
 
     echo "ac_add_options BINDGEN_CFLAGS='$BINDGEN_CFLAGS'" >> $MOZCONFIG
@@ -251,12 +296,20 @@ stdenv.mkDerivation ({
     "--disable-updater"
     "--enable-jemalloc"
     "--enable-default-toolkit=${default-toolkit}"
-    "--with-libclang-path=${llvmPackages.libclang}/lib"
-    "--with-clang-path=${llvmPackages.clang}/bin/clang"
+    "--with-libclang-path=${llvmPackages.libclang.lib}/lib"
     "--with-system-nspr"
     "--with-system-nss"
   ]
-  ++ lib.optional (stdenv.isDarwin) "--disable-xcode-checks"
+  ++ lib.optional (buildStdenv.isDarwin) "--disable-xcode-checks"
+  ++ lib.optional (!ltoSupport) "--with-clang-path=${llvmPackages.clang}/bin/clang"
+  # LTO is done using clang and lld on Linux.
+  # Darwin needs to use the default linker as lld is not supported (yet?):
+  #   https://bugzilla.mozilla.org/show_bug.cgi?id=1538724
+  # elf-hack is broken when using clang+lld:
+  #   https://bugzilla.mozilla.org/show_bug.cgi?id=1482204
+  ++ lib.optional ltoSupport "--enable-lto"
+  ++ lib.optional (ltoSupport && (buildStdenv.isAarch32 || buildStdenv.isi686 || buildStdenv.isx86_64)) "--disable-elf-hack"
+  ++ lib.optional (ltoSupport && !buildStdenv.isDarwin) "--enable-linker=lld"
 
   ++ flag alsaSupport "alsa"
   ++ flag pulseaudioSupport "pulseaudio"
@@ -267,9 +320,9 @@ stdenv.mkDerivation ({
   ++ lib.optional drmSupport "--enable-eme=widevine"
 
   ++ (if debugBuild then [ "--enable-debug" "--enable-profiling" ]
-                    else [ "--disable-debug" "--enable-release"
+                    else ([ "--disable-debug"
                            "--enable-optimize"
-                           "--enable-strip" ])
+                           "--enable-strip" ] ++ releaseFlags))
   ++ lib.optional enableOfficialBranding "--enable-official-branding"
   ++ extraConfigureFlags;
 
@@ -281,34 +334,29 @@ stdenv.mkDerivation ({
     "MOZILLA_OFFICIAL=1"
     "BUILD_OFFICIAL=1"
   ]
+  ++ lib.optionals ltoSupport [
+    "AR=${buildStdenv.cc.bintools.bintools}/bin/llvm-ar"
+    "LLVM_OBJDUMP=${buildStdenv.cc.bintools.bintools}/bin/llvm-objdump"
+    "NM=${buildStdenv.cc.bintools.bintools}/bin/llvm-nm"
+    "RANLIB=${buildStdenv.cc.bintools.bintools}/bin/llvm-ranlib"
+    "STRIP=${buildStdenv.cc.bintools.bintools}/bin/llvm-strip"
+  ]
   ++ extraMakeFlags;
 
   enableParallelBuilding = true;
   doCheck = false; # "--disable-tests" above
 
-  installPhase = if stdenv.isDarwin then ''
+  installPhase = if buildStdenv.isDarwin then ''
     mkdir -p $out/Applications
     cp -LR dist/${binaryNameCapitalized}.app $out/Applications
   '' else null;
 
-  postInstall = lib.optionalString stdenv.isLinux ''
+  postInstall = lib.optionalString buildStdenv.isLinux ''
     # Remove SDK cruft. FIXME: move to a separate output?
     rm -rf $out/share/idl $out/include $out/lib/${binaryName}-devel-*
 
     # Needed to find Mozilla runtime
     gappsWrapperArgs+=(--argv0 "$out/bin/.${binaryName}-wrapped")
-  '';
-
-  postFixup = lib.optionalString stdenv.isLinux ''
-    # Fix notifications. LibXUL uses dlopen for this, unfortunately; see #18712.
-    patchelf --set-rpath "${lib.getLib libnotify
-      }/lib:$(patchelf --print-rpath "$out"/lib/${binaryName}*/libxul.so)" \
-        "$out"/lib/${binaryName}*/libxul.so
-    patchelf --add-needed ${xorg.libXScrnSaver.out}/lib/libXss.so $out/lib/${binaryName}/${binaryName}
-    ${lib.optionalString (pipewireSupport && lib.versionAtLeast ffversion "83") ''
-      patchelf --add-needed "${lib.getLib pipewire}/lib/libpipewire-0.3.so" \
-        "$out"/lib/${binaryName}/${binaryName}
-    ''}
   '';
 
   doInstallCheck = true;
@@ -323,11 +371,13 @@ stdenv.mkDerivation ({
     isFirefox3Like = true;
     gtk = gtk2;
     inherit alsaSupport;
+    inherit pipewireSupport;
     inherit nspr;
     inherit ffmpegSupport;
     inherit gssSupport;
     inherit execdir;
     inherit browserName;
+    inherit tests;
   } // lib.optionalAttrs gtk3Support { inherit gtk3; };
 
   hardeningDisable = [ "format" ]; # -Werror=format-security

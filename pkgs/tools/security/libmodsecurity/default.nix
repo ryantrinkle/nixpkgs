@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig
+{ lib, stdenv, fetchFromGitHub, autoreconfHook, pkg-config
 , doxygen, perl, valgrind
 , curl, geoip, libxml2, lmdb, lua, pcre, yajl }:
 
@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
     sha256 = "07vry10cdll94sp652hwapn0ppjv3mb7n2s781yhy7hssap6f2vp";
   };
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig doxygen ];
+  nativeBuildInputs = [ autoreconfHook pkg-config doxygen ];
 
   buildInputs = [ perl valgrind curl geoip libxml2 lmdb lua pcre yajl ];
 
@@ -28,7 +28,7 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = ''
       ModSecurity v3 library component.
     '';

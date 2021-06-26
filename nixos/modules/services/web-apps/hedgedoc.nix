@@ -5,13 +5,19 @@ with lib;
 let
   cfg = config.services.hedgedoc;
 
+  # 21.03 will not be an official release - it was instead 21.05.  This
+  # versionAtLeast statement remains set to 21.03 for backwards compatibility.
+  # See https://github.com/NixOS/nixpkgs/pull/108899 and
+  # https://github.com/NixOS/rfcs/blob/master/rfcs/0080-nixos-release-schedule.md.
   name = if versionAtLeast config.system.stateVersion "21.03"
     then "hedgedoc"
     else "codimd";
 
   prettyJSON = conf:
-    pkgs.runCommand "codimd-config.json" { preferLocalBuild = true; } ''
-      echo '${builtins.toJSON conf}' | ${pkgs.jq}/bin/jq \
+    pkgs.runCommandLocal "hedgedoc-config.json" {
+      nativeBuildInputs = [ pkgs.jq ];
+    } ''
+      echo '${builtins.toJSON conf}' | jq \
         '{production:del(.[]|nulls)|del(.[][]?|nulls)}' > $out
     '';
 in
@@ -885,6 +891,44 @@ in
         description = "Configure the SAML integration.";
       };
     };
+
+    environmentFile = mkOption {
+      type = with types; nullOr path;
+      default = null;
+      example = "/var/lib/hedgedoc/hedgedoc.env";
+      description = ''
+        Environment file as defined in <citerefentry>
+        <refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum>
+        </citerefentry>.
+
+        Secrets may be passed to the service without adding them to the world-readable
+        Nix store, by specifying placeholder variables as the option value in Nix and
+        setting these variables accordingly in the environment file.
+
+        <programlisting>
+          # snippet of HedgeDoc-related config
+          services.hedgedoc.configuration.dbURL = "postgres://hedgedoc:\''${DB_PASSWORD}@db-host:5432/hedgedocdb";
+          services.hedgedoc.configuration.minio.secretKey = "$MINIO_SECRET_KEY";
+        </programlisting>
+
+        <programlisting>
+          # content of the environment file
+          DB_PASSWORD=verysecretdbpassword
+          MINIO_SECRET_KEY=verysecretminiokey
+        </programlisting>
+
+        Note that this file needs to be available on the host on which
+        <literal>HedgeDoc</literal> is running.
+      '';
+    };
+
+    package = mkOption {
+      type = types.package;
+      default = pkgs.hedgedoc;
+      description = ''
+        Package that provides HedgeDoc.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -908,11 +952,17 @@ in
       description = "HedgeDoc Service";
       wantedBy = [ "multi-user.target" ];
       after = [ "networking.target" ];
+      preStart = ''
+        ${pkgs.envsubst}/bin/envsubst \
+          -o ${cfg.workDir}/config.json \
+          -i ${prettyJSON cfg.configuration}
+      '';
       serviceConfig = {
         WorkingDirectory = cfg.workDir;
-        ExecStart = "${pkgs.hedgedoc}/bin/hedgedoc";
+        ExecStart = "${cfg.package}/bin/hedgedoc";
+        EnvironmentFile = mkIf (cfg.environmentFile != null) [ cfg.environmentFile ];
         Environment = [
-          "CMD_CONFIG_FILE=${prettyJSON cfg.configuration}"
+          "CMD_CONFIG_FILE=${cfg.workDir}/config.json"
           "NODE_ENV=production"
         ];
         Restart = "always";

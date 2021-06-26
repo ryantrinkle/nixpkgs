@@ -8,6 +8,18 @@ let
   username = config.users.users.mirakurun.name;
   groupname = config.users.users.mirakurun.group;
   settingsFmt = pkgs.formats.yaml {};
+
+  polkitRule = pkgs.writeTextDir "share/polkit-1/rules.d/10-mirakurun.rules" ''
+    polkit.addRule(function (action, subject) {
+      if (
+        (action.id == "org.debian.pcsc-lite.access_pcsc" ||
+          action.id == "org.debian.pcsc-lite.access_card") &&
+        subject.user == "${username}"
+      ) {
+        return polkit.Result.YES;
+      }
+    });
+  '';
 in
   {
     options = {
@@ -18,7 +30,8 @@ in
           type = with types; nullOr port;
           default = 40772;
           description = ''
-            Port to listen on. If null, it won't listen on any port.
+            Port to listen on. If <literal>null</literal>, it won't listen on
+            any port.
           '';
         };
 
@@ -27,6 +40,32 @@ in
           default = false;
           description = ''
             Open ports in the firewall for Mirakurun.
+
+            <warning>
+              <para>
+                Exposing Mirakurun to the open internet is generally advised
+                against. Only use it inside a trusted local network, or
+                consider putting it behind a VPN if you want remote access.
+              </para>
+            </warning>
+          '';
+        };
+
+        unixSocket = mkOption {
+          type = with types; nullOr path;
+          default = "/var/run/mirakurun/mirakurun.sock";
+          description = ''
+            Path to unix socket to listen on. If <literal>null</literal>, it
+            won't listen on any unix sockets.
+          '';
+        };
+
+        allowSmartCardAccess = mkOption {
+          type = types.bool;
+          default = true;
+          description = ''
+            Install polkit rules to allow Mirakurun to access smart card readers
+            which is commonly used along with tuner devices.
           '';
         };
 
@@ -92,7 +131,7 @@ in
     };
 
     config = mkIf cfg.enable {
-      environment.systemPackages = [ mirakurun ];
+      environment.systemPackages = [ mirakurun ] ++ optional cfg.allowSmartCardAccess polkitRule;
       environment.etc = {
         "mirakurun/server.yml".source = settingsFmt.generate "server.yml" cfg.serverSettings;
         "mirakurun/tuners.yml" = mkIf (cfg.tunerSettings != null) {
@@ -121,8 +160,8 @@ in
 
       services.mirakurun.serverSettings = {
         logLevel = mkDefault 2;
-        path = mkDefault "/var/run/mirakurun/mirakurun.sock";
-        port = mkIf (cfg.port != null) (mkDefault cfg.port);
+        path = mkIf (cfg.unixSocket != null) cfg.unixSocket;
+        port = mkIf (cfg.port != null) cfg.port;
       };
 
       systemd.tmpfiles.rules = [

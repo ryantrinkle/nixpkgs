@@ -1,9 +1,12 @@
-{ stdenv
+{ lib, stdenv
 , fetchFromGitHub
-, pkgconfig
+, pkg-config
+, xxd
 , cairo
+, fluidsynth
 , libX11
 , libjack2
+, alsaLib
 , liblo
 , libsigcxx
 , libsmf
@@ -11,26 +14,24 @@
 
 stdenv.mkDerivation rec {
   pname = "mamba";
-  version = "1.3";
+  version = "2.2";
 
   src = fetchFromGitHub {
     owner = "brummer10";
     repo = "Mamba";
     rev = "v${version}";
-    sha256 = "1wa3f9c4l239mpxa7nxx8hajy4icn40vpvaxq5l1qzskl74w072d";
+    sha256 = "1885qxyfkpslzk0aaaaws0x73b10h9nbr04jkk7xhkya25gf280m";
     fetchSubmodules = true;
   };
 
-  patches = [ ./fix-build.patch ];
-
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ cairo libX11 libjack2 liblo libsigcxx libsmf ];
+  nativeBuildInputs = [ pkg-config xxd ];
+  buildInputs = [ cairo fluidsynth libX11 libjack2 alsaLib liblo libsigcxx libsmf ];
 
   makeFlags = [ "PREFIX=$(out)" ];
 
   enableParallelBuilding = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/brummer10/Mamba";
     description = "Virtual MIDI keyboard for Jack Audio Connection Kit";
     license = licenses.bsd0;

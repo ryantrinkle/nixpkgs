@@ -19,6 +19,7 @@ buildPythonPackage rec {
 
   propagatedBuildInputs = [ zope_interface ];
 
+  doCheck = !isPy27; # namespace conflicts
   checkInputs = [ zope_location zope_schema ];
 
   checkPhase = ''
@@ -27,6 +28,5 @@ buildPythonPackage rec {
 
   meta = {
     maintainers = with lib.maintainers; [ domenkozar ];
-    broken = isPy27;
   };
 }

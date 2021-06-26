@@ -33,10 +33,11 @@ buildPythonPackage rec {
     "PythonMagick"
   ];
 
+  disabled = isPy3k;
+
   meta = with lib; {
     homepage = "http://www.imagemagick.org/script/api.php";
     license = licenses.imagemagick;
     description = "PythonMagick provides object oriented bindings for the ImageMagick Library.";
-    broken = true;
   };
 }

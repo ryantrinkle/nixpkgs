@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, libpcap, tcpdump }:
+{ lib, stdenv, fetchurl, libpcap, tcpdump, Carbon, CoreServices }:
 
 stdenv.mkDerivation rec {
   pname = "tcpreplay";
@@ -9,7 +9,11 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-7gZTEIBsIuL9NvAU4euzMbmKfsTblY6Rw9nL2gZA2Sw=";
   };
 
-  buildInputs = [ libpcap ];
+  buildInputs = [ libpcap ]
+    ++ lib.optionals stdenv.hostPlatform.isDarwin [
+      Carbon CoreServices
+    ];
+
 
   configureFlags = [
     "--disable-local-libopts"
@@ -21,7 +25,7 @@ stdenv.mkDerivation rec {
     "--with-tcpdump=${tcpdump}/bin"
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A suite of utilities for editing and replaying network traffic";
     homepage = "https://tcpreplay.appneta.com/";
     license = with licenses; [ bsdOriginalUC gpl3Only ];

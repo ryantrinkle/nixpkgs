@@ -1,4 +1,4 @@
-{ stdenv, fetchPypi, buildPythonPackage
+{ lib, fetchPypi, buildPythonPackage
 , requests, fetchpatch, pythonOlder, typing
 }:
 
@@ -11,12 +11,12 @@ buildPythonPackage rec {
     sha256 = "sha256-AFRKA5VRD6jyiguZYP7WOQOWqHq1GjUzbuez0f1070U=";
   };
 
-  propagatedBuildInputs = [ requests ] ++ stdenv.lib.optional (pythonOlder "3.5") typing;
+  propagatedBuildInputs = [ requests ] ++ lib.optional (pythonOlder "3.5") typing;
 
-  meta = {
+  meta = with lib; {
     description = "The official Todoist Python API library";
     homepage = "https://todoist-python.readthedocs.io/en/latest/";
-    license = stdenv.lib.licenses.mit;
-    maintainers = with stdenv.lib.maintainers; [ ma27 ];
+    license = licenses.mit;
+    maintainers = with maintainers; [ ma27 ];
   };
 }

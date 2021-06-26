@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, fetchpatch, cmake, ffmpeg_3, SDL2, chromaprint, libebur128 }:
+{ lib, stdenv, fetchFromGitHub, fetchpatch, cmake, ffmpeg_3, SDL2, chromaprint, libebur128 }:
 
 stdenv.mkDerivation rec {
   version = "4.3.0";
@@ -20,9 +20,10 @@ stdenv.mkDerivation rec {
     })
   ];
 
-  buildInputs = [ cmake ffmpeg_3 SDL2 chromaprint libebur128 ];
+  nativeBuildInputs = [ cmake ];
+  buildInputs = [ ffmpeg_3 SDL2 chromaprint libebur128 ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Streaming audio processing library";
     homepage = "https://github.com/andrewrk/libgroove";
     license = licenses.mit;

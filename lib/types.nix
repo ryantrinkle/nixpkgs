@@ -1,12 +1,65 @@
 # Definitions related to run-time type checking.  Used in particular
 # to type-check NixOS configurations.
 { lib }:
-with lib.lists;
-with lib.attrsets;
-with lib.options;
-with lib.trivial;
-with lib.strings;
+
 let
+  inherit (lib)
+    elem
+    flip
+    functionArgs
+    isAttrs
+    isBool
+    isDerivation
+    isFloat
+    isFunction
+    isInt
+    isList
+    isString
+    isStorePath
+    setFunctionArgs
+    toDerivation
+    toList
+    ;
+  inherit (lib.lists)
+    all
+    concatLists
+    count
+    elemAt
+    filter
+    foldl'
+    head
+    imap1
+    last
+    length
+    tail
+    unique
+    ;
+  inherit (lib.attrsets)
+    attrNames
+    filterAttrs
+    hasAttr
+    mapAttrs
+    optionalAttrs
+    zipAttrsWith
+    ;
+  inherit (lib.options)
+    getFiles
+    getValues
+    mergeDefaultOption
+    mergeEqualOption
+    mergeOneOption
+    showFiles
+    showOption
+    ;
+  inherit (lib.strings)
+    concatMapStringsSep
+    concatStringsSep
+    escapeNixString
+    isCoercibleToString
+    ;
+  inherit (lib.trivial)
+    boolToString
+    ;
 
   inherit (lib.modules) mergeDefinitions;
   outer_types =
@@ -94,9 +147,13 @@ rec {
     , # The deprecation message to display when this type is used by an option
       # If null, the type isn't deprecated
       deprecationMessage ? null
+    , # The types that occur in the definition of this type. This is used to
+      # issue deprecation warnings recursively. Can also be used to reuse
+      # nested types
+      nestedTypes ? {}
     }:
     { _type = "option-type";
-      inherit name check merge emptyValue getSubOptions getSubModules substSubModules typeMerge functor deprecationMessage;
+      inherit name check merge emptyValue getSubOptions getSubModules substSubModules typeMerge functor deprecationMessage nestedTypes;
       description = if description == null then name else description;
     };
 
@@ -104,6 +161,42 @@ rec {
   # When adding new types don't forget to document them in
   # nixos/doc/manual/development/option-types.xml!
   types = rec {
+
+    anything = mkOptionType {
+      name = "anything";
+      description = "anything";
+      check = value: true;
+      merge = loc: defs:
+        let
+          getType = value:
+            if isAttrs value && isCoercibleToString value
+            then "stringCoercibleSet"
+            else builtins.typeOf value;
+
+          # Returns the common type of all definitions, throws an error if they
+          # don't have the same type
+          commonType = foldl' (type: def:
+            if getType def.value == type
+            then type
+            else throw "The option `${showOption loc}' has conflicting option types in ${showFiles (getFiles defs)}"
+          ) (getType (head defs).value) defs;
+
+          mergeFunction = {
+            # Recursively merge attribute sets
+            set = (attrsOf anything).merge;
+            # Safe and deterministic behavior for lists is to only accept one definition
+            # listOf only used to apply mkIf and co.
+            list =
+              if length defs > 1
+              then throw "The option `${showOption loc}' has conflicting definitions, in ${showFiles (getFiles defs)}."
+              else (listOf anything).merge;
+            # This is the type of packages, only accept a single definition
+            stringCoercibleSet = mergeOneOption;
+            # Otherwise fall back to only allowing all equal definitions
+          }.${commonType} or mergeEqualOption;
+        in mergeFunction loc defs;
+    };
+
     unspecified = mkOptionType {
       name = "unspecified";
     };
@@ -167,14 +260,14 @@ rec {
         };
         u8 = unsign 8 256;
         u16 = unsign 16 65536;
-        # the biggest int a 64-bit Nix accepts is 2^63 - 1 (9223372036854775808), for a 32-bit Nix it is 2^31 - 1 (2147483647)
-        # the smallest int a 64-bit Nix accepts is -2^63 (-9223372036854775807), for a 32-bit Nix it is -2^31 (-2147483648)
-        # u32 = unsign 32 4294967296;
+        # the biggest int Nix accepts is 2^63 - 1 (9223372036854775808)
+        # the smallest int Nix accepts is -2^63 (-9223372036854775807)
+        u32 = unsign 32 4294967296;
         # u64 = unsign 64 18446744073709551616;
 
         s8 = sign 8 256;
         s16 = sign 16 65536;
-        # s32 = sign 32 4294967296;
+        s32 = sign 32 4294967296;
       };
 
     # Alias of u16 for a port number
@@ -234,7 +327,7 @@ rec {
       name = "attrs";
       description = "attribute set";
       check = isAttrs;
-      merge = loc: foldl' (res: def: mergeAttrs res def.value) {};
+      merge = loc: foldl' (res: def: res // def.value) {};
       emptyValue = { value = {}; };
     };
 
@@ -248,7 +341,7 @@ rec {
     };
 
     shellPackage = package // {
-      check = x: (package.check x) && (hasAttr "shellPath" x);
+      check = x: isDerivation x && hasAttr "shellPath" x;
     };
 
     path = mkOptionType {
@@ -263,21 +356,20 @@ rec {
       check = isList;
       merge = loc: defs:
         map (x: x.value) (filter (x: x ? value) (concatLists (imap1 (n: def:
-          if isList def.value then
-            imap1 (m: def':
-              (mergeDefinitions
-                (loc ++ ["[definition ${toString n}-entry ${toString m}]"])
-                elemType
-                [{ inherit (def) file; value = def'; }]
-              ).optionalValue
-            ) def.value
-          else
-            throw "The option value `${showOption loc}` in `${def.file}` is not a list.") defs)));
+          imap1 (m: def':
+            (mergeDefinitions
+              (loc ++ ["[definition ${toString n}-entry ${toString m}]"])
+              elemType
+              [{ inherit (def) file; value = def'; }]
+            ).optionalValue
+          ) def.value
+        ) defs)));
       emptyValue = { value = {}; };
       getSubOptions = prefix: elemType.getSubOptions (prefix ++ ["*"]);
       getSubModules = elemType.getSubModules;
       substSubModules = m: listOf (elemType.substSubModules m);
       functor = (defaultFunctor name) // { wrapped = elemType; };
+      nestedTypes.elemType = elemType;
     };
 
     nonEmptyListOf = elemType:
@@ -302,6 +394,7 @@ rec {
       getSubModules = elemType.getSubModules;
       substSubModules = m: attrsOf (elemType.substSubModules m);
       functor = (defaultFunctor name) // { wrapped = elemType; };
+      nestedTypes.elemType = elemType;
     };
 
     # A version of attrsOf that's lazy in its values at the expense of
@@ -326,6 +419,7 @@ rec {
       getSubModules = elemType.getSubModules;
       substSubModules = m: lazyAttrsOf (elemType.substSubModules m);
       functor = (defaultFunctor name) // { wrapped = elemType; };
+      nestedTypes.elemType = elemType;
     };
 
     # TODO: drop this in the future:
@@ -334,6 +428,7 @@ rec {
       deprecationMessage = "Mixing lists with attribute values is no longer"
         + " possible; please use `types.attrsOf` instead. See"
         + " https://github.com/NixOS/nixpkgs/issues/1800 for the motivation.";
+      nestedTypes.elemType = elemType;
     };
 
     # Value of given type but with no merging (i.e. `uniq list`s are not concatenated).
@@ -346,6 +441,7 @@ rec {
       getSubModules = elemType.getSubModules;
       substSubModules = m: uniq (elemType.substSubModules m);
       functor = (defaultFunctor name) // { wrapped = elemType; };
+      nestedTypes.elemType = elemType;
     };
 
     # Null or value of ...
@@ -364,6 +460,18 @@ rec {
       getSubModules = elemType.getSubModules;
       substSubModules = m: nullOr (elemType.substSubModules m);
       functor = (defaultFunctor name) // { wrapped = elemType; };
+      nestedTypes.elemType = elemType;
+    };
+
+    functionTo = elemType: mkOptionType {
+      name = "functionTo";
+      description = "function that evaluates to a(n) ${elemType.name}";
+      check = isFunction;
+      merge = loc: defs:
+        fnArgs: (mergeDefinitions (loc ++ [ "[function body]" ]) elemType (map (fn: { inherit (fn) file; value = fn.value fnArgs; }) defs)).mergedValue;
+      getSubOptions = elemType.getSubOptions;
+      getSubModules = elemType.getSubModules;
+      substSubModules = m: functionTo (elemType.substSubModules m);
     };
 
     # A submodule (like typed attribute set). See NixOS manual.
@@ -437,6 +545,9 @@ rec {
         substSubModules = m: submoduleWith (attrs // {
           modules = m;
         });
+        nestedTypes = lib.optionalAttrs (freeformType != null) {
+          freeformType = freeformType;
+        };
         functor = defaultFunctor name // {
           type = types.submoduleWith;
           payload = {
@@ -465,6 +576,7 @@ rec {
         show = v:
                if builtins.isString v then ''"${v}"''
           else if builtins.isInt v then builtins.toString v
+          else if builtins.isBool v then boolToString v
           else ''<${builtins.typeOf v}>'';
       in
       mkOptionType rec {
@@ -497,6 +609,8 @@ rec {
            then functor.type mt1 mt2
            else null;
       functor = (defaultFunctor name) // { wrapped = [ t1 t2 ]; };
+      nestedTypes.left = t1;
+      nestedTypes.right = t2;
     };
 
     # Any of the types in the given list
@@ -528,6 +642,8 @@ rec {
         substSubModules = m: coercedTo coercedType coerceFunc (finalType.substSubModules m);
         typeMerge = t1: t2: null;
         functor = (defaultFunctor name) // { wrapped = finalType; };
+        nestedTypes.coercedType = coercedType;
+        nestedTypes.finalType = finalType;
       };
 
     # Obsolete alternative to configOf.  It takes its option

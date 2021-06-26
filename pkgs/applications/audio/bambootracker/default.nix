@@ -7,20 +7,10 @@
 , pkg-config
 , qttools
 , qtbase
-, alsaSupport ? stdenv.hostPlatform.isLinux
-, alsaLib
-, pulseSupport ? stdenv.hostPlatform.isLinux
-, libpulseaudio
-, jackSupport ? stdenv.hostPlatform.isUnix
-, jack
-, CoreAudio
-, CoreMIDI
-, CoreFoundation
-, CoreServices
+, rtaudio
+, rtmidi
 }:
-let
-  inherit (lib) optional optionals;
-in
+
 mkDerivation rec {
   pname = "bambootracker";
   version = "0.4.6";
@@ -29,8 +19,7 @@ mkDerivation rec {
     owner = "rerrahkr";
     repo = "BambooTracker";
     rev = "v${version}";
-    sha256 = "1qn4ax9cmmr1slkn83575m9a4wan3r4r6k7cnf4yq2nmh2znpjnh";
-    fetchSubmodules = true;
+    sha256 = "0iddqfw951dw9xpl4w7310sl4z544507ppb12i8g4fzvlxfw2ifc";
   };
 
   # TODO Remove when updating past 0.4.6
@@ -45,20 +34,9 @@ mkDerivation rec {
 
   nativeBuildInputs = [ qmake qttools pkg-config ];
 
-  buildInputs = [ qtbase ]
-    ++ optional alsaSupport alsaLib
-    ++ optional pulseSupport libpulseaudio
-    ++ optional jackSupport jack
-    ++ optionals stdenv.hostPlatform.isDarwin [
-    CoreAudio
-    CoreMIDI
-    CoreFoundation
-    CoreServices
-  ];
+  buildInputs = [ qtbase rtaudio rtmidi ];
 
-  qmakeFlags = optionals alsaSupport [ "CONFIG+=use_alsa" ]
-    ++ optionals pulseSupport [ "CONFIG+=use_pulse" ]
-    ++ optionals jackSupport [ "CONFIG+=use_jack" ];
+  qmakeFlags = [ "CONFIG+=system_rtaudio" "CONFIG+=system_rtmidi" ];
 
   postConfigure = "make qmake_all";
 

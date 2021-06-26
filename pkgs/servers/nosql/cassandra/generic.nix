@@ -1,22 +1,34 @@
-{ stdenv, fetchurl, python, makeWrapper, gawk, bash, getopt, procps
-, which, jre, coreutils, nixosTests
-# generation is the attribute version suffix such as 3_11 in pkgs.cassandra_3_11
+{ lib
+, stdenv
+, fetchurl
+, python
+, makeWrapper
+, gawk
+, bash
+, getopt
+, procps
+, which
+, jre
+, coreutils
+, nixosTests
+  # generation is the attribute version suffix such as 3_11 in pkgs.cassandra_3_11
 , generation
-, version, sha256
-, extraMeta ? {}
+, version
+, sha256
+, extraMeta ? { }
 , ...
 }:
 
 let
-  libPath = stdenv.lib.makeLibraryPath [ stdenv.cc.cc ];
-  binPath = with stdenv.lib; makeBinPath ([
+  libPath = lib.makeLibraryPath [ stdenv.cc.cc ];
+  binPath = lib.makeBinPath [
     bash
     getopt
     gawk
     which
     jre
     procps
-  ]);
+  ];
 in
 
 stdenv.mkDerivation rec {
@@ -90,22 +102,25 @@ stdenv.mkDerivation rec {
     wrapProgram $out/bin/cqlsh --prefix PATH : ${python}/bin
 
     runHook postInstall
-    '';
+  '';
 
   passthru = {
     tests =
       let
         test = nixosTests."cassandra_${generation}";
-      in {
-        nixos = test;
+      in
+      {
+        nixos =
+          assert test.testPackage.version == version;
+          test;
       };
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "http://cassandra.apache.org/";
     description = "A massively scalable open source NoSQL database";
     platforms = platforms.unix;
     license = licenses.asl20;
-    maintainers = [];
+    maintainers = [ maintainers.roberth ];
   } // extraMeta;
 }

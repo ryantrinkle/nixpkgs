@@ -63,7 +63,7 @@ let
 
       preSetup = mkOption {
         example = literalExample ''
-          ${pkgs.iproute}/bin/ip netns add foo
+          ${pkgs.iproute2}/bin/ip netns add foo
         '';
         default = "";
         type = with types; coercedTo (listOf str) (concatStringsSep "\n") lines;
@@ -219,17 +219,6 @@ let
 
   };
 
-  generatePathUnit = name: values:
-    assert (values.privateKey == null);
-    assert (values.privateKeyFile != null);
-    nameValuePair "wireguard-${name}"
-      {
-        description = "WireGuard Tunnel - ${name} - Private Key";
-        requiredBy = [ "wireguard-${name}.service" ];
-        before = [ "wireguard-${name}.service" ];
-        pathConfig.PathExists = values.privateKeyFile;
-      };
-
   generateKeyServiceUnit = name: values:
     assert values.generatePrivateKeyFile;
     nameValuePair "wireguard-${name}-key"
@@ -238,7 +227,7 @@ let
         wantedBy = [ "wireguard-${name}.service" ];
         requiredBy = [ "wireguard-${name}.service" ];
         before = [ "wireguard-${name}.service" ];
-        path = with pkgs; [ wireguard ];
+        path = with pkgs; [ wireguard-tools ];
 
         serviceConfig = {
           Type = "oneshot";
@@ -246,12 +235,15 @@ let
         };
 
         script = ''
-          mkdir --mode 0644 -p "${dirOf values.privateKeyFile}"
+          set -e
+
+          # If the parent dir does not already exist, create it.
+          # Otherwise, does nothing, keeping existing permisions intact.
+          mkdir -p --mode 0755 "${dirOf values.privateKeyFile}"
+
           if [ ! -f "${values.privateKeyFile}" ]; then
-            touch "${values.privateKeyFile}"
-            chmod 0600 "${values.privateKeyFile}"
-            wg genkey > "${values.privateKeyFile}"
-            chmod 0400 "${values.privateKeyFile}"
+            # Write private key file with atomically-correct permissions.
+            (set -e; umask 077; wg genkey > "${values.privateKeyFile}")
           fi
         '';
       };
@@ -278,7 +270,7 @@ let
         wantedBy = [ "multi-user.target" "wireguard-${interfaceName}.service" ];
         environment.DEVICE = interfaceName;
         environment.WG_ENDPOINT_RESOLUTION_RETRIES = "infinity";
-        path = with pkgs; [ iproute wireguard-tools ];
+        path = with pkgs; [ iproute2 wireguard-tools ];
 
         serviceConfig = {
           Type = "oneshot";
@@ -333,7 +325,7 @@ let
         after = [ "network.target" "network-online.target" ];
         wantedBy = [ "multi-user.target" ];
         environment.DEVICE = name;
-        path = with pkgs; [ kmod iproute wireguard-tools ];
+        path = with pkgs; [ kmod iproute2 wireguard-tools ];
 
         serviceConfig = {
           Type = "oneshot";
@@ -444,9 +436,6 @@ in
       // (listToAttrs (map generatePeerUnit all_peers))
       // (mapAttrs' generateKeyServiceUnit
       (filterAttrs (name: value: value.generatePrivateKeyFile) cfg.interfaces));
-
-    systemd.paths = mapAttrs' generatePathUnit
-      (filterAttrs (name: value: value.privateKeyFile != null) cfg.interfaces);
 
   });
 

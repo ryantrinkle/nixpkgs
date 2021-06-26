@@ -1,14 +1,14 @@
 { lib, mkDerivation, fetchFromGitHub, standard-library }:
 
 mkDerivation rec {
-  version = "0.1.3.1";
+  version = "0.1.6";
   pname = "agda-categories";
 
   src = fetchFromGitHub {
     owner = "agda";
     repo = "agda-categories";
     rev = "v${version}";
-    sha256 = "08mc20qaz9vp5rhi60rh8wvjkg5aby3bgwwdhfnxha1663qf1q24";
+    sha256 = "1s75yqcjwj13s1m3fg29krnn05lws6143ccfdygc6c4iynvvznsh";
   };
 
   buildInputs = [ standard-library ];

@@ -2,16 +2,15 @@
   - source: ../../../../../doc/languages-frameworks/texlive.xml
   - current html: https://nixos.org/nixpkgs/manual/#sec-language-texlive
 */
-{ stdenv, lib, fetchurl, fetchpatch, runCommand, writeText, buildEnv
-, callPackage, ghostscriptX, harfbuzz, poppler_min
-, makeWrapper, python, ruby, perl
+{ stdenv, lib, fetchurl, runCommand, writeText, buildEnv
+, callPackage, ghostscriptX, harfbuzz
+, makeWrapper, python3, ruby, perl
 , useFixedHashes ? true
 , recurseIntoAttrs
 }:
 let
   # various binaries (compiled)
   bin = callPackage ./bin.nix {
-    poppler = poppler_min; # otherwise depend on various X stuff
     ghostscript = ghostscriptX;
     harfbuzz = harfbuzz.override {
       withIcu = true; withGraphite2 = true;
@@ -25,7 +24,7 @@ let
   # function for creating a working environment from a set of TL packages
   combine = import ./combine.nix {
     inherit bin combinePkgs buildEnv lib makeWrapper writeText
-      stdenv python ruby perl;
+      stdenv python3 ruby perl;
     ghostscript = ghostscriptX; # could be without X, probably, but we use X above
   };
 
@@ -57,21 +56,6 @@ let
       collection-plaingeneric = orig.collection-plaingeneric // {
         deps = orig.collection-plaingeneric.deps // { inherit (tl) xdvi; };
       };
-
-      # TODO revert for texlive 2020
-      arara = lib.recursiveUpdate orig.arara {
-        postUnpack = let
-          arara_jar_fix = fetchpatch {
-            url = "https://github.com/TeX-Live/texlive-source/commit/dbaf12f4a47dcd62bcc96346f65493fda3fec2c8.diff";
-            sha256 = "148knr8k6sm6fpyj31kdq85yxvzvwp1prjha3f07q24kbar2l830";
-          };
-        in ''
-          if [ -f "$out"/scripts/arara/arara.sh ]; then
-            cd "$out"/scripts/
-            patch -p4 <${arara_jar_fix}
-          fi
-        '';
-      };
     }); # overrides
 
     # tl =
@@ -81,7 +65,7 @@ let
 
   flatDeps = pname: attrs:
     let
-      version = attrs.version or bin.texliveYear;
+      version = attrs.version or (builtins.toString attrs.revision);
       mkPkgV = tlType: let
         pkg = attrs // {
           sha512 = attrs.sha512.${tlType};
@@ -103,6 +87,12 @@ let
         ++ combinePkgs (attrs.deps or {});
     };
 
+  snapshot = {
+    year = "2021";
+    month = "04";
+    day = "08";
+  };
+
   # create a derivation that contains an unpacked upstream TL package
   mkPkg = { pname, tlType, revision, version, sha512, postUnpack ? "", stripPrefix ? 1, ... }@args:
     let
@@ -112,15 +102,7 @@ let
       fixedHash = fixedHashes.${tlName} or null; # be graceful about missing hashes
 
       urls = args.urls or (if args ? url then [ args.url ] else
-        lib.concatMap
-          (up: [
-            # Only ~11% of packages in texlive 2019 have revisions, so
-            # the number of requests is nearly doubled if we lookup
-            # the name with revision
-            # "${up}/${urlName}.r${toString revision}.tar.xz"
-            "${up}/${urlName}.tar.xz" # TODO To be removed for texlive 2020?
-          ])
-          urlPrefixes);
+        map (up: "${up}/${urlName}.r${toString revision}.tar.xz") urlPrefixes);
 
       # The tarballs on CTAN mirrors for the current release are constantly
       # receiving updates, so we can't use those directly. Stable snapshots
@@ -129,11 +111,11 @@ let
       # (https://tug.org/historic/).
       urlPrefixes = args.urlPrefixes or [
         # tlnet-final snapshot
-        "http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2019/tlnet-final/archive"
-        "ftp://tug.org/texlive/historic/2019/tlnet-final/archive"
+        #"http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2019/tlnet-final/archive"
+        #"ftp://tug.org/texlive/historic/2019/tlnet-final/archive"
 
         # Daily snapshots hosted by one of the texlive release managers
-        #https://texlive.info/tlnet-archive/2019/10/19/tlnet/archive
+        "https://texlive.info/tlnet-archive/${snapshot.year}/${snapshot.month}/${snapshot.day}/tlnet/archive"
       ];
 
       src = fetchurl { inherit urls sha512; };
@@ -149,6 +131,7 @@ let
 
     in if sha512 == "" then
       # hash stripped from pkgs.nix to save space -> fetch&unpack in a single step
+      # currently unused as we prefer to keep the sha512 hashes for reproducibility
       fetchurl {
         inherit urls;
         sha1 = if fixedHash == null then throw "TeX Live package ${tlName} is missing hash!"
@@ -162,8 +145,7 @@ let
         // passthru
 
     else runCommand "texlive-${tlName}"
-      ( { # lots of derivations, not meant to be cached
-          preferLocalBuild = true; allowSubstitutes = false;
+      ( {
           inherit passthru;
         } // lib.optionalAttrs (fixedHash != null) {
           outputHash = fixedHash;
@@ -192,13 +174,12 @@ in
           addMetaAttrs rec {
             description = "TeX Live environment for ${pname}";
             platforms = lib.platforms.all;
-            hydraPlatforms = lib.optionals
-              (!lib.elem pname ["scheme-infraonly"]) platforms;
             maintainers = with lib.maintainers;  [ veprbl ];
           }
           (combine {
             ${pname} = attrs;
             extraName = "combined" + lib.removePrefix "scheme" pname;
+            extraVersion = ".${snapshot.year}${snapshot.month}${snapshot.day}";
           })
         )
         { inherit (tl)

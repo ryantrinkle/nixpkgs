@@ -1,22 +1,17 @@
-{ stdenv, fetchFromGitHub, fetchpatch
-, autoconf
-, automake
-, libtool
-, openssl
+{ stdenv, lib, fetchFromGitHub, fetchpatch
+, autoconf, automake, libtool, openssl, pkg-config
 }:
 
 stdenv.mkDerivation rec {
   pname = "libetpan";
-  version = "1.9.3";
+  version = "1.9.4";
 
   src = fetchFromGitHub {
     owner = "dinhviethoa";
     repo = "libetpan";
     rev = version;
-    sha256 = "19g4qskg71jv7sxfxsdkjmrxk9mk5kf9b6fhw06g6wvm3205n95f";
+    sha256 = "0g7an003simfdn7ihg9yjv7hl2czsmjsndjrp39i7cad8icixscn";
   };
-
-  nativeBuildInputs = [ libtool autoconf automake ];
 
   patches = [
     # The following two patches are fixing CVE-2020-15953, as reported in the
@@ -40,14 +35,17 @@ stdenv.mkDerivation rec {
     })
   ];
 
+  nativeBuildInputs = [ autoconf automake libtool pkg-config ];
+
   buildInputs = [ openssl ];
 
   configureScript = "./autogen.sh";
 
-  meta = with stdenv.lib; {
-    description = "An efficient, portable library for different kinds of mail access: IMAP, SMTP, POP, and NNTP";
+  meta = with lib; {
+    description = "Mail Framework for the C Language";
     homepage = "http://www.etpan.org/libetpan.html";
     license = licenses.bsd3;
+    maintainers = with maintainers; [ oxzi ];
     platforms = platforms.linux;
   };
 }

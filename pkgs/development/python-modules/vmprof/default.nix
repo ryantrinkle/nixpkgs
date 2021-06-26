@@ -1,7 +1,6 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
-, isPy27
 , colorama
 , libunwind
 , pytz
@@ -25,10 +24,9 @@ buildPythonPackage rec {
   doCheck = false;
   pythonImportsCheck = [ "vmprof" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A vmprof client";
     license = licenses.mit;
     homepage = "https://vmprof.readthedocs.org/";
-    broken = isPy27;
   };
 }

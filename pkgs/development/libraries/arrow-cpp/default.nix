@@ -1,31 +1,33 @@
-{ stdenv, lib, fetchurl, fetchFromGitHub, fetchpatch, fixDarwinDylibNames
+{ stdenv, lib, fetchurl, fetchFromGitHub, fixDarwinDylibNames
 , autoconf, boost, brotli, cmake, flatbuffers, gflags, glog, gtest, lz4
-, perl, python3, rapidjson, snappy, thrift, utf8proc, which, zlib, zstd
-, enableShared ? true }:
+, perl, python3, rapidjson, re2, snappy, thrift, utf8proc, which, xsimd
+, zlib, zstd
+, enableShared ? !stdenv.hostPlatform.isStatic
+}:
 
 let
   arrow-testing = fetchFromGitHub {
     owner = "apache";
     repo = "arrow-testing";
-    rev = "f552c4dcd2ae3d14048abd20919748cce5276ade";
-    sha256 = "1smaidk5k2q6xdav7qp74ak34vvwv5qyfqw0szi573awsrsrahr8";
+    rev = "d6c4deb22c4b4e9e3247a2f291046e3c671ad235";
+    sha256 = "0cwhnqijam632zp07j98i8ym967wz6kd35fim1msv88x2rhqky1i";
   };
 
   parquet-testing = fetchFromGitHub {
     owner = "apache";
     repo = "parquet-testing";
-    rev = "bcd9ebcf9204a346df47204fe21b85c8d0498816";
-    sha256 = "0m16pqzbvxiaradq088q5ai6fwnz9srbap996397znwppvva479b";
+    rev = "ddd898958803cb89b7156c6350584d1cda0fe8de";
+    sha256 = "0n16xqlpxn2ryp43w8pppxrbwmllx6sk4hv3ycgikfj57nd3ibc0";
   };
 
 in stdenv.mkDerivation rec {
   pname = "arrow-cpp";
-  version = "1.0.1";
+  version = "4.0.1";
 
   src = fetchurl {
     url =
       "mirror://apache/arrow/arrow-${version}/apache-arrow-${version}.tar.gz";
-    sha256 = "0p67dni8dwqbwq96gfdq3pyk799id6dgdl9h7cpp9icsjsmad70l";
+    sha256 = "0vl926i6jvsvj5vigdgqzp9v1i1h5zzj1abqr6qwc9drfsibzk3m";
   };
   sourceRoot = "apache-arrow-${version}/cpp";
 
@@ -43,26 +45,13 @@ in stdenv.mkDerivation rec {
     # ./cpp/cmake_modules/ThirdpartyToolchain.cmake
     # ./cpp/thirdparty/versions.txt
     url =
-      "https://github.com/microsoft/mimalloc/archive/v1.6.3.tar.gz";
-    sha256 = "0pia8b4acv1w8qzcpc9i1a2fasnn3rmp996k0l87p2di0lbls0w5";
+      "https://github.com/microsoft/mimalloc/archive/v1.6.4.tar.gz";
+    sha256 = "1b8av0974q70alcmaw5cwzbn6n9blnpmj721ik1qwmbbwwd6nqgs";
   };
 
   patches = [
     # patch to fix python-test
     ./darwin.patch
-    # Properly exported static targets. Remove at the next version bump.
-    (fetchpatch {
-      url = "https://github.com/apache/arrow/commit/b040600b39a4f803b704934252665f9440dd1276.patch";
-      sha256 = "1mvw29ybcsz77zprmsk41blxmrj8ywayg7ghf6xkkf98907ws8m8";
-      includes = [ "*.cmake" ];
-      stripLen = 1;
-    })
-    (fetchpatch {
-      url = "https://github.com/apache/arrow/commit/81d3f2657b17436d6d5a6af9aaf6f36c3f5e4ac9.patch";
-      sha256 = "18fmzr5f79hvx2qpyfgvvl98p4zgzfxrmrd1d2basp0w0da1ciqs";
-      includes = [ "*CMakeLists.txt" "*.cmake" "*.cmake.in" ];
-      stripLen = 1;
-    })
   ];
 
   nativeBuildInputs = [
@@ -79,6 +68,7 @@ in stdenv.mkDerivation rec {
     gtest
     lz4
     rapidjson
+    re2
     snappy
     thrift
     utf8proc
@@ -101,6 +91,10 @@ in stdenv.mkDerivation rec {
     "-DARROW_VERBOSE_THIRDPARTY_BUILD=ON"
     "-DARROW_DEPENDENCY_SOURCE=SYSTEM"
     "-DARROW_DEPENDENCY_USE_SHARED=${if enableShared then "ON" else "OFF"}"
+    "-DARROW_COMPUTE=ON"
+    "-DARROW_CSV=ON"
+    "-DARROW_DATASET=ON"
+    "-DARROW_JSON=ON"
     "-DARROW_PLASMA=ON"
     # Disable Python for static mode because openblas is currently broken there.
     "-DARROW_PYTHON=${if enableShared then "ON" else "OFF"}"
@@ -122,11 +116,22 @@ in stdenv.mkDerivation rec {
     "-DCMAKE_INSTALL_RPATH=@loader_path/../lib" # needed for tools executables
   ] ++ lib.optional (!stdenv.isx86_64) "-DARROW_USE_SIMD=OFF";
 
+  ARROW_XSIMD_URL = xsimd.src;
+
   doInstallCheck = true;
   ARROW_TEST_DATA =
     if doInstallCheck then "${arrow-testing}/data" else null;
   PARQUET_TEST_DATA =
     if doInstallCheck then "${parquet-testing}/data" else null;
+  GTEST_FILTER =
+    if doInstallCheck then let
+      # Upstream Issue: https://issues.apache.org/jira/browse/ARROW-11398
+      filteredTests = lib.optionals stdenv.hostPlatform.isAarch64 [
+        "TestFilterKernelWithNumeric/3.CompareArrayAndFilterRandomNumeric"
+        "TestFilterKernelWithNumeric/7.CompareArrayAndFilterRandomNumeric"
+        "TestCompareKernel.PrimitiveRandomTests"
+      ];
+    in "-${builtins.concatStringsSep ":" filteredTests}" else null;
   installCheckInputs = [ perl which ];
   installCheckPhase =
   let
@@ -141,11 +146,11 @@ in stdenv.mkDerivation rec {
       --exclude-regex '^(${builtins.concatStringsSep "|" excludedTests})$'
   '';
 
-  meta = {
+  meta = with lib; {
     description = "A  cross-language development platform for in-memory data";
     homepage = "https://arrow.apache.org/";
-    license = lib.licenses.asl20;
-    platforms = lib.platforms.unix;
-    maintainers = with lib.maintainers; [ tobim veprbl ];
+    license = licenses.asl20;
+    platforms = platforms.unix;
+    maintainers = with maintainers; [ tobim veprbl ];
   };
 }

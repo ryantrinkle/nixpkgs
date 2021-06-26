@@ -3,6 +3,7 @@ from contextlib import contextmanager, _GeneratorContextManager
 from queue import Queue, Empty
 from typing import Tuple, Any, Callable, Dict, Iterator, Optional, List, Iterable
 from xml.sax.saxutils import XMLGenerator
+from colorama import Style
 import queue
 import io
 import _thread
@@ -20,6 +21,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import telnetlib
 import tempfile
 import time
 import traceback
@@ -110,7 +112,6 @@ def create_vlan(vlan_nr: str) -> Tuple[str, str, "subprocess.Popen[bytes]", Any]
     pty_master, pty_slave = pty.openpty()
     vde_process = subprocess.Popen(
         ["vde_switch", "-s", vde_socket, "--dirmode", "0700"],
-        bufsize=1,
         stdin=pty_slave,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -152,6 +153,8 @@ class Logger:
         self.xml.startDocument()
         self.xml.startElement("logfile", attrs={})
 
+        self._print_serial_logs = True
+
     def close(self) -> None:
         self.xml.endElement("logfile")
         self.xml.endDocument()
@@ -175,15 +178,21 @@ class Logger:
         self.drain_log_queue()
         self.log_line(message, attributes)
 
-    def enqueue(self, message: Dict[str, str]) -> None:
-        self.queue.put(message)
+    def log_serial(self, message: str, machine: str) -> None:
+        self.enqueue({"msg": message, "machine": machine, "type": "serial"})
+        if self._print_serial_logs:
+            eprint(Style.DIM + "{} # {}".format(machine, message) + Style.RESET_ALL)
+
+    def enqueue(self, item: Dict[str, str]) -> None:
+        self.queue.put(item)
 
     def drain_log_queue(self) -> None:
         try:
             while True:
                 item = self.queue.get_nowait()
-                attributes = {"machine": item["machine"], "type": "serial"}
-                self.log_line(self.sanitise(item["msg"]), attributes)
+                msg = self.sanitise(item["msg"])
+                del item["msg"]
+                self.log_line(msg, item)
         except Empty:
             pass
 
@@ -308,8 +317,9 @@ class Machine:
             start_command += "-cdrom " + args["cdrom"] + " "
 
         if "usb" in args:
+            # https://github.com/qemu/qemu/blob/master/docs/usb2.txt
             start_command += (
-                "-device piix3-usb-uhci -drive "
+                "-device usb-ehci -drive "
                 + "id=usbdisk,file="
                 + args["usb"]
                 + ",if=none,readonly "
@@ -327,6 +337,9 @@ class Machine:
 
     def log(self, msg: str) -> None:
         self.logger.log(msg, {"machine": self.name})
+
+    def log_serial(self, msg: str) -> None:
+        self.logger.log_serial(msg, self.name)
 
     def nested(self, msg: str, attrs: Dict[str, str] = {}) -> _GeneratorContextManager:
         my_attrs = {"machine": self.name}
@@ -442,6 +455,16 @@ class Machine:
                 status_code = int(match[2])
                 return (status_code, output)
             output += chunk
+
+    def shell_interact(self) -> None:
+        """Allows you to interact with the guest shell
+
+        Should only be used during test development, not in the production test."""
+        self.connect()
+        self.log("Terminal is ready (there is no prompt):")
+        telnet = telnetlib.Telnet()
+        telnet.sock = self.shell  # type: ignore
+        telnet.interact()
 
     def succeed(self, *commands: str) -> str:
         """Execute each command and check that it succeeds."""
@@ -666,8 +689,7 @@ class Machine:
                 shutil.copy(intermediate, abs_target)
 
     def dump_tty_contents(self, tty: str) -> None:
-        """Debugging: Dump the contents of the TTY<n>
-        """
+        """Debugging: Dump the contents of the TTY<n>"""
         self.execute("fold -w 80 /dev/vcs{} | systemd-cat".format(tty))
 
     def _get_screen_text_variants(self, model_ids: Iterable[int]) -> List[str]:
@@ -737,6 +759,7 @@ class Machine:
         shell_path = os.path.join(self.state_dir, "shell")
         self.shell_socket = create_socket(shell_path)
 
+        display_available = any(x in os.environ for x in ["DISPLAY", "WAYLAND_DISPLAY"])
         qemu_options = (
             " ".join(
                 [
@@ -746,7 +769,7 @@ class Machine:
                     "-device virtio-serial",
                     "-device virtconsole,chardev=shell",
                     "-device virtio-rng-pci",
-                    "-serial stdio" if "DISPLAY" in os.environ else "-nographic",
+                    "-serial stdio" if display_available else "-nographic",
                 ]
             )
             + " "
@@ -765,7 +788,6 @@ class Machine:
 
         self.process = subprocess.Popen(
             self.script,
-            bufsize=1,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -786,8 +808,7 @@ class Machine:
                 # Ignore undecodable bytes that may occur in boot menus
                 line = _line.decode(errors="ignore").replace("\r", "").rstrip()
                 self.last_lines.put(line)
-                eprint("{} # {}".format(self.name, line))
-                self.logger.enqueue({"msg": line, "machine": self.name})
+                self.log_serial(line)
 
         _thread.start_new_thread(process_serial_output, ())
 
@@ -879,8 +900,7 @@ class Machine:
         self.send_monitor_command("set_link virtio-net-pci.1 off")
 
     def unblock(self) -> None:
-        """Make the machine reachable.
-        """
+        """Make the machine reachable."""
         self.send_monitor_command("set_link virtio-net-pci.1 on")
 
 
@@ -928,6 +948,16 @@ def run_tests() -> None:
     for machine in machines:
         if machine.is_up():
             machine.execute("sync")
+
+
+def serial_stdout_on() -> None:
+    global log
+    log._print_serial_logs = True
+
+
+def serial_stdout_off() -> None:
+    global log
+    log._print_serial_logs = False
 
 
 @contextmanager

@@ -1,6 +1,7 @@
 { lib
 , buildPythonPackage
 , fetchPypi
+, isPy27
 , setuptools_scm
 , cython
 , numpy
@@ -12,11 +13,12 @@
 
 buildPythonPackage rec {
   pname = "numcodecs";
-  version = "0.6.4";
+  version = "0.7.3";
+  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "ef4843d5db4d074e607e9b85156835c10d006afc10e175bda62ff5412fca6e4d";
+    sha256 = "022b12ad83eb623ec53f154859d49f6ec43b15c36052fa864eaf2d9ee786dd85";
   };
 
   nativeBuildInputs = [

@@ -1,9 +1,9 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
-, fetchpatch
 , meson
+, nasm
 , ninja
-, pkgconfig
+, pkg-config
 , python3
 , gst-plugins-base
 , orc
@@ -25,59 +25,47 @@
 , libsoup
 , libpulseaudio
 , libintl
-, darwin
+, Cocoa
 , lame
 , mpg123
 , twolame
-, gtkSupport ? false, gtk3 ? null
+, gtkSupport ? false, gtk3
+, qt5Support ? false, qt5
+, raspiCameraSupport ? false, libraspberrypi
 , enableJack ? true, libjack2
 , libXdamage
 , libXext
 , libXfixes
 , ncurses
+, wayland
+, wayland-protocols
 , xorg
 , libgudev
 , wavpack
 }:
 
-assert gtkSupport -> gtk3 != null;
+assert raspiCameraSupport -> (stdenv.isLinux && stdenv.isAarch64);
 
-let
-  inherit (stdenv.lib) optionals;
-in
 stdenv.mkDerivation rec {
   pname = "gst-plugins-good";
-  version = "1.16.3";
+  version = "1.18.4";
 
   outputs = [ "out" "dev" ];
 
   src = fetchurl {
-    url = "${meta.homepage}/src/${pname}/${pname}-${version}.tar.xz";
-    sha256 = "0pzq565ijl5z3mphvix34878m7hck6a58rdpj7sp7rixwwzkm8nk";
+    url = "https://gstreamer.freedesktop.org/src/${pname}/${pname}-${version}.tar.xz";
+    sha256 = "1c1rpq709cy8maaykyn1n0kckj9c6fl3mhvixkk6xmdwkcx0xrdn";
   };
 
-  patches = [
-    ./fix_pkgconfig_includedir.patch
-    (fetchpatch {
-      # https://gstreamer.freedesktop.org/security/sa-2021-0002.html
-      name = "CVE-2021-3497.patch";
-      url = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/commit/9181191511f9c0be6a89c98b311f49d66bd46dc3.patch";
-      sha256 = "10dvfxrw7l3gflk9fzn5x18vkj4080dfkjnzldc12r5mnl37qdz8";
-    })
-    (fetchpatch {
-      # https://gstreamer.freedesktop.org/security/sa-2021-0003.html
-      name = "CVE-2021-3498.patch";
-      url = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/commit/02174790726dd20a5c73ce2002189bf240ad4fe0.patch";
-      sha256 = "1sygia6z0yv5grzii6z9bviwi6rm6br3xjr0cnffsji6z943d7vc";
-    })
-  ];
-
   nativeBuildInputs = [
-    pkgconfig
+    pkg-config
     python3
     meson
     ninja
     gettext
+    nasm
+  ] ++ lib.optionals stdenv.isLinux [
+    wayland-protocols
   ];
 
   buildInputs = [
@@ -106,29 +94,39 @@ stdenv.mkDerivation rec {
     xorg.libXfixes
     xorg.libXdamage
     wavpack
-  ] ++ optionals gtkSupport [
+  ] ++ lib.optionals raspiCameraSupport [
+    libraspberrypi
+  ] ++ lib.optionals gtkSupport [
     # for gtksink
     gtk3
-  ] ++ optionals stdenv.isDarwin [
-    darwin.apple_sdk.frameworks.Cocoa
-  ] ++ optionals stdenv.isLinux [
+  ] ++ lib.optionals qt5Support (with qt5; [
+    qtbase
+    qtdeclarative
+    qtwayland
+    qtx11extras
+  ]) ++ lib.optionals stdenv.isDarwin [
+    Cocoa
+  ] ++ lib.optionals stdenv.isLinux [
     libv4l
     libpulseaudio
     libavc1394
     libiec61883
     libgudev
-  ] ++ optionals enableJack [
+    wayland
+  ] ++ lib.optionals enableJack [
     libjack2
   ];
 
   mesonFlags = [
     "-Dexamples=disabled" # requires many dependencies and probably not useful for our users
-    "-Dqt5=disabled" # not clear as of writing how to correctly pass in the required qt5 deps
-  ] ++ optionals (!gtkSupport) [
+    "-Ddoc=disabled" # `hotdoc` not packaged in nixpkgs as of writing
+  ] ++ lib.optionals (!qt5Support) [
+    "-Dqt5=disabled"
+  ] ++ lib.optionals (!gtkSupport) [
     "-Dgtk3=disabled"
-  ] ++ optionals (!enableJack) [
+  ] ++ lib.optionals (!enableJack) [
     "-Djack=disabled"
-  ] ++ optionals (!stdenv.isLinux) [
+  ] ++ lib.optionals (!stdenv.isLinux) [
     "-Ddv1394=disabled" # Linux only
     "-Doss4=disabled" # Linux only
     "-Doss=disabled" # Linux only
@@ -136,9 +134,14 @@ stdenv.mkDerivation rec {
     "-Dv4l2-gudev=disabled" # Linux-only
     "-Dv4l2=disabled" # Linux-only
     "-Dximagesrc=disabled" # Linux-only
-    "-Dpulse=disabled" # TODO check if we can keep this enabled
+  ] ++ lib.optionals (!raspiCameraSupport) [
+    "-Drpicamsrc=disabled"
   ];
 
+  postPatch = ''
+    patchShebangs \
+      scripts/extract-release-date-from-doap-file.py
+  '';
 
   NIX_LDFLAGS = [
     # linking error on Darwin
@@ -149,7 +152,10 @@ stdenv.mkDerivation rec {
   # fails 1 tests with "Unexpected critical/warning: g_object_set_is_valid_property: object class 'GstRtpStorage' has no property named ''"
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  # must be explicitely set since 5590e365
+  dontWrapQtApps = true;
+
+  meta = with lib; {
     description = "GStreamer Good Plugins";
     homepage = "https://gstreamer.freedesktop.org";
     longDescription = ''

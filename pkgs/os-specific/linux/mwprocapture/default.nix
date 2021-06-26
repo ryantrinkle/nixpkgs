@@ -1,6 +1,6 @@
-{ stdenv, fetchurl, kernel, alsaLib }:
+{ lib, stdenv, fetchurl, kernel, alsaLib }:
 
-with stdenv.lib;
+with lib;
 
 # The Magewell Pro Capture drivers are not supported for kernels older than 3.2
 assert versionAtLeast kernel.version "3.2.0";
@@ -67,6 +67,5 @@ stdenv.mkDerivation rec {
     license = licenses.unfreeRedistributable;
     maintainers = with maintainers; [ MP2E ];
     platforms = platforms.linux;
-    broken = with kernel; kernelAtLeast "5.8";
   };
 }

@@ -210,16 +210,16 @@ in rec {
       '';
     };
 
-    startLimitIntervalSec = mkOption {
+    startLimitBurst = mkOption {
        type = types.int;
        description = ''
          Configure unit start rate limiting. Units which are started
-         more than burst times within an interval time interval are
-         not permitted to start any more.
+         more than startLimitBurst times within an interval time
+         interval are not permitted to start any more.
        '';
     };
 
-    startLimitBurst = mkOption {
+    startLimitIntervalSec = mkOption {
        type = types.int;
        description = ''
          Configure unit start rate limiting. Units which are started
@@ -254,8 +254,7 @@ in rec {
     serviceConfig = mkOption {
       default = {};
       example =
-        { StartLimitInterval = 10;
-          RestartSec = 5;
+        { RestartSec = 5;
         };
       type = types.addCheck (types.attrsOf unitOption) checkService;
       description = ''

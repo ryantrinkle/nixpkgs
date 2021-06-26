@@ -1,6 +1,6 @@
-{ stdenv, wrapQtAppsHook, makeDesktopItem
+{ lib, stdenv, wrapQtAppsHook, makeDesktopItem
 , fetchFromGitHub
-, cmake, qttools, pkgconfig
+, cmake, qttools, pkg-config
 , qtbase, qtdeclarative, qtgraphicaleffects
 , qtmultimedia, qtxmlpatterns
 , qtquickcontrols, qtquickcontrols2
@@ -10,28 +10,26 @@
 , randomx, zeromq, libgcrypt, libgpgerror
 , hidapi, rapidjson, quirc
 , trezorSupport ? true
-,   libusb1  ? null
-,   protobuf ? null
-,   python3  ? null
+,   libusb1
+,   protobuf
+,   python3
 }:
 
-with stdenv.lib;
-
-assert trezorSupport -> all (x: x!=null) [ libusb1 protobuf python3 ];
+with lib;
 
 stdenv.mkDerivation rec {
   pname = "monero-gui";
-  version = "0.17.2.1";
+  version = "0.17.2.2";
 
   src = fetchFromGitHub {
     owner  = "monero-project";
     repo   = "monero-gui";
     rev    = "v${version}";
-    sha256 = "1apjvpvn6hg0k0ak6wpg4prcdcslnb6fqhzzg2p4iy846f0ai9ji";
+    sha256 = "1k3grbd3wydy5gv6d8x35skv1v97lhh6awd9i87im9lz4kn8ywkd";
   };
 
   nativeBuildInputs = [
-    cmake pkgconfig wrapQtAppsHook
+    cmake pkg-config wrapQtAppsHook
     (getDev qttools)
   ];
 

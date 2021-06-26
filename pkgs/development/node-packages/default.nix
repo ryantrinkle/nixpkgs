@@ -1,4 +1,4 @@
-{ pkgs, nodejs, stdenv }:
+{ pkgs, nodejs, stdenv, fetchFromGitHub }:
 
 let
   since = (version: pkgs.lib.versionAtLeast nodejs.version version);
@@ -13,11 +13,24 @@ let
         export NG_CLI_ANALYTICS=false
       '';
     };
+
+    aws-azure-login = super.aws-azure-login.override {
+      meta.platforms = pkgs.lib.platforms.linux;
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      prePatch = ''
+        export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+      '';
+      postInstall = ''
+        wrapProgram $out/bin/aws-azure-login \
+            --set PUPPETEER_EXECUTABLE_PATH ${pkgs.chromium}/bin/chromium
+      '';
+    };
+
     bower2nix = super.bower2nix.override {
       buildInputs = [ pkgs.makeWrapper ];
       postInstall = ''
         for prog in bower2nix fetch-bower; do
-          wrapProgram "$out/bin/$prog" --prefix PATH : ${stdenv.lib.makeBinPath [ pkgs.git pkgs.nix ]}
+          wrapProgram "$out/bin/$prog" --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.git pkgs.nix ]}
         done
       '';
     };
@@ -39,8 +52,17 @@ let
       meta.broken = since "12";
     };
 
-    bitwarden-cli = pkgs.lib.overrideDerivation super."@bitwarden/cli" (drv: {
+    # NOTE: this is a stub package to fetch npm dependencies for
+    # ../../applications/video/epgstation
+    epgstation = super."epgstation-../../applications/video/epgstation".override (drv: {
+      meta = drv.meta // {
+        broken = true; # not really broken, see the comment above
+      };
+    });
+
+    bitwarden-cli = super."@bitwarden/cli".override (drv: {
       name = "bitwarden-cli-${drv.version}";
+      meta.mainProgram = "bw";
     });
 
     fast-cli = super."fast-cli-1.x".override {
@@ -51,19 +73,55 @@ let
       buildInputs = [ pkgs.phantomjs2 ];
     };
 
+    flood = super.flood.override {
+      buildInputs = [ self.node-pre-gyp ];
+    };
+
+    expo-cli = super."expo-cli".override (attrs: {
+      # The traveling-fastlane-darwin optional dependency aborts build on Linux.
+      dependencies = builtins.filter (d: d.packageName != "@expo/traveling-fastlane-${if stdenv.isLinux then "darwin" else "linux"}") attrs.dependencies;
+    });
+
+    "@electron-forge/cli" = super."@electron-forge/cli".override {
+      buildInputs = [ self.node-pre-gyp self.rimraf ];
+    };
+
     git-ssb = super.git-ssb.override {
       buildInputs = [ self.node-gyp-build ];
       meta.broken = since "10";
     };
 
+    hsd = super.hsd.override {
+      buildInputs = [ self.node-gyp-build pkgs.unbound ];
+    };
+
+    ijavascript = super.ijavascript.override (oldAttrs: {
+      preRebuild = ''
+        export NPM_CONFIG_ZMQ_EXTERNAL=true
+      '';
+      buildInputs = oldAttrs.buildInputs ++ [ self.node-gyp-build pkgs.zeromq ];
+    });
+
     insect = super.insect.override (drv: {
       nativeBuildInputs = drv.nativeBuildInputs or [] ++ [ pkgs.psc-package self.pulp ];
     });
 
+    makam =  super.makam.override {
+      buildInputs = [ pkgs.nodejs pkgs.makeWrapper ];
+      postFixup = ''
+        wrapProgram "$out/bin/makam" --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.nodejs ]}
+        ${
+          if stdenv.isLinux
+            then "patchelf --set-interpreter ${stdenv.glibc}/lib/ld-linux-x86-64.so.2 \"$out/lib/node_modules/makam/makam-bin-linux64\""
+            else ""
+        }
+      '';
+    };
+
     mirakurun = super.mirakurun.override rec {
       nativeBuildInputs = with pkgs; [ makeWrapper ];
       postInstall = let
-        runtimeDeps = [ nodejs ] ++ (with pkgs; [ bash which v4l_utils ]);
+        runtimeDeps = [ nodejs ] ++ (with pkgs; [ bash which v4l-utils ]);
       in
       ''
         substituteInPlace $out/lib/node_modules/mirakurun/processes.json \
@@ -98,13 +156,27 @@ let
     node2nix = super.node2nix.override {
       buildInputs = [ pkgs.makeWrapper ];
       postInstall = ''
-        wrapProgram "$out/bin/node2nix" --prefix PATH : ${stdenv.lib.makeBinPath [ pkgs.nix ]}
+        wrapProgram "$out/bin/node2nix" --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.nix ]}
       '';
     };
 
     node-red = super.node-red.override {
       buildInputs = [ self.node-pre-gyp ];
     };
+
+    mermaid-cli = super."@mermaid-js/mermaid-cli".override (
+    if stdenv.isDarwin
+    then {}
+    else {
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      prePatch = ''
+        export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+      '';
+      postInstall = ''
+        wrapProgram $out/bin/mmdc \
+        --set PUPPETEER_EXECUTABLE_PATH ${pkgs.chromium.outPath}/bin/chromium
+      '';
+    });
 
     pnpm = super.pnpm.override {
       nativeBuildInputs = [ pkgs.makeWrapper ];
@@ -114,7 +186,7 @@ let
       '';
 
       postInstall = let
-        pnpmLibPath = stdenv.lib.makeBinPath [
+        pnpmLibPath = pkgs.lib.makeBinPath [
           nodejs.passthru.python
           nodejs
         ];
@@ -131,14 +203,38 @@ let
 
       nativeBuildInputs = [ pkgs.makeWrapper ];
       postInstall =  ''
-        wrapProgram "$out/bin/pulp" --suffix PATH : ${stdenv.lib.makeBinPath [
+        wrapProgram "$out/bin/pulp" --suffix PATH : ${pkgs.lib.makeBinPath [
           pkgs.purescript
         ]}
       '';
     };
 
+    netlify-cli =
+      let
+        esbuild = pkgs.esbuild.overrideAttrs (old: rec {
+          version = "0.11.14";
+
+          src = fetchFromGitHub {
+            owner = "evanw";
+            repo = "esbuild";
+            rev = "v${version}";
+            sha256 = "sha256-N7WNam0zF1t++nLVhuxXSDGV/JaFtlFhufp+etinvmM=";
+          };
+
+        });
+      in
+      super.netlify-cli.override {
+        preRebuild = ''
+          export ESBUILD_BINARY_PATH="${esbuild}/bin/esbuild"
+        '';
+      };
+
     ssb-server = super.ssb-server.override {
       buildInputs = [ pkgs.automake pkgs.autoconf self.node-gyp-build ];
+      meta.broken = since "10";
+    };
+
+    stf = super.stf.override {
       meta.broken = since "10";
     };
 
@@ -158,8 +254,42 @@ let
       '';
     });
 
-    stf = super.stf.override {
-      meta.broken = since "10";
+    typescript-language-server = super.typescript-language-server.override {
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postInstall = ''
+        wrapProgram "$out/bin/typescript-language-server" \
+          --prefix PATH : ${pkgs.lib.makeBinPath [ self.typescript ]}
+      '';
+    };
+
+    teck-programmer = super.teck-programmer.override {
+      buildInputs = [ pkgs.libusb ];
+    };
+
+    vega-cli = super.vega-cli.override {
+      nativeBuildInputs = [ pkgs.pkg-config ];
+      buildInputs = with pkgs; [
+        super.node-pre-gyp
+        pixman
+        cairo
+        pango
+        libjpeg
+      ];
+    };
+
+    vega-lite = super.vega-lite.override {
+        # npx tries to install vega from scratch at vegalite runtime if it
+        # can't find it. We thus replace it with a direct call to the nix
+        # derivation. This might not be necessary anymore in future vl
+        # versions: https://github.com/vega/vega-lite/issues/6863.
+        postInstall = ''
+          substituteInPlace $out/lib/node_modules/vega-lite/bin/vl2pdf \
+            --replace "npx -p vega vg2pdf"  "${self.vega-cli}/bin/vg2pdf"
+          substituteInPlace $out/lib/node_modules/vega-lite/bin/vl2svg \
+            --replace "npx -p vega vg2svg"  "${self.vega-cli}/bin/vg2svg"
+          substituteInPlace $out/lib/node_modules/vega-lite/bin/vl2png \
+            --replace "npx -p vega vg2png"  "${self.vega-cli}/bin/vg2png"
+        '';
     };
 
     webtorrent-cli = super.webtorrent-cli.override {
@@ -173,15 +303,27 @@ let
         # https://sharp.pixelplumbing.com/install
         vips
 
+        libsecret
+        self.node-gyp-build
         self.node-pre-gyp
+      ] ++ lib.optionals stdenv.isDarwin [
+        darwin.apple_sdk.frameworks.AppKit
+        darwin.apple_sdk.frameworks.Security
       ];
-      meta.broken = true;
     };
 
     thelounge = super.thelounge.override {
       buildInputs = [ self.node-pre-gyp ];
       postInstall = ''
         echo /var/lib/thelounge > $out/lib/node_modules/thelounge/.thelounge_home
+      '';
+    };
+
+    yaml-language-server = super.yaml-language-server.override {
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postInstall = ''
+        wrapProgram "$out/bin/yaml-language-server" \
+        --prefix NODE_PATH : ${self.prettier}/lib/node_modules
       '';
     };
   };

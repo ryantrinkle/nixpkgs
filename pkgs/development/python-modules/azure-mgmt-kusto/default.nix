@@ -1,21 +1,27 @@
 { lib, buildPythonPackage, fetchPypi, isPy27
 , azure-common
+, azure-mgmt-core
 , msrest
 , msrestazure
 }:
 
 buildPythonPackage rec {
-  version = "0.9.0";
+  version = "2.0.0";
   pname = "azure-mgmt-kusto";
   disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "9210db89fa18ee8ed53339cd63bbe6fe1d9624cd793b54b7451ddbda8ae92ef3";
+    sha256 = "81601479e2b6da3e69654462674ef1474218c4415ef25c1d9892939721732153";
     extension = "zip";
   };
 
-  propagatedBuildInputs = [ azure-common msrest msrestazure ];
+  propagatedBuildInputs = [
+    azure-common
+    azure-mgmt-core
+    msrest
+    msrestazure
+  ];
 
   # no tests included
   doCheck = false;

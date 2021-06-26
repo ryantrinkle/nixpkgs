@@ -6,7 +6,7 @@
 }:
 
 { swingSupport ? true
-, stdenv
+, lib, stdenv
 , requireFile
 , makeWrapper
 , unzip
@@ -83,10 +83,8 @@ let result = stdenv.mkDerivation rec {
       sha256 = sha256.${stdenv.hostPlatform.system};
     };
 
-  nativeBuildInputs = [ file ]
-    ++ stdenv.lib.optional installjce unzip;
-
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ file makeWrapper ]
+    ++ lib.optional installjce unzip;
 
   # See: https://github.com/NixOS/patchelf/issues/10
   dontStrip = 1;
@@ -148,7 +146,7 @@ let result = stdenv.mkDerivation rec {
   '';
 
   postFixup = ''
-    rpath+="''${rpath:+:}${stdenv.lib.concatStringsSep ":" (map (a: "$jrePath/${a}") rSubPaths)}"
+    rpath+="''${rpath:+:}${lib.concatStringsSep ":" (map (a: "$jrePath/${a}") rSubPaths)}"
 
     # set all the dynamic linkers
     find $out -type f -perm -0100 \
@@ -171,9 +169,9 @@ let result = stdenv.mkDerivation rec {
    */
   libraries =
     [stdenv.cc.libc glib libxml2 ffmpeg_3 libxslt libGL xorg.libXxf86vm alsaLib fontconfig freetype pango gtk2 cairo gdk-pixbuf atk] ++
-    stdenv.lib.optionals swingSupport [xorg.libX11 xorg.libXext xorg.libXtst xorg.libXi xorg.libXp xorg.libXt xorg.libXrender stdenv.cc.cc];
+    lib.optionals swingSupport [xorg.libX11 xorg.libXext xorg.libXtst xorg.libXi xorg.libXp xorg.libXt xorg.libXrender stdenv.cc.cc];
 
-  rpath = stdenv.lib.strings.makeLibraryPath libraries;
+  rpath = lib.strings.makeLibraryPath libraries;
 
   passthru.mozillaPlugin = if installjdk then "/jre/lib/${architecture}/plugins" else "/lib/${architecture}/plugins";
 
@@ -183,9 +181,10 @@ let result = stdenv.mkDerivation rec {
 
   passthru.architecture = architecture;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     license = licenses.unfree;
     platforms = [ "i686-linux" "x86_64-linux" "armv7l-linux" "aarch64-linux" ]; # some inherit jre.meta.platforms
+    mainProgram = "java";
   };
 
 }; in result

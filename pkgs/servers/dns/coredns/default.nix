@@ -1,21 +1,21 @@
-{ stdenv, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
 buildGoModule rec {
   pname = "coredns";
-  version = "1.7.0";
+  version = "1.8.3";
 
   src = fetchFromGitHub {
     owner = "coredns";
     repo = "coredns";
     rev = "v${version}";
-    sha256 = "1wayfr26gwgdl0sfrvskb4hkxfmxfy7idbrpw3z4r05fkr2886xj";
+    sha256 = "sha256-aE+kw854/wjFJqiRC/1gLzRpaVa6EPJPJaKqXtFM+Sw=";
   };
 
-  vendorSha256 = "17znl3vkg73hnrfl697rw201nsd5sijgalnbkljk1b4m0a01zik1";
+  vendorSha256 = "sha256-1+WgBsknyPcZhvQLffhlWBH1o0pYTFoOG5BviUJYxyA=";
 
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://coredns.io";
     description = "A DNS server that runs middleware";
     license = licenses.asl20;

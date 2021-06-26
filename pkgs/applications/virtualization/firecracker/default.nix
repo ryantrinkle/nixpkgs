@@ -1,7 +1,7 @@
-{ fetchurl, stdenv }:
+{ fetchurl, lib, stdenv }:
 
 let
-  version = "0.21.3";
+  version = "0.24.3";
 
   suffix = {
     x86_64-linux  = "x86_64";
@@ -9,33 +9,28 @@ let
   }."${stdenv.hostPlatform.system}" or (throw "Unsupported system: ${stdenv.hostPlatform.system}");
 
   baseurl = "https://github.com/firecracker-microvm/firecracker/releases/download";
-  fetchbin = name: sha256: fetchurl {
-    url    = "${baseurl}/v${version}/${name}-v${version}-${suffix}";
+
+  dlbin = sha256: fetchurl {
+    url    = "${baseurl}/v${version}/firecracker-v${version}-${suffix}.tgz";
     sha256 = sha256."${stdenv.hostPlatform.system}";
-  };
-
-  firecracker-bin = fetchbin "firecracker" {
-    x86_64-linux = "13mvdl7gk837w485vk0rrj084ids3nxs60014psg65vl7akwb9rr";
-    aarch64-linux = "0s9gg6bz46yy0ix8s5wm1hcm420rh32ip3axa1by4rashgp804ka";
-  };
-
-  jailer-bin = fetchbin "jailer" {
-    x86_64-linux = "0pyplam86arsc8mqhmmg47vin91b7nqpk3p6rnys3gs99mc1n5wm";
-    aarch64-linux = "1h7x5828s09a393n8w4si7qclxngkw0d6zas3zmhviyr2xbjbz87";
   };
 
 in
 stdenv.mkDerivation {
   pname = "firecracker";
   inherit version;
-  srcs = [ firecracker-bin jailer-bin ];
 
-  unpackPhase    = ":";
+  sourceRoot = ".";
+  src = dlbin {
+    x86_64-linux  = "sha256-i6NMVFoLm4hQJH7RnhfC0t+0DJCINoP5b/iCv9JyRdk=";
+    aarch64-linux = "0m7xs12g97z1ipzaf7dgknf3azlah0p6bdr9i454azvzg955238b";
+  };
+
   configurePhase = ":";
 
   buildPhase     = ''
-    cp ${firecracker-bin} firecracker
-    cp ${jailer-bin}      jailer
+    mv firecracker-* firecracker
+    mv jailer-*      jailer
     chmod +x firecracker jailer
   '';
 
@@ -51,7 +46,7 @@ stdenv.mkDerivation {
     install -D jailer      $out/bin/jailer
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Secure, fast, minimal micro-container virtualization";
     homepage    = "http://firecracker-microvm.io";
     license     = licenses.asl20;

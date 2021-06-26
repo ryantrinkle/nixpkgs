@@ -1,6 +1,6 @@
 { lib, stdenv, fetchFromGitHub
-, autoreconfHook, utillinux, nukeReferences, coreutils
-, perl, buildPackages
+, autoreconfHook269, util-linux, nukeReferences, coreutils
+, perl, nixosTests
 , configFile ? "all"
 
 # Userspace dependencies
@@ -8,8 +8,8 @@
 , libtirpc
 , nfs-utils
 , gawk, gnugrep, gnused, systemd
-, smartmontools, sysstat, sudo
-, pkg-config
+, smartmontools, enableMail ? false
+, sysstat, pkg-config
 
 # Kernel dependencies
 , kernel ? null
@@ -18,6 +18,8 @@
 
 with lib;
 let
+  smartmon = smartmontools.override { inherit enableMail; };
+
   buildKernel = any (n: n == configFile) [ "kernel" "all" ];
   buildUser = any (n: n == configFile) [ "user" "all" ];
 
@@ -44,8 +46,8 @@ let
         # The arrays must remain the same length, so we repeat a flag that is
         # already part of the command and therefore has no effect.
         substituteInPlace ./module/os/linux/zfs/zfs_ctldir.c \
-          --replace '"/usr/bin/env", "umount"' '"${utillinux}/bin/umount", "-n"' \
-          --replace '"/usr/bin/env", "mount"'  '"${utillinux}/bin/mount", "-n"'
+          --replace '"/usr/bin/env", "umount"' '"${util-linux}/bin/umount", "-n"' \
+          --replace '"/usr/bin/env", "mount"'  '"${util-linux}/bin/mount", "-n"'
       '' + optionalString buildUser ''
         substituteInPlace ./lib/libshare/os/linux/nfs.c --replace "/usr/sbin/exportfs" "${
           # We don't *need* python support, but we set it like this to minimize closure size:
@@ -83,7 +85,7 @@ let
           "PATH=${makeBinPath [ coreutils gawk gnused gnugrep systemd ]}"
       '';
 
-      nativeBuildInputs = [ autoreconfHook nukeReferences ]
+      nativeBuildInputs = [ autoreconfHook269 nukeReferences ]
         ++ optionals buildKernel (kernel.moduleBuildDependencies ++ [ perl ])
         ++ optional buildUser pkg-config;
       buildInputs = optionals buildUser [ zlib libuuid attr libtirpc ]
@@ -128,7 +130,7 @@ let
       postInstall = optionalString buildKernel ''
         # Add reference that cannot be detected due to compressed kernel module
         mkdir -p "$out/nix-support"
-        echo "${utillinux}" >> "$out/nix-support/extra-refs"
+        echo "${util-linux}" >> "$out/nix-support/extra-refs"
       '' + optionalString buildUser ''
         # Remove provided services as they are buggy
         rm $out/etc/systemd/system/zfs-import-*.service
@@ -148,14 +150,26 @@ let
       '';
 
       postFixup = let
-        path = "PATH=${makeBinPath [ coreutils gawk gnused gnugrep utillinux smartmontools sysstat ]}:$PATH";
+        path = "PATH=${makeBinPath [ coreutils gawk gnused gnugrep util-linux smartmon sysstat ]}:$PATH";
       in ''
         for i in $out/libexec/zfs/zpool.d/*; do
           sed -i '2i${path}' $i
         done
       '';
 
-      outputs = [ "out" ] ++ optionals buildUser [ "lib" "dev" ];
+      outputs = [ "out" ] ++ optionals buildUser [ "dev" ];
+
+      passthru = {
+        inherit enableMail;
+
+        tests =
+          if isUnstable then [
+            nixosTests.zfs.unstable
+          ] else [
+            nixosTests.zfs.installer
+            nixosTests.zfs.stable
+          ];
+      };
 
       meta = {
         description = "ZFS Filesystem Linux Kernel module";
@@ -168,13 +182,9 @@ let
         license = licenses.cddl;
         platforms = platforms.linux;
         maintainers = with maintainers; [ hmenke jcumming jonringer wizeman fpletz globin mic92 ];
-        broken = if
-          buildKernel && (kernelCompatible != null) && !kernelCompatible
-          then builtins.trace ''
-            Linux v${kernel.version} is not yet supported by zfsonlinux v${version}.
-            ${lib.optionalString (!isUnstable) "Try zfsUnstable or set the NixOS option boot.zfs.enableUnstable."}
-          '' true
-          else false;
+        # If your Linux kernel version is not yet supported by zfs, try zfsUnstable.
+        # On NixOS set the option boot.zfs.enableUnstable.
+        broken = buildKernel && (kernelCompatible != null) && !kernelCompatible;
       };
     };
 in {
@@ -183,24 +193,23 @@ in {
   # to be adapted
   zfsStable = common {
     # check the release notes for compatible kernels
-    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.12";
+    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.13";
 
     # this package should point to the latest release.
-    version = "2.0.4";
+    version = "2.0.5";
 
-    sha256 = "sha256-ySTt0K3Lc0Le35XTwjiM5l+nIf9co7wBn+Oma1r8YHo=";
+    sha256 = "0n0d8ab7ibxxa8znfsprh7jxwgighx5g291v7hi8272vfjrmk1mj";
   };
 
   zfsUnstable = common {
     # check the release notes for compatible kernels
-    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.12";
+    kernelCompatible = kernel.kernelAtLeast "3.10" && kernel.kernelOlder "5.13";
 
     # this package should point to a version / git revision compatible with the latest kernel release
-    version = "2.0.4";
+    version = "2.1.0-rc5";
 
-    sha256 = "sha256-ySTt0K3Lc0Le35XTwjiM5l+nIf9co7wBn+Oma1r8YHo=";
+    sha256 = "sha256-cj0P2bw6sTO+Y74pYn/WEpBuVGMMYCreJQjUdC3DMTE=";
 
     isUnstable = true;
   };
 }
-

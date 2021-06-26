@@ -20,7 +20,18 @@ in
 
 {
   fastcgi-cache-purge = throw "fastcgi-cache-purge was renamed to cache-purge";
-  ngx_aws_auth = throw "fastcgi-cache-purge was renamed to aws-auth";
+  ngx_aws_auth = throw "ngx_aws_auth was renamed to aws-auth";
+
+  akamai-token-validate = {
+    src = fetchFromGitHub {
+      name = "akamai-token-validate";
+      owner = "kaltura";
+      repo = "nginx-akamai-token-validate-module";
+      rev = "34fd0c94d2c43c642f323491c4f4a226cd83b962";
+      sha256 = "0yf34s11vgkcl03wbl6gjngm3p9hs8vvm7hkjkwhjh39vkk2a7cy";
+    };
+    inputs = [ pkgs.openssl ];
+  };
 
   aws-auth = {
     src = fetchFromGitHub {
@@ -229,8 +240,8 @@ in
       name = "naxsi";
       owner = "nbs-system";
       repo = "naxsi";
-      rev = "07a056ccd36bc3c5c40dc17991db226cb8cf6241";
-      sha256 = "1kdqy7by6ha2pl9lkkjxh4qrwcsrj2alm8fl129831h5y5xy8qx2";
+      rev = "95ac520eed2ea04098a76305fd0ad7e9158840b7";
+      sha256 = "0b5pnqkgg18kbw5rf2ifiq7lsx5rqmpqsql6hx5ycxjzxj6acfb3";
     } + "/naxsi_src";
   };
 
@@ -240,8 +251,8 @@ in
         name = "opentracing";
         owner = "opentracing-contrib";
         repo = "nginx-opentracing";
-        rev = "v0.9.0";
-        sha256 = "02rf1909grbhvs9mjxrv7pwgbf7b8rpjw7j8rpwxag2rgvlsic3g";
+        rev = "v0.10.0";
+        sha256 = "1q234s3p55xv820207dnh4fcxkqikjcq5rs02ai31ylpmfsf0kkb";
       };
       in "${src'}/opentracing";
     inputs = [ pkgs.opentracing-cpp ];
@@ -265,7 +276,7 @@ in
           meta = {
             description = "PageSpeed module for Nginx";
             homepage    = "https://developers.google.com/speed/pagespeed/module/";
-            license     = pkgs.stdenv.lib.licenses.asl20;
+            license     = pkgs.lib.licenses.asl20;
           };
         }
         ''
@@ -320,6 +331,17 @@ in
     };
   };
 
+  secure-token = {
+    src = fetchFromGitHub {
+      name = "secure-token";
+      owner = "kaltura";
+      repo = "nginx-secure-token-module";
+      rev = "95bdc0d1aca06ea7fe42555f71e65910bd74914d";
+      sha256 = "19wzck1xzq4kz7nyabcwzlank1k7wi7w2wn2c1mwz374c79g8ggp";
+    };
+    inputs = [ pkgs.openssl ];
+  };
+
   set-misc = {
     src = fetchFromGitHub {
       name = "set-misc";
@@ -335,8 +357,8 @@ in
       name = "shibboleth";
       owner = "nginx-shib";
       repo = "nginx-http-shibboleth";
-      rev = "5eadab80b2f5940d8873398bca000d93d3f0cf27";
-      sha256 = "1l0h3ic9mfsci89d0k5q3igkfpzq052ia25xj5hc8fq388yrhpap";
+      rev = "3f5ff4212fa12de23cb1acae8bf3a5a432b3f43b";
+      sha256 = "136zjipaz7iikgcgqwdv1mrh3ya996zyzbkdy6d4k07s2h9g7hy6";
     };
   };
 
@@ -367,6 +389,16 @@ in
       repo = "nginx-sorted-querystring-module";
       rev = "0.3";
       sha256 = "0p6b0hcws39n27fx4xp9k4hb3pcv7b6kah4qqaj0pzjy3nbp4gj7";
+    };
+  };
+
+  spnego-http-auth = {
+    src = fetchFromGitHub {
+      name = "spnego-http-auth";
+      owner = "stnoonan";
+      repo = "spnego-http-auth-nginx-module";
+      rev = "72c8ee04c81f929ec84d5a6d126f789b77781a8c";
+      sha256 = "05rw3a7cv651951li995r5l1yzz6kwkm2xpbd59jsfzd74bw941i";
     };
   };
 
@@ -460,6 +492,17 @@ in
       sha256 = "1b0v471mzbcys73pzr7gpvzzhff0cva0l5ff32cv7z1v9c0ypji7";
     };
     inputs = [ pkgs.ffmpeg_3 ];
+  };
+
+  vod = {
+    src = fetchFromGitHub {
+      name = "vod";
+      owner = "kaltura";
+      repo = "nginx-vod-module";
+      rev = "e46079f51282d5a378e6911714b5f3a533bb7700";
+      sha256 = "0pzzq4xcq7jg8mxwnz7srj1nczg9ajd1b8q58qlm03lny8nd2hr5";
+    };
+    inputs = [ pkgs.ffmpeg_3 pkgs.fdk_aac pkgs.openssl pkgs.libxml2 pkgs.libiconv ];
   };
 
   vts = {

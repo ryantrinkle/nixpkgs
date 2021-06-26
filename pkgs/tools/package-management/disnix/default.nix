@@ -13,8 +13,8 @@ stdenv.mkDerivation {
 
   meta = {
     description = "A Nix-based distributed service deployment tool";
-    license = stdenv.lib.licenses.lgpl21Plus;
-    maintainers = [ stdenv.lib.maintainers.sander ];
-    platforms = stdenv.lib.platforms.unix;
+    license = lib.licenses.lgpl21Plus;
+    maintainers = with lib.maintainers; [ sander tomberek ];
+    platforms = lib.platforms.unix;
   };
 }

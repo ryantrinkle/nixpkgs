@@ -1,7 +1,7 @@
-{ stdenv, fetchurl, pkgconfig, dbus, nettle, fetchpatch
-, libidn, libnetfilter_conntrack }:
+{ lib, stdenv, fetchurl, pkg-config, dbus, nettle, fetchpatch
+, libidn, libnetfilter_conntrack, buildPackages }:
 
-with stdenv.lib;
+with lib;
 let
   copts = concatStringsSep " " ([
     "-DHAVE_IDN"
@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-rZjTgD32h+W5OAgPPSXGKP5ByHh1LQP7xhmXh/7jEvo=";
   };
 
-  postPatch = stdenv.lib.optionalString stdenv.hostPlatform.isLinux ''
+  postPatch = lib.optionalString stdenv.hostPlatform.isLinux ''
     sed '1i#include <linux/sockios.h>' -i src/dhcp.c
   '';
 
@@ -33,6 +33,7 @@ stdenv.mkDerivation rec {
     "BINDIR=$(out)/bin"
     "MANDIR=$(out)/man"
     "LOCALEDIR=$(out)/share/locale"
+    "PKG_CONFIG=${buildPackages.pkg-config}/bin/${buildPackages.pkg-config.targetPrefix}pkg-config"
   ];
 
   hardeningEnable = [ "pie" ];
@@ -66,7 +67,7 @@ stdenv.mkDerivation rec {
     END
   '';
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkg-config ];
   buildInputs = [ nettle libidn ]
     ++ optionals stdenv.isLinux [ dbus libnetfilter_conntrack ];
 

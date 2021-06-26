@@ -1,22 +1,22 @@
-{ stdenv
-, lib
+{ lib
+, stdenv
 , fetchFromGitHub
-, fetchpatch
 , bison
 , pam
 
+, withPAM ? true
 , withTimestamp ? true
 }:
 
 stdenv.mkDerivation rec {
   pname = "doas";
-  version = "6.6.1";
+  version = "6.8.1";
 
   src = fetchFromGitHub {
     owner = "Duncaen";
     repo = "OpenDoas";
     rev = "v${version}";
-    sha256 = "07kkc5729p654jrgfsc8zyhiwicgmq38yacmwfvay2b3gmy728zn";
+    sha256 = "sha256-F0FVVspGDZmzxy4nsb/wsEoCw4eHscymea7tIKrWzD0=";
   };
 
   # otherwise confuses ./configure
@@ -24,6 +24,7 @@ stdenv.mkDerivation rec {
 
   configureFlags = [
     (lib.optionalString withTimestamp "--with-timestamp") # to allow the "persist" setting
+    (lib.optionalString (!withPAM) "--without-pam")
     "--pamdir=${placeholder "out"}/etc/pam.d"
   ];
 
@@ -31,16 +32,10 @@ stdenv.mkDerivation rec {
     # Allow doas to discover binaries in /run/current-system/sw/{s,}bin and
     # /run/wrappers/bin
     ./0001-add-NixOS-specific-dirs-to-safe-PATH.patch
-
-    (fetchpatch {
-      name = "CVE-2019-25016.patch";
-      url = "https://gitlab.alpinelinux.org/alpine/aports/-/raw/9e259950190c924b4a17825aad2d7cee87fbd75b/main/doas/reset-path.patch";
-      sha256 = "sha256-Nx+i2+HOtCQ65AC6aJGAq12Pxr2BLDrKlt1PTUstDug=";
-    })
   ];
 
   postPatch = ''
-    sed -i '/\(chown\|chmod\)/d' bsd.prog.mk
+    sed -i '/\(chown\|chmod\)/d' GNUmakefile
   '';
 
   buildInputs = [ bison pam ];

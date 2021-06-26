@@ -1,4 +1,4 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 , gcc-unwrapped
 , dpkg
@@ -13,11 +13,11 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "openbazaar-client";
-  version = "2.4.7";
+  version = "2.4.10";
 
   src = fetchurl {
     url = "https://github.com/OpenBazaar/openbazaar-desktop/releases/download/v${version}/openbazaar2client_${version}_amd64.deb";
-    sha256 = "04wwljaiqm8rsdrzngqrzrjzfrjsrfsaa60c904zhbhmsqc7y4f1";
+    sha256 = "sha256-X0iTTLOJsZeyVZwNU3y39cFMHnxlnYXmqQERE26CLTY=";
   };
 
   dontBuild = true;
@@ -47,10 +47,10 @@ stdenv.mkDerivation rec {
   postFixup = ''
     makeWrapper ${electron}/bin/electron $out/bin/${pname} \
       --add-flags $out/share/${pname}/resources/app \
-      --prefix LD_LIBRARY_PATH : "${stdenv.lib.makeLibraryPath [ gcc-unwrapped.lib ]}"
+      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ gcc-unwrapped.lib ]}"
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Decentralized Peer to Peer Marketplace for Bitcoin - client";
     homepage = "https://www.openbazaar.org/";
     license = licenses.mit;

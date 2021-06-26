@@ -1,6 +1,6 @@
-{ stdenv, fetchFromGitHub, cmake, zlib, boost
+{ lib, stdenv, fetchFromGitHub, cmake, zlib, boost
 , openal, glm, freetype, libGLU, SDL2, epoxy
-, dejavu_fonts, inkscape_0, optipng, imagemagick
+, dejavu_fonts, inkscape, optipng, imagemagick
 , withCrashReporter ? !stdenv.isDarwin
 ,   qtbase ? null
 ,   wrapQtAppsHook ? null
@@ -8,7 +8,7 @@
 ,   gdb  ? null
 }:
 
-with stdenv.lib;
+with lib;
 
 stdenv.mkDerivation {
   pname = "arx-libertatis";
@@ -22,7 +22,7 @@ stdenv.mkDerivation {
   };
 
   nativeBuildInputs = [
-    cmake inkscape_0 imagemagick optipng
+    cmake inkscape imagemagick optipng
   ] ++ optionals withCrashReporter [ wrapQtAppsHook ];
 
   buildInputs = [
@@ -37,7 +37,6 @@ stdenv.mkDerivation {
     "-DImageMagick_mogrify_EXECUTABLE=${imagemagick.out}/bin/mogrify"
   ];
 
-  enableParallelBuilding = true;
   dontWrapQtApps = true;
 
   postInstall = ''

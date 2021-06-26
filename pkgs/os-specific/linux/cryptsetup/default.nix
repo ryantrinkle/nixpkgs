@@ -1,15 +1,15 @@
-{ stdenv, fetchurl, lvm2, json_c
-, openssl, libuuid, pkgconfig, popt }:
+{ lib, stdenv, fetchurl, lvm2, json_c
+, openssl, libuuid, pkg-config, popt }:
 
 stdenv.mkDerivation rec {
   pname = "cryptsetup";
-  version = "2.3.3";
+  version = "2.3.5";
 
   outputs = [ "out" "dev" "man" ];
 
   src = fetchurl {
     url = "mirror://kernel/linux/utils/cryptsetup/v2.3/${pname}-${version}.tar.xz";
-    sha256 = "1pw2bq4nv2z3xyycckxkbp7dp9kkp2n6bspna3plryg277z4zjiv";
+    sha256 = "sha256-ztmUb0RNEyU22vkvyKykJ3Y4o8LZbiBUCyuuTTb9cME=";
   };
 
   # Disable 4 test cases that fail in a sandbox
@@ -31,7 +31,7 @@ stdenv.mkDerivation rec {
     "--with-crypto_backend=openssl"
   ];
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkg-config ];
   buildInputs = [ lvm2 json_c openssl libuuid popt ];
 
   doCheck = true;
@@ -39,8 +39,8 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = "https://gitlab.com/cryptsetup/cryptsetup/";
     description = "LUKS for dm-crypt";
-    license = stdenv.lib.licenses.gpl2;
-    maintainers = with stdenv.lib.maintainers; [ ];
-    platforms = with stdenv.lib.platforms; linux;
+    license = lib.licenses.gpl2;
+    maintainers = with lib.maintainers; [ ];
+    platforms = with lib.platforms; linux;
   };
 }

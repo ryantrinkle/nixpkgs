@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, makeWrapper, pkgconfig, gtk2, gtk2-x11
+{ stdenv, fetchurl, makeWrapper, pkg-config, gtk2, gtk2-x11
 , gtkspell2, aspell
 , gst_all_1, startupnotification, gettext
 , perlPackages, libxml2, nss, nspr, farstream
@@ -46,7 +46,7 @@ let unwrapped = stdenv.mkDerivation rec {
   ++ (lib.optional (stdenv.isDarwin) gtk2-x11);
 
 
-  propagatedBuildInputs = [ pkgconfig gettext ]
+  propagatedBuildInputs = [ pkg-config gettext ]
     ++ (with perlPackages; [ perl XMLParser ])
     ++ (lib.optional (stdenv.isLinux) gtk2)
     ++ (lib.optional (stdenv.isDarwin) gtk2-x11);
@@ -76,14 +76,17 @@ let unwrapped = stdenv.mkDerivation rec {
 
   doInstallCheck = stdenv.hostPlatform == stdenv.buildPlatform;
   # In particular, this detects missing python imports in some of the tools.
-  postInstallCheck = ''
-    for f in "''${!outputBin}"/bin/{purple-remote,pidgin}; do
+  postFixup = let
+    # TODO: python is a script, so it doesn't work as interpreter on darwin
+    binsToTest = lib.optionalString stdenv.isLinux "purple-remote," + "pidgin,finch";
+  in lib.optionalString doInstallCheck ''
+    for f in "''${!outputBin}"/bin/{${binsToTest}}; do
       echo "Testing: $f --help"
       "$f" --help
     done
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Multi-protocol instant messaging client";
     homepage = "http://pidgin.im";
     license = licenses.gpl2Plus;

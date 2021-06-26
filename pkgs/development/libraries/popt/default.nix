@@ -1,4 +1,4 @@
-{stdenv, fetchurl}:
+{lib, stdenv, fetchurl}:
 
 stdenv.mkDerivation rec {
   pname = "popt";
@@ -9,14 +9,14 @@ stdenv.mkDerivation rec {
     sha256 = "1lf5zlj5rbg6s4bww7hbhpca97prgprnarx978vcwa0bl81vqnai";
   };
 
-  patches = stdenv.lib.optionals stdenv.isCygwin [
+  patches = lib.optionals stdenv.isCygwin [
     ./1.16-cygwin.patch
     ./1.16-vpath.patch
   ];
 
   doCheck = false; # fails
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Command line option parsing library";
     platforms = platforms.unix;
     license = licenses.mit;

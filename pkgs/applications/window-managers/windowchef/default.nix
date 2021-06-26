@@ -1,23 +1,23 @@
-{ stdenv, fetchFromGitHub, libxcb, libXrandr
+{ lib, stdenv, fetchFromGitHub, libxcb, libXrandr
 , xcbutil, xcbutilkeysyms, xcbutilwm, xcbproto
 }:
 
 stdenv.mkDerivation rec {
   pname = "windowchef";
-  version = "0.5.0";
+  version = "0.5.2";
 
   src = fetchFromGitHub {
     owner  = "tudurom";
     repo   = "windowchef";
     rev    = "v${version}";
-    sha256 = "02fvb8fxnkpzb0vpbsl6rf7ssdrvw6mlm43qvl2sxq7zb88zdw96";
+    sha256 = "1m4vly7w2f28lrj26rhh3x9xsp3d97m5cxj91fafgh5rds4ygyhp";
   };
 
   buildInputs = [ libxcb libXrandr xcbutil xcbutilkeysyms xcbutilwm xcbproto];
 
   makeFlags = [ "PREFIX=$(out)" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A stacking window manager that cooks windows with orders from the Waitron";
     homepage = "https://github.com/tudurom/windowchef";
     maintainers = with maintainers; [ bhougland ];

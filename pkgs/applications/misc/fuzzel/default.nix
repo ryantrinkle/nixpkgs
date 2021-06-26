@@ -1,13 +1,12 @@
-{ stdenv, lib, fetchgit, pkg-config, meson, ninja, wayland, pixman, cairo, librsvg, wayland-protocols, wlroots, libxkbcommon, scdoc, git, tllist, fcft}:
+{ stdenv, lib, fetchzip, pkg-config, meson, ninja, wayland, pixman, cairo, librsvg, wayland-protocols, wlroots, libxkbcommon, scdoc, git, tllist, fcft}:
 
 stdenv.mkDerivation rec {
   pname = "fuzzel";
-  version = "1.4.1";
+  version = "1.5.4";
 
-  src = fetchgit {
-    url = "https://codeberg.org/dnkl/fuzzel";
-    rev = "${version}";
-    sha256 = "18pg46xry7q4i19mpjfz942c6vkqlrj4q18p85zldzv9gdsxnm9c";
+  src = fetchzip {
+    url = "https://codeberg.org/dnkl/fuzzel/archive/${version}.tar.gz";
+    sha256 = "sha256-Zg9KrRf2ntg2FU6lhllt/Fd63KJak6zB7hu4ujj/9AI=";
   };
 
   nativeBuildInputs = [ pkg-config meson ninja scdoc git ];
@@ -19,5 +18,6 @@ stdenv.mkDerivation rec {
     license = licenses.mit;
     maintainers = with maintainers; [ fionera ];
     platforms = with platforms; linux;
+    changelog = "https://codeberg.org/dnkl/fuzzel/releases/tag/${version}";
   };
 }

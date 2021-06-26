@@ -1,4 +1,4 @@
-{ buildPythonPackage, fetchPypi, fetchpatch, isPy27
+{ buildPythonPackage, fetchPypi, fetchpatch
 , plaster, PasteDeploy
 , pytest, pytestcov
 }:
@@ -6,7 +6,6 @@
 buildPythonPackage rec {
   pname = "plaster_pastedeploy";
   version = "0.6";
-  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;

@@ -1,13 +1,20 @@
-{ lib, buildPythonPackage, fetchPypi }:
+{ lib, buildPythonPackage, fetchPypi, python }:
 
 buildPythonPackage rec {
   pname = "bitarray";
-  version = "1.5.3";
+  version = "2.0.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "567631fc922b1c2c528c376795f18dcc0604d18702e0b8b50e8e35f0474214a5";
+    sha256 = "sha256-7DpPbXEaee0jrqlUFjjTNT3D8IPyk6ExgLFLSC4+Ge8=";
   };
+
+  checkPhase = ''
+    cd $out
+    ${python.interpreter} -c 'import bitarray; bitarray.test()'
+  '';
+
+  pythonImportsCheck = [ "bitarray" ];
 
   meta = with lib; {
     description = "Efficient arrays of booleans";

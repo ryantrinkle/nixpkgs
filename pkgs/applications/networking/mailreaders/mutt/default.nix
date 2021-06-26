@@ -1,10 +1,10 @@
-{ stdenv, fetchurl, fetchpatch, ncurses, which, perl
+{ lib, stdenv, fetchurl, fetchpatch, ncurses, which, perl
 , gdbm ? null
 , openssl ? null
 , cyrus_sasl ? null
 , gnupg ? null
 , gpgme ? null
-, kerberos ? null
+, libkrb5 ? null
 , headerCache  ? true
 , sslSupport   ? true
 , saslSupport  ? true
@@ -23,40 +23,27 @@ assert smimeSupport -> openssl    != null;
 assert gpgSupport   -> gnupg      != null;
 assert gpgmeSupport -> gpgme      != null && openssl != null;
 
-with stdenv.lib;
+with lib;
 
 stdenv.mkDerivation rec {
   pname = "mutt";
-  version = "1.14.7";
+  version = "2.0.7";
 
   src = fetchurl {
     url = "http://ftp.mutt.org/pub/mutt/${pname}-${version}.tar.gz";
-    sha256 = "0r58xnjgkw0kmnnzhb32mk5gkkani5kbi5krybpbag156fqhgxg4";
+    sha256 = "sha256-lXaIxqUhVhmS1PLyfPn+sjnHxsAELGBhwOR0p90mzJE=";
   };
 
-  patches = [
-    # CVE-2020-28896
-    (fetchpatch {
-      url = "https://gitlab.com/muttmua/mutt/-/commit/04b06aaa3e0cc0022b9b01dbca2863756ebbf59a.patch";
-      sha256 = "117mm757yj4k4cb9f1cmc9p0dqmi2mf92qsxvi8a794b9kdj5m2z";
-    })
-    # CVE-2021-3181
-    (fetchpatch {
-      url = "https://gitlab.com/muttmua/mutt/-/commit/4a2becbdb4422aaffe3ce314991b9d670b7adf17.patch";
-      sha256 = "1dcfv1pfxchw3bjlcggjmy9fmldpzhmb1bffy03l25pjglbc4n95";
-    })
-  ] ++ optional smimeSupport [
-    (fetchpatch {
-      url = "https://salsa.debian.org/mutt-team/mutt/raw/debian/1.10.1-2/debian/patches/misc/smime.rc.patch";
-      sha256 = "0b4i00chvx6zj9pcb06x2jysmrcb2znn831lcy32cgfds6gr3nsi";
-    })
-  ];
+  patches = optional smimeSupport (fetchpatch {
+    url = "https://salsa.debian.org/mutt-team/mutt/raw/debian/1.10.1-2/debian/patches/misc/smime.rc.patch";
+    sha256 = "0b4i00chvx6zj9pcb06x2jysmrcb2znn831lcy32cgfds6gr3nsi";
+  });
 
   buildInputs =
     [ ncurses which perl ]
     ++ optional headerCache  gdbm
     ++ optional sslSupport   openssl
-    ++ optional gssSupport   kerberos
+    ++ optional gssSupport   libkrb5
     ++ optional saslSupport  cyrus_sasl
     ++ optional gpgmeSupport gpgme;
 

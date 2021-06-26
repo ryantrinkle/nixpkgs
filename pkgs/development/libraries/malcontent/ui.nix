@@ -1,4 +1,4 @@
-{ stdenv
+{ lib, stdenv
 , meson
 , ninja
 , pkg-config
@@ -11,6 +11,7 @@
 , flatpak
 , malcontent
 , gtk3
+, appstream-glib
 , desktop-file-utils
 , polkit
 , glib-testing
@@ -42,6 +43,7 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
+    appstream-glib
     dbus
     polkit
     glib-testing
@@ -62,7 +64,7 @@ stdenv.mkDerivation rec {
     "-Dui=enabled"
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "UI components for parental controls library";
     homepage = "https://gitlab.freedesktop.org/pwithnall/malcontent";
     license = licenses.lgpl21Plus;

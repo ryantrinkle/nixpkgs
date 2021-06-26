@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, perl, pkgconfig, systemd, openssl
+{ stdenv, lib, fetchurl, perl, pkg-config, systemd, openssl
 , bzip2, zlib, lz4, inotify-tools, pam, libcap
 , clucene_core_2, icu, openldap, libsodium, libstemmer, cyrus_sasl
 , nixosTests
@@ -10,9 +10,9 @@
 
 stdenv.mkDerivation rec {
   pname = "dovecot";
-  version = "2.3.13";
+  version = "2.3.15";
 
-  nativeBuildInputs = [ perl pkgconfig ];
+  nativeBuildInputs = [ perl pkg-config ];
   buildInputs =
     [ openssl bzip2 zlib lz4 clucene_core_2 icu openldap libsodium libstemmer cyrus_sasl.dev ]
     ++ lib.optionals (stdenv.isLinux) [ systemd pam libcap inotify-tools ]
@@ -21,15 +21,15 @@ stdenv.mkDerivation rec {
     ++ lib.optional withSQLite sqlite;
 
   src = fetchurl {
-    url = "https://dovecot.org/releases/2.3/${pname}-${version}.tar.gz";
-    sha256 = "1i7ijss79a23v7b6lycfzaa8r5rh01k0h0b9h0j4a6n11sw7by53";
+    url = "https://dovecot.org/releases/${lib.versions.majorMinor version}/${pname}-${version}.tar.gz";
+    sha256 = "141manrh54cy8xizr7f8fsa3vdzc2ccfgdz87l9rjylm8mfxvfr1";
   };
 
   enableParallelBuilding = true;
 
   preConfigure = ''
     patchShebangs src/config/settings-get.pl
-  '';
+  '' + lib.optionalString (stdenv.isLinux) "export systemdsystemunitdir=$out/etc/systemd/system";
 
   # We need this for sysconfdir, see remark below.
   installFlags = [ "DESTDIR=$(out)" ];
@@ -75,17 +75,18 @@ stdenv.mkDerivation rec {
     "lib_cv_va_copy=yes"
     "lib_cv___va_copy=yes"
     "lib_cv_va_val_copy=yes"
-  ] ++ lib.optional (stdenv.isLinux) "--with-systemdsystemunitdir=$(out)/etc/systemd/system"
-    ++ lib.optional (stdenv.isDarwin) "--enable-static"
+  ] ++ lib.optional stdenv.isLinux "--with-systemd"
+    ++ lib.optional stdenv.isDarwin "--enable-static"
     ++ lib.optional withMySQL "--with-mysql"
     ++ lib.optional withPgSQL "--with-pgsql"
     ++ lib.optional withSQLite "--with-sqlite";
 
-  meta = {
+  meta = with lib; {
     homepage = "https://dovecot.org/";
     description = "Open source IMAP and POP3 email server written with security primarily in mind";
-    maintainers = with stdenv.lib.maintainers; [ peti rickynils fpletz globin ];
-    platforms = stdenv.lib.platforms.unix;
+    license = with licenses; [ mit publicDomain lgpl21Only bsd3 bsdOriginal ];
+    maintainers = with maintainers; [ peti fpletz globin ajs124 ];
+    platforms = platforms.unix;
   };
   passthru.tests = {
     opensmtpd-interaction = nixosTests.opensmtpd;

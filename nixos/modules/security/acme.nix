@@ -68,7 +68,7 @@ let
     '' + (concatStringsSep "\n" (mapAttrsToList (cert: data: ''
       for fixpath in ${escapeShellArg cert} .lego/${escapeShellArg cert}; do
         if [ -d "$fixpath" ]; then
-          chmod -R 750 "$fixpath"
+          chmod -R u=rwX,g=rX,o= "$fixpath"
           chown -R acme:${data.group} "$fixpath"
         fi
       done
@@ -126,6 +126,7 @@ let
     protocolOpts = if useDns then (
       [ "--dns" data.dnsProvider ]
       ++ optionals (!data.dnsPropagationCheck) [ "--dns.disable-cp" ]
+      ++ optionals (data.dnsResolver != null) [ "--dns.resolvers" data.dnsResolver ]
     ) else (
       [ "--http" "--http.webroot" data.webroot ]
     );
@@ -151,7 +152,7 @@ let
     );
     renewOpts = escapeShellArgs (
       commonOpts
-      ++ [ "renew" "--reuse-key" ]
+      ++ [ "renew" ]
       ++ optionals data.ocspMustStaple [ "--must-staple" ]
       ++ data.extraLegoRenewFlags
     );
@@ -234,7 +235,7 @@ let
       # https://github.com/NixOS/nixpkgs/pull/81371#issuecomment-605526099
       wantedBy = optionals (!config.boot.isContainer) [ "multi-user.target" ];
 
-      path = with pkgs; [ lego coreutils diffutils ];
+      path = with pkgs; [ lego coreutils diffutils openssl ];
 
       serviceConfig = commonServiceConfig // {
         Group = data.group;
@@ -273,6 +274,34 @@ let
       script = ''
         set -euxo pipefail
 
+        # This reimplements the expiration date check, but without querying
+        # the acme server first. By doing this offline, we avoid errors
+        # when the network or DNS are unavailable, which can happen during
+        # nixos-rebuild switch.
+        is_expiration_skippable() {
+          pem=$1
+
+          # This function relies on set -e to exit early if any of the
+          # conditions or programs fail.
+
+          [[ -e $pem ]]
+
+          expiration_line="$(
+            set -euxo pipefail
+            openssl x509 -noout -enddate <$pem \
+                  | grep notAfter \
+                  | sed -e 's/^notAfter=//'
+          )"
+          [[ -n "$expiration_line" ]]
+
+          expiration_date="$(date -d "$expiration_line" +%s)"
+          now="$(date +%s)"
+          expiration_s=$[expiration_date - now]
+          expiration_days=$[expiration_s / (3600 * 24)]   # rounds down
+
+          [[ $expiration_days -gt ${toString cfg.validMinDays} ]]
+        }
+
         ${optionalString (data.webroot != null) ''
           # Ensure the webroot exists. Fixing group is required in case configuration was changed between runs.
           # Lego will fail if the webroot does not exist at all.
@@ -293,8 +322,14 @@ let
           # When domains are updated, there's no need to do a full
           # Lego run, but it's likely renew won't work if days is too low.
           if [ -e certificates/domainhash.txt ] && cmp -s domainhash.txt certificates/domainhash.txt; then
-            lego ${renewOpts} --days ${toString cfg.validMinDays}
+            if is_expiration_skippable out/full.pem; then
+              echo 1>&2 "nixos-acme: skipping renewal because expiration isn't within the coming ${toString cfg.validMinDays} days"
+            else
+              echo 1>&2 "nixos-acme: renewing now, because certificate expires within the configured ${toString cfg.validMinDays} days"
+              lego ${renewOpts} --days ${toString cfg.validMinDays}
+            fi
           else
+            echo 1>&2 "certificate domain(s) have changed; will renew now"
             # Any number > 90 works, but this one is over 9000 ;-)
             lego ${renewOpts} --days 9001
           fi
@@ -306,7 +341,7 @@ let
 
         mv domainhash.txt certificates/
         chmod 640 certificates/*
-        chmod -R 700 accounts/*
+        chmod -R u=rwX,g=,o= accounts/*
 
         # Group might change between runs, re-apply it
         chown 'acme:${data.group}' certificates/*
@@ -351,7 +386,7 @@ let
       webroot = mkOption {
         type = types.nullOr types.str;
         default = null;
-        example = "/var/lib/acme/acme-challenges";
+        example = "/var/lib/acme/acme-challenge";
         description = ''
           Where the webroot of the HTTP vhost is located.
           <filename>.well-known/acme-challenge/</filename> directory
@@ -439,6 +474,17 @@ let
         description = ''
           DNS Challenge provider. For a list of supported providers, see the "code"
           field of the DNS providers listed at <link xlink:href="https://go-acme.github.io/lego/dns/"/>.
+        '';
+      };
+
+      dnsResolver = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "1.1.1.1:53";
+        description = ''
+          Set the resolver to use for performing recursive DNS queries. Supported:
+          host:port. The default is to use the system resolvers, or Google's DNS
+          resolvers if the system's cannot be determined.
         '';
       };
 
@@ -573,12 +619,12 @@ in {
         example = literalExample ''
           {
             "example.com" = {
-              webroot = "/var/www/challenges/";
+              webroot = "/var/lib/acme/acme-challenge/";
               email = "foo@example.com";
               extraDomainNames = [ "www.example.com" "foo.example.com" ];
             };
             "bar.example.com" = {
-              webroot = "/var/www/challenges/";
+              webroot = "/var/lib/acme/acme-challenge/";
               email = "bar@example.com";
             };
           }

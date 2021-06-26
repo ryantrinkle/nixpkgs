@@ -1,27 +1,27 @@
-{ stdenv, fetchFromGitHub, cmake, asciidoc }:
+{ lib, stdenv, fetchFromGitHub, libxslt, asciidoc }:
 
 stdenv.mkDerivation rec {
   pname = "mkrom";
-  version = "unstable-2020-06-11";
+  version = "1.0.4";
 
   src = fetchFromGitHub {
     owner = "KnightOS";
     repo = "mkrom";
-    rev = "7a735ecbe09409e74680a9dc1c50dd4db99a409f";
-    sha256 = "18h7a0fb5zb991iy9ljpknmk9qvl9nz3yh1zh5bm399rpxn4nzx3";
+    rev = version;
+    sha256 = "sha256-YFrh0tOGiM90uvU9ZWopW1+9buHDQtetuOtPDSYYaXw=";
   };
 
-  nativeBuildInputs = [
-    asciidoc
-    cmake
-  ];
+  strictDeps = true;
+  nativeBuildInputs = [ asciidoc libxslt.bin ];
 
-  hardeningDisable = [ "format" ];
+  installFlags = [ "DESTDIR=$(out)" ];
+  installTargets = [ "install" "install_man" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage    = "https://knightos.org/";
     description = "Packages KnightOS distribution files into a ROM";
     license     = licenses.mit;
     maintainers = with maintainers; [ siraben ];
+    platforms   = platforms.all;
   };
 }

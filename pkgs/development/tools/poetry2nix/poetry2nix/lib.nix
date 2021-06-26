@@ -1,4 +1,4 @@
-{ lib, pkgs }:
+{ lib, pkgs, stdenv }:
 let
   inherit (import ./semver.nix { inherit lib ireplace; }) satisfiesSemver;
   inherit (builtins) genList length;
@@ -156,12 +156,10 @@ let
     let
       missingBuildBackendError = "No build-system.build-backend section in pyproject.toml. "
         + "Add such a section as described in https://python-poetry.org/docs/pyproject/#poetry-and-pep-517";
-      buildSystem = lib.attrByPath [ "build-system" "build-backend" ] (throw missingBuildBackendError) pyProject;
-      drvAttr = moduleName (builtins.elemAt (builtins.split "\\.|:" buildSystem) 0);
+      requires = lib.attrByPath [ "build-system" "requires" ] (throw missingBuildBackendError) pyProject;
+      requiredPkgs = builtins.map (n: lib.elemAt (builtins.match "([^!=<>~[]+).*" n) 0) requires;
     in
-    if buildSystem == "" then [ ] else (
-      [ pythonPackages.${drvAttr} or (throw "unsupported build system ${buildSystem}") ]
-    );
+    builtins.map (drvAttr: pythonPackages.${drvAttr} or (throw "unsupported build system requirement ${drvAttr}")) requiredPkgs;
 
   # Find gitignore files recursively in parent directory stopping with .git
   findGitIgnores = path:
@@ -196,6 +194,23 @@ let
         inherit src;
       };
     };
+
+  # Maps Nixpkgs CPU values to target machines known to be supported for manylinux* wheels.
+  # (a.k.a. `uname -m` output from CentOS 7)
+  #
+  # This is current as of manylinux2014 (PEP-0599), and is a superset of manylinux2010 / manylinux1.
+  # s390x is not supported in Nixpkgs, so we don't map it.
+  manyLinuxTargetMachines = {
+    x86_64 = "x86_64";
+    i686 = "i686";
+    aarch64 = "aarch64";
+    armv7l = "armv7l";
+    powerpc64 = "ppc64";
+    powerpc64le = "ppc64le";
+  };
+
+  # Machine tag for our target platform (if available)
+  targetMachine = manyLinuxTargetMachines.${stdenv.targetPlatform.parsed.cpu.name} or null;
 in
 {
   inherit
@@ -209,5 +224,6 @@ in
     cleanPythonSources
     moduleName
     getPythonVersion
+    targetMachine
     ;
 }

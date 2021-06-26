@@ -30,33 +30,31 @@ still shows most of the available features is in `./gwenview.nix`.
 }:
 
 let
+  minQtVersion = "5.15";
+  broken = lib.versionOlder libsForQt5.qtbase.version minQtVersion;
+
   mirror = "mirror://kde";
   srcs = import ./srcs.nix { inherit fetchurl mirror; };
 
   mkDerivation = args:
     let
-      inherit (args) name;
-      sname = args.sname or name;
-      inherit (srcs.${sname}) src version;
+      inherit (args) pname;
+      inherit (srcs.${pname}) src version;
       mkDerivation =
         libsForQt5.callPackage ({ mkDerivation }: mkDerivation) {};
     in
       mkDerivation (args // {
-        name = "${name}-${version}";
-        inherit src;
+        inherit pname version src;
 
         outputs = args.outputs or [ "out" ];
 
-        buildInputs =
-          (args.buildInputs or [])
-          # Include the default Plasma theme, in case of a Qt version mismatch
-          # between Plasma and Applications.
-          ++ [libsForQt5.breeze-qt5];
-
-        meta = {
-          platforms = lib.platforms.linux;
-          homepage = "http://www.kde.org";
-        } // (args.meta or {});
+        meta =
+          let meta = args.meta or {}; in
+          meta // {
+            homepage = meta.homepage or "http://www.kde.org";
+            platforms = meta.platforms or lib.platforms.linux;
+            broken = meta.broken or broken;
+          };
       });
 
   packages = self: with self;
@@ -94,10 +92,12 @@ let
       gwenview = callPackage ./gwenview.nix {};
       incidenceeditor = callPackage ./incidenceeditor.nix {};
       k3b = callPackage ./k3b.nix {};
+      kaccounts-integration = callPackage ./kaccounts-integration.nix {};
       kaddressbook = callPackage ./kaddressbook.nix {};
       kalarm = callPackage ./kalarm.nix {};
       kalarmcal = callPackage ./kalarmcal.nix {};
       kalzium = callPackage ./kalzium.nix {};
+      kamoso = callPackage ./kamoso.nix {};
       kapman = callPackage ./kapman.nix {};
       kapptemplate = callPackage ./kapptemplate.nix { };
       kate = callPackage ./kate.nix {};
@@ -116,10 +116,9 @@ let
       kdegraphics-mobipocket = callPackage ./kdegraphics-mobipocket.nix {};
       kdegraphics-thumbnailers = callPackage ./kdegraphics-thumbnailers.nix {};
       kdenetwork-filesharing = callPackage ./kdenetwork-filesharing.nix {};
-      kdenlive = callPackage ./kdenlive.nix {};
+      kdenlive = callPackage ./kdenlive {};
       kdepim-runtime = callPackage ./kdepim-runtime {};
       kdepim-addons = callPackage ./kdepim-addons.nix {};
-      kdepim-apps-libs = callPackage ./kdepim-apps-libs {};
       kdf = callPackage ./kdf.nix {};
       kdialog = callPackage ./kdialog.nix {};
       kdiamond = callPackage ./kdiamond.nix {};

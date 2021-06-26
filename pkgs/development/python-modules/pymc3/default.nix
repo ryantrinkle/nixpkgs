@@ -16,17 +16,16 @@
 , parameterized
 , fastprogress
 , typing-extensions
-, libredirect
 }:
 
 buildPythonPackage rec {
   pname = "pymc3";
-  version = "3.9.3";
+  version = "3.11.2";
   disabled = pythonOlder "3.5";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "abe046f5a5d0e5baee80b7c4bc0a4c218f61b517b62d77be4f89cf4784c27d78";
+    sha256 = "d3b93c8923ae8c8107c5adfd22f7c37fa0849a00a9723e0e0a0ca6afb582d6c3";
   };
 
   # No need for coverage stats in Nix builds
@@ -61,20 +60,8 @@ buildPythonPackage rec {
 
   # For some reason tests are run as a part of the *install* phase if enabled.
   # Theano writes compiled code to ~/.theano hence we set $HOME.
-  # This branch is missing #97597 (and its predecessor #93560), meaning only
-  # "/tmp" is exempt from NIX_ENFORCE_PURITY's objections when theano is
-  # imported from within a nix build environment. Therefore use libredirect
-  # to convince the wrapper we are actually accessing "/tmp".
-  preInstall = ''
-    export HOME=$(mktemp -d)
-
-    export NIX_REDIRECTS=/tmp=$TMPDIR
-    export LD_PRELOAD=${libredirect}/lib/libredirect.so
-    export TEMP=/tmp
-    export TEMPDIR=/tmp
-    export TMP=/tmp
-    export TMPDIR=/tmp
-  '';
+  preInstall = "export HOME=$(mktemp -d)";
+  postInstall = "rm -rf $HOME";
 
   meta = {
     description = "Bayesian estimation, particularly using Markov chain Monte Carlo (MCMC)";

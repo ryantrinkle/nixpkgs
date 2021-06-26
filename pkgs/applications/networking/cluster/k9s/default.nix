@@ -1,14 +1,14 @@
-{ stdenv, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
 buildGoModule rec {
   pname = "k9s";
-  version = "0.21.7";
+  version = "0.24.8";
 
   src = fetchFromGitHub {
     owner  = "derailed";
     repo   = "k9s";
     rev    = "v${version}";
-    sha256 = "1rw1vzxfjzklzdpcxz7mplvlmggavaym260s7vzvbgvd1snf38cb";
+    sha256 = "sha256-6RGm2uiYvsdpWdhNwDTw4z1O6uNErkWTuyOiwKIvXOY=";
   };
 
   buildFlagsArray = ''
@@ -18,12 +18,12 @@ buildGoModule rec {
       -X github.com/derailed/k9s/cmd.commit=${src.rev}
   '';
 
-  vendorSha256 = "05rsbi40pihdh212d5zn6cchnkrqd6rsyl3vfsw77ksybwakrbf7";
+  vendorSha256 = "sha256-lzxGTubm+qQes5QKaamfmSkXs4qquHHjIhts8YmKlYI=";
 
   doCheck = false;
 
-  meta = with stdenv.lib; {
-    description = "Kubernetes CLI To Manage Your Clusters In Style.";
+  meta = with lib; {
+    description = "Kubernetes CLI To Manage Your Clusters In Style";
     homepage = "https://github.com/derailed/k9s";
     license = licenses.asl20;
     maintainers = with maintainers; [ Gonzih markus1189 ];

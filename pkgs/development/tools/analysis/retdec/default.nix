@@ -9,7 +9,7 @@
 , autoconf
 , automake
 , libtool
-, pkgconfig
+, pkg-config
 , bison
 , flex
 , groff
@@ -135,8 +135,7 @@ in stdenv.mkDerivation rec {
 
   src = fetchFromGitHub {
     owner = "avast-tl";
-    repo = "retdec";
-    name = "retdec-${version}";
+    repo = pname;
     rev = "refs/tags/v${version}";
     sha256 = "0chky656lsddn20bnm3pmz6ix20y4a0y8swwr42hrhi01vkhmzrp";
   };
@@ -146,7 +145,7 @@ in stdenv.mkDerivation rec {
     autoconf
     automake
     libtool
-    pkgconfig
+    pkg-config
     bison
     flex
     groff
@@ -217,8 +216,6 @@ in stdenv.mkDerivation rec {
     substituteInPlace scripts/retdec-unpacker.py --replace "'upx'" "'${upx}/bin/upx'"
   '';
 
-  enableParallelBuilding = true;
-
   doInstallCheck = true;
   installCheckPhase = ''
     ${python3.interpreter} "$out/bin/retdec-tests-runner.py"
@@ -227,7 +224,6 @@ in stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    broken = true;
     description = "A retargetable machine-code decompiler based on LLVM";
     homepage = "https://retdec.com";
     license = licenses.mit;

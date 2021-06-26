@@ -1,13 +1,13 @@
 { fetchNuGet }: [
   (fetchNuGet {
     name = "AtkSharp";
-    version = "3.22.25.56";
-    sha256 = "069fm4wplxb4s1i6mdj00b22zqpz6pg9miglcj8mkf1b4lnn09g0";
+    version = "3.22.25.128";
+    sha256 = "0fg01zi7v6127043jzxzihirsdp187pyj83gfa6p79cx763l7z94";
   })
   (fetchNuGet {
     name = "CairoSharp";
-    version = "3.22.25.56";
-    sha256 = "0b7p4yj88wgayh464j3rkbc4js8z57wxy3mprgvx86i3rc2v5jd9";
+    version = "3.22.25.128";
+    sha256 = "1rjdxd4fq5z3n51qx8vrcaf4i277ccc62jxk88xzbsxapdmjjdf9";
   })
   (fetchNuGet {
     name = "Concentus";
@@ -15,9 +15,14 @@
     sha256 = "0y5z444wrbhlmsqpy2sxmajl1fbf74843lvgj3y6vz260dn2q0l0";
   })
   (fetchNuGet {
+    name = "Crc32.NET";
+    version = "1.2.0";
+    sha256 = "0qaj3192k1vfji87zf50rhydn5mrzyzybrs2k4v7ap29k8i0vi5h";
+  })
+  (fetchNuGet {
     name = "DiscordRichPresence";
-    version = "1.0.150";
-    sha256 = "0qmbi4sccia3w80q8xfvj3bw62nvz047wq198n2b2aflkf47bq79";
+    version = "1.0.166";
+    sha256 = "019rz0br8hamydmdrgzcc6280jfhm4i4ix27jh66a7h37alvdi3a";
   })
   (fetchNuGet {
     name = "FFmpeg.AutoGen";
@@ -26,28 +31,23 @@
   })
   (fetchNuGet {
     name = "GdkSharp";
-    version = "3.22.25.56";
-    sha256 = "0f708dwy6i9hghxs711scwkww28lvfjd6gykk7xv921vich5xvy6";
+    version = "3.22.25.128";
+    sha256 = "0bmn0ddaw8797pnhpyl03h2zl8i5ha67yv38gly4ydy50az2xhj7";
   })
   (fetchNuGet {
     name = "GioSharp";
-    version = "3.22.25.56";
-    sha256 = "1i7x1bakv5sq27ppl6w79c1wbvnfhf1713plc9ixaznh1fclcnwr";
+    version = "3.22.25.128";
+    sha256 = "0syfa1f2hg7wsxln5lh86n8m1lihhprc51b6km91gkl25l5hw5bv";
   })
   (fetchNuGet {
     name = "GLibSharp";
-    version = "3.22.25.56";
-    sha256 = "12czfm0lgjcy9hgqsiycwfv124dq619svrnsi036246i5hycj37w";
-  })
-  (fetchNuGet {
-    name = "GLWidget";
-    version = "1.0.2";
-    sha256 = "0nb46jiscnsywwdfy7zhx1bw4jfmca3s6l8dhbi99gc4bvp8ar7p";
+    version = "3.22.25.128";
+    sha256 = "1j8i5izk97ga30z1qpd765zqd2q5w71y8bhnkqq4bj59768fyxp5";
   })
   (fetchNuGet {
     name = "GtkSharp";
-    version = "3.22.25.56";
-    sha256 = "18dbn834wimdmxmgsqd81hyvjyyzgbnayzvz9f714cgw4yjkjyqs";
+    version = "3.22.25.128";
+    sha256 = "0z0wx0p3gc02r8d7y88k1rw307sb2vapbr1k1yc5qdc38fxz5jsy";
   })
   (fetchNuGet {
     name = "GtkSharp.Dependencies";
@@ -56,33 +56,28 @@
   })
   (fetchNuGet {
     name = "LibHac";
-    version = "0.11.3";
-    sha256 = "0xj2ip3bjy29xwy4fn5fncjadwbbg59sa3580cmkj47aab9cddyn";
+    version = "0.12.0";
+    sha256 = "08r9b9cdcbz6339sw8r5dfy2a8iw53df0j3xq9rygkg02xspimld";
   })
   (fetchNuGet {
     name = "Microsoft.AspNetCore.App.Runtime.linux-x64";
-    version = "3.1.2";
-    sha256 = "19wfh9yg4n2khbl7pvf6ngx95m5p8lw4l9y935pv7nh4xgwk02p9";
+    version = "5.0.5";
+    sha256 = "026m19pddhkx5idwpi6mp1yl9yfcfgm2qjp1jh54mdja1d7ng0vk";
   })
   (fetchNuGet {
     name = "Microsoft.AspNetCore.App.Runtime.osx-x64";
-    version = "3.1.2";
-    sha256 = "1v7i4f1k3j8xavbfwb7qr5f680gg5nblrmx5zcsj7l07q4wbnmwl";
+    version = "5.0.5";
+    sha256 = "09nsi9fa8kb3jpnim0hdap3jabskvpr4fmpvnj5wsh3gp91vqvgb";
   })
   (fetchNuGet {
     name = "Microsoft.AspNetCore.App.Runtime.win-x64";
-    version = "3.1.2";
-    sha256 = "1gciv56vzfpl86lb9gzvyfj8w2qd7jhdrbxph6l1aykwzqbxf7bd";
+    version = "5.0.5";
+    sha256 = "10g2vdsz685agqbd7h7dd9gvs584prpai0zv37r59wzlynj1assl";
   })
   (fetchNuGet {
     name = "Microsoft.CodeCoverage";
-    version = "16.2.0";
-    sha256 = "07h1ylca2j7a4hznq4m4b8nrzv1lw7gcf848k2a3nbm6rapv61ki";
-  })
-  (fetchNuGet {
-    name = "Microsoft.CodeCoverage";
-    version = "16.5.0";
-    sha256 = "0610wzn4qyywf9lb4538vwqhprxc4g0g7gjbmnjzvx97jr5nd5mf";
+    version = "16.8.0";
+    sha256 = "1y05sjk7wgd29a47v1yhn2s1lrd8wgazkilvmjbvivmrrm3fqjs8";
   })
   (fetchNuGet {
     name = "Microsoft.CSharp";
@@ -96,28 +91,28 @@
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.App.Host.osx-x64";
-    version = "3.1.2";
-    sha256 = "0sy1h7ffq8s3bkvf1carf4rn9qf7hn0yv6dcjklgh3g9jhlsq34f";
+    version = "5.0.5";
+    sha256 = "14d6wz593dwm2j3apd3ny10idk8bfxqgfrparhc1q7q4i66y21ws";
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.App.Host.win-x64";
-    version = "3.1.2";
-    sha256 = "1yqsnl4my2q1ps666162kn0h34wyfajiwqs6snhrww195b59msdv";
+    version = "5.0.5";
+    sha256 = "1233y31z46yqzjgwpa6mmb1h63iqp6wbly6mbwkjqm2adx1wkp47";
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.App.Runtime.linux-x64";
-    version = "3.1.2";
-    sha256 = "0a332ia5pabnz7mdfc99a5hlc7drnwzlc7cj9b5c3an6dq636p66";
+    version = "5.0.5";
+    sha256 = "1h5yry6k9bpqqis2fb1901csb8kipm7anm174fjj41r317vzfjfa";
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.App.Runtime.osx-x64";
-    version = "3.1.2";
-    sha256 = "1wb8h30di1mix8liz937snl1w8hbblixrpiazjskxclp3i7m1rg3";
+    version = "5.0.5";
+    sha256 = "1a1ijdk61l0h25sj9ypcf96vz1c08ca7q5809g82qpi9m34kw8b8";
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.App.Runtime.win-x64";
-    version = "3.1.2";
-    sha256 = "0aj005mh57ynscf87cpfshc3ff22l4svf6lqz0hpqsi0hlidqwqx";
+    version = "5.0.5";
+    sha256 = "1gc4msk61jgj9ill4icp0mn523g411iqpxphp0fykfvqdpqyqg46";
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.Platforms";
@@ -136,8 +131,8 @@
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.Platforms";
-    version = "3.1.0";
-    sha256 = "1gc1x8f95wk8yhgznkwsg80adk1lc65v9n5rx4yaa4bc5dva0z3j";
+    version = "5.0.0";
+    sha256 = "0mwpwdflidzgzfx2dlpkvvnkgkr2ayaf0s80737h4wa35gaj11rc";
   })
   (fetchNuGet {
     name = "Microsoft.NETCore.Targets";
@@ -151,33 +146,18 @@
   })
   (fetchNuGet {
     name = "Microsoft.NET.Test.Sdk";
-    version = "16.2.0";
-    sha256 = "1nr5jxchdy3p7jm4fm73d5yivghjisdsyafma8fs5d1v49bhgckq";
-  })
-  (fetchNuGet {
-    name = "Microsoft.NET.Test.Sdk";
-    version = "16.5.0";
-    sha256 = "19f5bvzci5mmfz81jwc4dax4qdf7w4k67n263383mn8mawf22bfq";
+    version = "16.8.0";
+    sha256 = "1ln2mva7j2mpsj9rdhpk8vhm3pgd8wn563xqdcwd38avnhp74rm9";
   })
   (fetchNuGet {
     name = "Microsoft.TestPlatform.ObjectModel";
-    version = "16.2.0";
-    sha256 = "1ywzyx75d61wm75l7wglxzglg5k9nq66wd56m52hmmg8mf253z57";
-  })
-  (fetchNuGet {
-    name = "Microsoft.TestPlatform.ObjectModel";
-    version = "16.5.0";
-    sha256 = "02h7j1fr0fwcggn0wgddh59k8b2wmly3snckwhswzqvks5rvfnnw";
+    version = "16.8.0";
+    sha256 = "0ii9d88py6mjsxzj9v3zx4izh6rb9ma6s9kj85xmc0xrw7jc2g3m";
   })
   (fetchNuGet {
     name = "Microsoft.TestPlatform.TestHost";
-    version = "16.2.0";
-    sha256 = "05dx9nv1skc5ji79ji5vz6c93b09w9xh70iyy6j5ca978ga92i6g";
-  })
-  (fetchNuGet {
-    name = "Microsoft.TestPlatform.TestHost";
-    version = "16.5.0";
-    sha256 = "08cvss66lqa92h55dxkbrzn796jckhlyj53zz22x3qyr6xi21v5v";
+    version = "16.8.0";
+    sha256 = "1rh8cga1km3jfafkwfjr0dwqrxb4306hf7fipwba9h02w7vlhb9a";
   })
   (fetchNuGet {
     name = "Microsoft.Win32.Primitives";
@@ -191,11 +171,6 @@
   })
   (fetchNuGet {
     name = "Microsoft.Win32.Registry";
-    version = "4.0.0";
-    sha256 = "1spf4m9pikkc19544p29a47qnhcd885klncahz133hbnyqbkmz9k";
-  })
-  (fetchNuGet {
-    name = "Microsoft.Win32.Registry";
     version = "4.3.0";
     sha256 = "1gxyzxam8163vk1kb6xzxjj4iwspjsz9zhgn1w9rjzciphaz0ig7";
   })
@@ -206,13 +181,13 @@
   })
   (fetchNuGet {
     name = "Microsoft.Win32.Registry";
-    version = "4.7.0";
-    sha256 = "0bx21jjbs7l5ydyw4p6cn07chryxpmchq2nl5pirzz4l3b0q4dgs";
+    version = "5.0.0";
+    sha256 = "102hvhq2gmlcbq8y2cb7hdr2dnmjzfp2k3asr1ycwrfacwyaak7n";
   })
   (fetchNuGet {
     name = "Microsoft.Win32.SystemEvents";
-    version = "4.5.0";
-    sha256 = "0fnkv3ky12227zqg4zshx4kw2mvysq2ppxjibfw02cc3iprv4njq";
+    version = "5.0.0";
+    sha256 = "0sja4ba0mrvdamn0r9mhq38b9dxi08yb3c1hzh29n1z6ws1hlrcq";
   })
   (fetchNuGet {
     name = "Mono.Posix.NETStandard";
@@ -256,38 +231,43 @@
   })
   (fetchNuGet {
     name = "NUnit3TestAdapter";
-    version = "3.15.1";
-    sha256 = "1nhpvzxbxgymmkb3bd5ci40rg8k71bfx2ghbgc99znvnvhf2034y";
+    version = "3.17.0";
+    sha256 = "0kxc6z3b8ccdrcyqz88jm5yh5ch9nbg303v67q8sp5hhs8rl8nk6";
   })
   (fetchNuGet {
-    name = "NUnit3TestAdapter";
-    version = "3.16.1";
-    sha256 = "1pzhmapfdszsfza7zjr3zrlz4fssdxsyiwmlj76a40mbhxhfa4q9";
+    name = "OpenTK.Core";
+    version = "4.5.0";
+    sha256 = "06qxczikp0aah20d4skk3g588dgh2vn2xffn0ajyyv0475m61s9m";
   })
   (fetchNuGet {
-    name = "OpenTK.NetStandard";
-    version = "1.0.5.12";
-    sha256 = "1n8j6k47189l5b6rnhyq391d84v6zkpiiqq41cccb6qizvrcgl69";
+    name = "OpenTK.Graphics";
+    version = "4.5.0";
+    sha256 = "180g5c92fhhhpmwl6paihx4h1bil7akaihlz2qy124n28pf4s988";
+  })
+  (fetchNuGet {
+    name = "OpenTK.Mathematics";
+    version = "4.5.0";
+    sha256 = "1h9dxhq1llxdbgdzsi87ijqgj2ilr3rv0zkxhaa65xrc5x8j8fva";
+  })
+  (fetchNuGet {
+    name = "OpenTK.OpenAL";
+    version = "4.5.0";
+    sha256 = "0lqxpc3vnxglql42x2frvq5bpkl5cf3dpnf9nx6pr3q6qnhigkfb";
   })
   (fetchNuGet {
     name = "PangoSharp";
-    version = "3.22.25.56";
-    sha256 = "12b0761nfsci4rvzcba4hrh5rcn6q24qaxwwz66myb82c999qj8w";
+    version = "3.22.25.128";
+    sha256 = "0dkl9j0yd65s5ds9xj5z6yb7yca7wlycqz25m8dng20d13sqr1zp";
   })
   (fetchNuGet {
-    name = "runtime.any.System.Collections";
-    version = "4.0.11";
-    sha256 = "1x44bm1cgv28zmrp095wf9mn8a6a0ivnzp9v14dcbhx06igxzgg0";
+    name = "ppy.SDL2-CS";
+    version = "1.0.225-alpha";
+    sha256 = "1x8hvk9kikwi7wrvwxdxk3pkbs491iss2mvqgiw844zld5izihqc";
   })
   (fetchNuGet {
     name = "runtime.any.System.Collections";
     version = "4.3.0";
     sha256 = "0bv5qgm6vr47ynxqbnkc7i797fdi8gbjjxii173syrx14nmrkwg0";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Diagnostics.Tools";
-    version = "4.0.1";
-    sha256 = "0qcpm90hrm9gx9pmxlvfml65jm0bwpr5dg3r7l7xm9nvmibvc7n7";
   })
   (fetchNuGet {
     name = "runtime.any.System.Diagnostics.Tools";
@@ -301,11 +281,6 @@
   })
   (fetchNuGet {
     name = "runtime.any.System.Globalization";
-    version = "4.0.11";
-    sha256 = "0240rp66pi5bw1xklmh421hj7arwcdmjmgfkiq1cbc6nrm8ah286";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Globalization";
     version = "4.3.0";
     sha256 = "1daqf33hssad94lamzg01y49xwndy2q97i2lrb7mgn28656qia1x";
   })
@@ -316,18 +291,8 @@
   })
   (fetchNuGet {
     name = "runtime.any.System.IO";
-    version = "4.1.0";
-    sha256 = "0kasfkjiml2kk8prnyn1990nhsahnjggvqwszqjdsfwfl43vpcb5";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.IO";
     version = "4.3.0";
     sha256 = "0l8xz8zn46w4d10bcn3l4yyn4vhb3lrj2zw8llvz7jk14k4zps5x";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Reflection";
-    version = "4.1.0";
-    sha256 = "06kcs059d5czyakx75rvlwa2mr86156w18fs7chd03f7084l7mq6";
   })
   (fetchNuGet {
     name = "runtime.any.System.Reflection";
@@ -336,18 +301,8 @@
   })
   (fetchNuGet {
     name = "runtime.any.System.Reflection.Extensions";
-    version = "4.0.1";
-    sha256 = "05k34ijz9g9csh0vbbv3g3lrxl163izwcfncmbcl7k073h32rzkr";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Reflection.Extensions";
     version = "4.3.0";
     sha256 = "0zyri97dfc5vyaz9ba65hjj1zbcrzaffhsdlpxc9bh09wy22fq33";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Reflection.Primitives";
-    version = "4.0.1";
-    sha256 = "1zxrpvixr5fqzkxpnin6g6gjq6xajy1snghz99ds2dwbhm276rhz";
   })
   (fetchNuGet {
     name = "runtime.any.System.Reflection.Primitives";
@@ -356,18 +311,8 @@
   })
   (fetchNuGet {
     name = "runtime.any.System.Resources.ResourceManager";
-    version = "4.0.1";
-    sha256 = "1jmgs7hynb2rff48623wnyb37558bbh1q28k9c249j5r5sgsr5kr";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Resources.ResourceManager";
     version = "4.3.0";
     sha256 = "03kickal0iiby82wa5flar18kyv82s9s6d4xhk5h4bi5kfcyfjzl";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Runtime";
-    version = "4.1.0";
-    sha256 = "0mjr2bi7wvnkphfjqgkyf8vfyvy15a829jz6mivl6jmksh2bx40m";
   })
   (fetchNuGet {
     name = "runtime.any.System.Runtime";
@@ -376,18 +321,8 @@
   })
   (fetchNuGet {
     name = "runtime.any.System.Runtime.Handles";
-    version = "4.0.1";
-    sha256 = "1kswgqhy34qvc49i981fk711s7knd6z13bp0rin8ms6axkh98nas";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Runtime.Handles";
     version = "4.3.0";
     sha256 = "0bh5bi25nk9w9xi8z23ws45q5yia6k7dg3i4axhfqlnj145l011x";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Runtime.InteropServices";
-    version = "4.1.0";
-    sha256 = "0gm8if0hcmp1qys1wmx4970k2x62pqvldgljsyzbjhiy5644vl8z";
   })
   (fetchNuGet {
     name = "runtime.any.System.Runtime.InteropServices";
@@ -396,28 +331,13 @@
   })
   (fetchNuGet {
     name = "runtime.any.System.Text.Encoding";
-    version = "4.0.11";
-    sha256 = "0m4vgmzi1ky8xlj0r7xcyazxln3j9dlialnk6d2gmgrfnzf8f9m7";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Text.Encoding";
     version = "4.3.0";
     sha256 = "0aqqi1v4wx51h51mk956y783wzags13wa7mgqyclacmsmpv02ps3";
   })
   (fetchNuGet {
     name = "runtime.any.System.Text.Encoding.Extensions";
-    version = "4.0.11";
-    sha256 = "0d1rxxpvg9v7wlibsfgz0r4hwigpadas822qf8m8fs1gma9gs877";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Text.Encoding.Extensions";
     version = "4.3.0";
     sha256 = "0lqhgqi0i8194ryqq6v2gqx0fb86db2gqknbm0aq31wb378j7ip8";
-  })
-  (fetchNuGet {
-    name = "runtime.any.System.Threading.Tasks";
-    version = "4.0.11";
-    sha256 = "1qzdp09qs8br5qxzlm1lgbjn4n57fk8vr1lzrmli2ysdg6x1xzvk";
   })
   (fetchNuGet {
     name = "runtime.any.System.Threading.Tasks";
@@ -521,18 +441,8 @@
   })
   (fetchNuGet {
     name = "runtime.unix.System.Diagnostics.Debug";
-    version = "4.0.11";
-    sha256 = "05ndbai4vpqrry0ghbfgqc8xblmplwjgndxmdn1zklqimczwjg2d";
-  })
-  (fetchNuGet {
-    name = "runtime.unix.System.Diagnostics.Debug";
     version = "4.3.0";
     sha256 = "1lps7fbnw34bnh3lm31gs5c0g0dh7548wfmb8zz62v0zqz71msj5";
-  })
-  (fetchNuGet {
-    name = "runtime.unix.System.IO.FileSystem";
-    version = "4.0.1";
-    sha256 = "02wnlydnbhai0zy7c3kihg0cis0l1b2z78kyi1ci47c5v0jklwha";
   })
   (fetchNuGet {
     name = "runtime.unix.System.IO.FileSystem";
@@ -551,18 +461,8 @@
   })
   (fetchNuGet {
     name = "runtime.unix.System.Private.Uri";
-    version = "4.0.1";
-    sha256 = "0ic5dgc45jkhcr1g9xmmzjm7ffiw4cymm0fprczlx4fnww4783nm";
-  })
-  (fetchNuGet {
-    name = "runtime.unix.System.Private.Uri";
     version = "4.3.0";
     sha256 = "1jx02q6kiwlvfksq1q9qr17fj78y5v6mwsszav4qcz9z25d5g6vk";
-  })
-  (fetchNuGet {
-    name = "runtime.unix.System.Runtime.Extensions";
-    version = "4.1.0";
-    sha256 = "0x1cwd7cvifzmn5x1wafvj75zdxlk3mxy860igh3x1wx0s8167y4";
   })
   (fetchNuGet {
     name = "runtime.unix.System.Runtime.Extensions";
@@ -581,18 +481,8 @@
   })
   (fetchNuGet {
     name = "runtime.win.System.Diagnostics.Debug";
-    version = "4.0.11";
-    sha256 = "1ylkj4v7aq00svij7aq82d86afpwqgrqf2kpikabxl26p19ry9wm";
-  })
-  (fetchNuGet {
-    name = "runtime.win.System.Diagnostics.Debug";
     version = "4.3.0";
     sha256 = "16fbn4bcynad1ygdq0yk1wmckvs8jvrrf104xa5dc2hlc8y3x58f";
-  })
-  (fetchNuGet {
-    name = "runtime.win.System.IO.FileSystem";
-    version = "4.0.1";
-    sha256 = "1dn9k6x8h27b6vbqh72hsfxax4fwf30jj8lc5328rg52lw29cyn1";
   })
   (fetchNuGet {
     name = "runtime.win.System.IO.FileSystem";
@@ -611,13 +501,13 @@
   })
   (fetchNuGet {
     name = "runtime.win.System.Runtime.Extensions";
-    version = "4.1.0";
-    sha256 = "1zmx2msa04ka8mgh8viahi4pqpp86vdhzij2rg1jg131bwlv59yw";
-  })
-  (fetchNuGet {
-    name = "runtime.win.System.Runtime.Extensions";
     version = "4.3.0";
     sha256 = "1700famsxndccfbcdz9q14qb20p49lax67mqwpgy4gx3vja1yczr";
+  })
+  (fetchNuGet {
+    name = "Ryujinx.Audio.OpenAL.Dependencies";
+    version = "1.21.0.1";
+    sha256 = "0z5k42h252nr60d02p2ww9190d7k1kzrb26vil4ydfhxqqqv6w9l";
   })
   (fetchNuGet {
     name = "Ryujinx.Graphics.Nvdec.Dependencies";
@@ -625,24 +515,29 @@
     sha256 = "0szgbdhyhvzpw8nb9k2ww37p5qipab1pdll8idkk57y5xnl2f7ll";
   })
   (fetchNuGet {
-    name = "SkiaSharp";
-    version = "1.68.1.1";
-    sha256 = "013yzsk798dwxdf2y5yx675x96nagfapkri5k3pgsjnmyfp1lvzk";
+    name = "SharpZipLib";
+    version = "1.3.0";
+    sha256 = "1pizj82wisch28nfdaszwqm9bz19lnl0s5mq8c0zybm2vhnrhvk4";
   })
   (fetchNuGet {
-    name = "SkiaSharp.NativeAssets.Linux";
-    version = "1.68.1.1";
-    sha256 = "07448kn9x56pxlnkxp2dpr5jmwj62k48y5m4608mwci32vs675hn";
+    name = "SixLabors.Fonts";
+    version = "1.0.0-beta0013";
+    sha256 = "0r0aw8xxd32rwcawawcz6asiyggz02hnzg5hvz8gimq8hvwx1wql";
   })
   (fetchNuGet {
-    name = "SkiaSharp.Views.Desktop.Common";
-    version = "1.68.1.1";
-    sha256 = "0wkj952iha7w2i8mvl0mksz2wqkx7vi7xylh10xgddld8kkm03r7";
+    name = "SixLabors.ImageSharp";
+    version = "1.0.2";
+    sha256 = "0fhk9sn8k18slfb26wz8mal0j699f7djwhxgv97snz6b10wynfaj";
   })
   (fetchNuGet {
-    name = "SkiaSharp.Views.Gtk3";
-    version = "1.68.1.1";
-    sha256 = "19fgshim2i60p55j4jcr0biq6k2xwal5dsmbgvyrrajnssaj3r95";
+    name = "SixLabors.ImageSharp.Drawing";
+    version = "1.0.0-beta11";
+    sha256 = "0hl0rs3kr1zdnx3gdssxgli6fyvmwzcfp99f4db71s0i8j8b2bp5";
+  })
+  (fetchNuGet {
+    name = "SPB";
+    version = "0.0.2";
+    sha256 = "178z9mi7zlk0laj79nkjh75ych47jjajiaj33hnh7zfmz05d8h6r";
   })
   (fetchNuGet {
     name = "System.AppContext";
@@ -666,8 +561,8 @@
   })
   (fetchNuGet {
     name = "System.CodeDom";
-    version = "4.7.0";
-    sha256 = "1lch8gwmw420wsvbv9ir4v5g1ij2ag23cbgi3c9gramj1h4vhlz2";
+    version = "5.0.0";
+    sha256 = "14zs2wqkmdlxzj8ikx19n321lsbarx5vl2a8wrachymxn8zb5njh";
   })
   (fetchNuGet {
     name = "System.Collections";
@@ -685,24 +580,9 @@
     sha256 = "07y08kvrzpak873pmyxs129g1ch8l27zmg51pcyj2jvq03n0r0fc";
   })
   (fetchNuGet {
-    name = "System.Collections.Immutable";
-    version = "1.2.0";
-    sha256 = "1jm4pc666yiy7af1mcf7766v710gp0h40p228ghj6bavx7xfa38m";
-  })
-  (fetchNuGet {
-    name = "System.Collections.NonGeneric";
-    version = "4.0.1";
-    sha256 = "19994r5y5bpdhj7di6w047apvil8lh06lh2c2yv9zc4fc5g9bl4d";
-  })
-  (fetchNuGet {
     name = "System.Collections.NonGeneric";
     version = "4.3.0";
     sha256 = "07q3k0hf3mrcjzwj8fwk6gv3n51cb513w4mgkfxzm3i37sc9kz7k";
-  })
-  (fetchNuGet {
-    name = "System.Collections.Specialized";
-    version = "4.0.1";
-    sha256 = "1wbv7y686p5x169rnaim7sln67ivmv6r57falrnx8aap9y33mam9";
   })
   (fetchNuGet {
     name = "System.Collections.Specialized";
@@ -711,18 +591,8 @@
   })
   (fetchNuGet {
     name = "System.ComponentModel";
-    version = "4.0.1";
-    sha256 = "0v4qpmqlzyfad2kswxxj2frnaqqhz9201c3yn8fmmarx5vlzg52z";
-  })
-  (fetchNuGet {
-    name = "System.ComponentModel";
     version = "4.3.0";
     sha256 = "0986b10ww3nshy30x9sjyzm0jx339dkjxjj3401r3q0f6fx2wkcb";
-  })
-  (fetchNuGet {
-    name = "System.ComponentModel.EventBasedAsync";
-    version = "4.0.11";
-    sha256 = "07r5i7xwban347nsfw28hhjwpr78ywksjyhywvhj1yr0s7sr00wh";
   })
   (fetchNuGet {
     name = "System.ComponentModel.EventBasedAsync";
@@ -731,18 +601,8 @@
   })
   (fetchNuGet {
     name = "System.ComponentModel.Primitives";
-    version = "4.1.0";
-    sha256 = "0wb5mnaag0w4fnyc40x19j8v2vshxp266razw64bcqfyj1whb1q0";
-  })
-  (fetchNuGet {
-    name = "System.ComponentModel.Primitives";
     version = "4.3.0";
     sha256 = "1svfmcmgs0w0z9xdw2f2ps05rdxmkxxhf0l17xk9l1l8xfahkqr0";
-  })
-  (fetchNuGet {
-    name = "System.ComponentModel.TypeConverter";
-    version = "4.1.0";
-    sha256 = "178cva9p1cs043h5n2fry5xkzr3wc9n0hwbxa8m3ymld9m6wcv0y";
   })
   (fetchNuGet {
     name = "System.ComponentModel.TypeConverter";
@@ -771,28 +631,13 @@
   })
   (fetchNuGet {
     name = "System.Diagnostics.Process";
-    version = "4.1.0";
-    sha256 = "061lrcs7xribrmq7kab908lww6kn2xn1w3rdc41q189y0jibl19s";
-  })
-  (fetchNuGet {
-    name = "System.Diagnostics.Process";
     version = "4.3.0";
     sha256 = "0g4prsbkygq8m21naqmcp70f24a1ksyix3dihb1r1f71lpi3cfj7";
-  })
-  (fetchNuGet {
-    name = "System.Diagnostics.TextWriterTraceListener";
-    version = "4.0.0";
-    sha256 = "1xigiwkwyxak0dhm0p8i2zb7a9syly9cdb5s9zkr9rbad4f2fqhs";
   })
   (fetchNuGet {
     name = "System.Diagnostics.Tools";
     version = "4.0.1";
     sha256 = "19cknvg07yhakcvpxg3cxa0bwadplin6kyxd8mpjjpwnp56nl85x";
-  })
-  (fetchNuGet {
-    name = "System.Diagnostics.TraceSource";
-    version = "4.0.0";
-    sha256 = "1mc7r72xznczzf6mz62dm8xhdi14if1h8qgx353xvhz89qyxsa3h";
   })
   (fetchNuGet {
     name = "System.Diagnostics.Tracing";
@@ -806,8 +651,8 @@
   })
   (fetchNuGet {
     name = "System.Drawing.Common";
-    version = "4.5.0";
-    sha256 = "0knqa0zsm91nfr34br8gx5kjqq4v81zdhqkacvs2hzc8nqk0ddhc";
+    version = "5.0.1";
+    sha256 = "14h722wq58k1wmgxmpws91xc7kh8109ijw0hcxjq9qkbhbi6pwmb";
   })
   (fetchNuGet {
     name = "System.Dynamic.Runtime";
@@ -896,8 +741,8 @@
   })
   (fetchNuGet {
     name = "System.Management";
-    version = "4.7.0";
-    sha256 = "0aw61jl6l78liiq04afxplz0ad5qbyg6vmyjaqrlnrv7whb58n66";
+    version = "5.0.0";
+    sha256 = "09hyv3p0zd549577clydlb2szl84m4gvdjnsry73n8b12ja7d75s";
   })
   (fetchNuGet {
     name = "System.Net.Http";
@@ -925,19 +770,14 @@
     sha256 = "05kji1mv4sl75iwmc613p873145nynm02xiajx8pn0h2kx53d23s";
   })
   (fetchNuGet {
+    name = "System.Numerics.Vectors";
+    version = "4.5.0";
+    sha256 = "1kzrj37yzawf1b19jq0253rcs8hsq1l2q8g69d7ipnhzb0h97m59";
+  })
+  (fetchNuGet {
     name = "System.ObjectModel";
     version = "4.0.12";
     sha256 = "1sybkfi60a4588xn34nd9a58png36i0xr4y4v4kqpg8wlvy5krrj";
-  })
-  (fetchNuGet {
-    name = "System.Private.DataContractSerialization";
-    version = "4.1.1";
-    sha256 = "1xk9wvgzipssp1393nsg4n16zbr5481k03nkdlj954hzq5jkx89r";
-  })
-  (fetchNuGet {
-    name = "System.Private.Uri";
-    version = "4.0.1";
-    sha256 = "0k57qhawjysm4cpbfpc49kl4av7lji310kjcamkl23bwgij5ld9j";
   })
   (fetchNuGet {
     name = "System.Private.Uri";
@@ -995,11 +835,6 @@
     sha256 = "02bly8bdc98gs22lqsfx9xicblszr2yan7v2mmw3g7hy6miq5hwq";
   })
   (fetchNuGet {
-    name = "System.Reflection.Metadata";
-    version = "1.3.0";
-    sha256 = "1y5m6kryhjpqqm2g3h3b6bzig13wkiw954x3b7icqjm6xypm1x3b";
-  })
-  (fetchNuGet {
     name = "System.Reflection.Primitives";
     version = "4.0.1";
     sha256 = "1bangaabhsl4k9fg8khn83wm6yial8ik1sza7401621jc6jrym28";
@@ -1038,6 +873,16 @@
     name = "System.Runtime";
     version = "4.3.0";
     sha256 = "066ixvgbf2c929kgknshcxqj6539ax7b9m570cp8n179cpfkapz7";
+  })
+  (fetchNuGet {
+    name = "System.Runtime.CompilerServices.Unsafe";
+    version = "4.7.0";
+    sha256 = "16r6sn4czfjk8qhnz7bnqlyiaaszr0ihinb7mq9zzr1wba257r54";
+  })
+  (fetchNuGet {
+    name = "System.Runtime.CompilerServices.Unsafe";
+    version = "5.0.0-preview.7.20364.11";
+    sha256 = "19sl184f6rjhfsizq0vapysazd6yd66lf638rszvrdhqlsxssz2m";
   })
   (fetchNuGet {
     name = "System.Runtime.Extensions";
@@ -1080,19 +925,9 @@
     sha256 = "0q18r1sh4vn7bvqgd6dmqlw5v28flbpj349mkdish2vjyvmnb2ii";
   })
   (fetchNuGet {
-    name = "System.Runtime.Loader";
-    version = "4.0.0";
-    sha256 = "0lpfi3psqcp6zxsjk2qyahal7zaawviimc8lhrlswhip2mx7ykl0";
-  })
-  (fetchNuGet {
     name = "System.Runtime.Numerics";
     version = "4.0.1";
     sha256 = "1y308zfvy0l5nrn46mqqr4wb4z1xk758pkk8svbz8b5ij7jnv4nn";
-  })
-  (fetchNuGet {
-    name = "System.Runtime.Serialization.Json";
-    version = "4.0.2";
-    sha256 = "08ypbzs0sb302ga04ds5b2wxa2gg0q50zpa0nvc87ipjhs0v66dn";
   })
   (fetchNuGet {
     name = "System.Runtime.Serialization.Primitives";
@@ -1106,8 +941,8 @@
   })
   (fetchNuGet {
     name = "System.Security.AccessControl";
-    version = "4.7.0";
-    sha256 = "0n0k0w44flkd8j0xw7g3g3vhw7dijfm51f75xkm1qxnbh4y45mpz";
+    version = "5.0.0";
+    sha256 = "17n3lrrl6vahkqmhlpn3w20afgz09n7i6rv0r3qypngwi7wqdr5r";
   })
   (fetchNuGet {
     name = "System.Security.Claims";
@@ -1166,8 +1001,8 @@
   })
   (fetchNuGet {
     name = "System.Security.Principal.Windows";
-    version = "4.7.0";
-    sha256 = "1a56ls5a9sr3ya0nr086sdpa9qv0abv31dd6fp27maqa9zclqq5d";
+    version = "5.0.0";
+    sha256 = "1mpk7xj76lxgz97a5yg93wi8lj0l8p157a5d50mmjy3gbz1904q8";
   })
   (fetchNuGet {
     name = "System.Text.Encoding";
@@ -1211,11 +1046,6 @@
   })
   (fetchNuGet {
     name = "System.Threading.Overlapped";
-    version = "4.0.1";
-    sha256 = "0fi79az3vmqdp9mv3wh2phblfjls89zlj6p9nc3i9f6wmfarj188";
-  })
-  (fetchNuGet {
-    name = "System.Threading.Overlapped";
     version = "4.3.0";
     sha256 = "1nahikhqh9nk756dh8p011j36rlcp1bzz3vwi2b4m1l2s3vz8idm";
   })
@@ -1241,18 +1071,8 @@
   })
   (fetchNuGet {
     name = "System.Threading.Thread";
-    version = "4.0.0";
-    sha256 = "1gxxm5fl36pjjpnx1k688dcw8m9l7nmf802nxis6swdaw8k54jzc";
-  })
-  (fetchNuGet {
-    name = "System.Threading.Thread";
     version = "4.3.0";
     sha256 = "0y2xiwdfcph7znm2ysxanrhbqqss6a3shi1z3c779pj2s523mjx4";
-  })
-  (fetchNuGet {
-    name = "System.Threading.ThreadPool";
-    version = "4.0.10";
-    sha256 = "0fdr61yjcxh5imvyf93n2m3n5g9pp54bnw2l1d2rdl9z6dd31ypx";
   })
   (fetchNuGet {
     name = "System.Threading.ThreadPool";
@@ -1281,33 +1101,13 @@
   })
   (fetchNuGet {
     name = "System.Xml.XmlDocument";
-    version = "4.0.1";
-    sha256 = "0ihsnkvyc76r4dcky7v3ansnbyqjzkbyyia0ir5zvqirzan0bnl1";
-  })
-  (fetchNuGet {
-    name = "System.Xml.XmlDocument";
     version = "4.3.0";
     sha256 = "0bmz1l06dihx52jxjr22dyv5mxv6pj4852lx68grjm7bivhrbfwi";
-  })
-  (fetchNuGet {
-    name = "System.Xml.XmlSerializer";
-    version = "4.0.11";
-    sha256 = "01nzc3gdslw90qfykq4qzr2mdnqxjl4sj0wp3fixiwdmlmvpib5z";
-  })
-  (fetchNuGet {
-    name = "System.Xml.XPath";
-    version = "4.0.1";
-    sha256 = "0fjqgb6y66d72d5n8qq1h213d9nv2vi8mpv8p28j3m9rccmsh04m";
   })
   (fetchNuGet {
     name = "System.Xml.XPath";
     version = "4.3.0";
     sha256 = "1cv2m0p70774a0sd1zxc8fm8jk3i5zk2bla3riqvi8gsm0r4kpci";
-  })
-  (fetchNuGet {
-    name = "System.Xml.XPath.XmlDocument";
-    version = "4.0.1";
-    sha256 = "0l7yljgif41iv5g56l3nxy97hzzgck2a7rhnfnljhx9b0ry41bvc";
   })
   (fetchNuGet {
     name = "System.Xml.XPath.XmlDocument";

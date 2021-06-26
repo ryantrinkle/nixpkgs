@@ -1,16 +1,33 @@
-{ buildGoModule, lib, fetchFromGitHub }:
+{ buildGoModule
+, fetchFromGitHub
+, installShellFiles
+, lib
+, makeWrapper
+, xdg-utils
+}:
 buildGoModule rec {
   pname = "aws-vault";
-  version = "6.0.0";
+  version = "6.3.1";
 
   src = fetchFromGitHub {
     owner = "99designs";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0ssm58ksk5jb28w1ipa57spzf6wixjy1m7flw61ls8k86cy7qb7c";
+    sha256 = "sha256-yNmjoCq9fYzt/lZQlVgxQvxKWCh5Lxd4NSX7c+gE/As=";
   };
 
-  vendorSha256 = "0lxm7nkzf9j9id7m46gqn26prb1jfl34gy1fycr0578absdvsrjd";
+  vendorSha256 = "sha256-Lb5iiuT/Fd3RMt98AafIi9I0FHJaSpJ8pH7r4yZiiiw=";
+
+  nativeBuildInputs = [ installShellFiles makeWrapper ];
+
+  postInstall = ''
+    wrapProgram $out/bin/aws-vault --prefix PATH : ${lib.makeBinPath [ xdg-utils ]}
+    installShellCompletion --cmd aws-vault \
+      --bash $src/contrib/completions/bash/aws-vault.bash \
+      --fish $src/contrib/completions/fish/aws-vault.fish \
+      --zsh $src/contrib/completions/zsh/aws-vault.zsh
+  '';
+
 
   doCheck = false;
 
@@ -20,6 +37,12 @@ buildGoModule rec {
   buildFlagsArray = ''
     -ldflags=
     -X main.Version=v${version}
+  '';
+
+  doInstallCheck = true;
+
+  installCheckPhase = ''
+    $out/bin/aws-vault --version 2>&1 | grep ${version} > /dev/null
   '';
 
   meta = with lib; {

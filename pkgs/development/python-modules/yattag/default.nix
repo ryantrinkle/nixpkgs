@@ -1,9 +1,8 @@
-{ lib, buildPythonPackage, fetchPypi, isPy27 }:
+{ lib, buildPythonPackage, fetchPypi }:
 
 buildPythonPackage rec {
   pname = "yattag";
   version = "1.14.0";
-  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;

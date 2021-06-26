@@ -1,14 +1,14 @@
-{ stdenv, fetchFromGitHub, gtk3, numix-icon-theme, hicolor-icon-theme }:
+{ lib, stdenv, fetchFromGitHub, gtk3, numix-icon-theme, hicolor-icon-theme }:
 
 stdenv.mkDerivation rec {
   pname = "numix-icon-theme-square";
-  version = "20.07.11";
+  version = "21.04.14";
 
   src = fetchFromGitHub {
     owner = "numixproject";
     repo = pname;
     rev = version;
-    sha256 = "07jy8l2r6grn7pabn3dnkc8j7xdykl7k57br30c6v61ss8paf2rw";
+    sha256 = "0ndxjp173dwz78m41mn818mh4bdsxa2ypv4wrwicx0v4d8z90ddj";
   };
 
   nativeBuildInputs = [ gtk3 ];
@@ -34,10 +34,10 @@ stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Numix icon theme (square version)";
     homepage = "https://numixproject.github.io";
-    license = licenses.gpl3;
+    license = licenses.gpl3Only;
     # darwin cannot deal with file names differing only in case
     platforms = platforms.linux;
     maintainers = with maintainers; [ romildo ];

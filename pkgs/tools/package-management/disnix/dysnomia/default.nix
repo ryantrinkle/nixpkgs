@@ -62,7 +62,7 @@ stdenv.mkDerivation {
      (if enableS6RCService then "--with-s6-rc" else "--without-s6-rc")
      (if stdenv.isDarwin then "--with-launchd" else "--without-launchd")
      "--with-job-template=${jobTemplate}"
-   ] ++ stdenv.lib.optional enableLegacy "--enable-legacy";
+   ] ++ lib.optional enableLegacy "--enable-legacy";
 
   buildInputs = [ getopt netcat ]
     ++ lib.optional stdenv.isLinux systemd
@@ -80,8 +80,8 @@ stdenv.mkDerivation {
 
   meta = {
     description = "Automated deployment of mutable components and services for Disnix";
-    license = stdenv.lib.licenses.mit;
-    maintainers = [ stdenv.lib.maintainers.sander ];
-    platforms = stdenv.lib.platforms.unix;
+    license = lib.licenses.mit;
+    maintainers = [ lib.maintainers.sander ];
+    platforms = lib.platforms.unix;
   };
 }

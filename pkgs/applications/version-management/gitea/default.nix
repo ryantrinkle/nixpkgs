@@ -9,18 +9,19 @@
 , pam
 , sqliteSupport ? true
 , pamSupport ? true
+, nixosTests
 }:
 
 with lib;
 
 buildGoPackage rec {
   pname = "gitea";
-  version = "1.14.2";
+  version = "1.14.3";
 
   # not fetching directly from the git repo, because that lacks several vendor files for the web UI
   src = fetchurl {
     url = "https://github.com/go-gitea/gitea/releases/download/v${version}/gitea-src-${version}.tar.gz";
-    sha256 = "sha256-0EvKk0/ro1YAqvc5yCt8vn2LkRoIbXrFTwcQtomoWsM=";
+    sha256 = "sha256-ieQxqZO84sYBcCzWYn40tRGLgSs2PpLlcNkI4vFq+wE=";
   };
 
   unpackPhase = ''
@@ -69,6 +70,8 @@ buildGoPackage rec {
   '';
 
   goPackagePath = "code.gitea.io/gitea";
+
+  passthru.tests.gitea = nixosTests.gitea;
 
   meta = {
     description = "Git with a cup of tea";

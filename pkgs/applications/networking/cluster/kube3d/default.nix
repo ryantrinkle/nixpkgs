@@ -1,43 +1,56 @@
-{ stdenv, buildGoModule, fetchFromGitHub, installShellFiles }:
+{ lib, buildGoModule, fetchFromGitHub, installShellFiles, k3sVersion ? "1.20.6-k3s1" }:
 
 buildGoModule rec {
   pname = "kube3d";
-  version = "3.0.1";
-  k3sVersion = "1.18.6-k3s1";
-
-  excludedPackages = ''tools'';
+  version = "4.4.3";
 
   src = fetchFromGitHub {
-    owner  = "rancher";
-    repo   = "k3d";
-    rev    = "v${version}";
-    sha256 = "1l6mh0dpf2bw9sxpn14iivv3pr8mj4favzx2hhn8k1j71cm1w4rj";
+    owner = "rancher";
+    repo = "k3d";
+    rev = "v${version}";
+    sha256 = "sha256-G8oaJtfsbSi5WaJobxUpNu9DchHfzbkpPvq23GYM99s=";
   };
-
-  buildFlagsArray = ''
-    -ldflags=
-      -w -s
-      -X github.com/rancher/k3d/v3/version.Version=v${version}
-      -X github.com/rancher/k3d/v3/version.K3sVersion=v${k3sVersion}
-  '';
-
-  nativeBuildInputs = [ installShellFiles ];
-  postInstall = ''
-   for shell in bash zsh; do
-     $out/bin/k3d completion $shell > k3d.$shell
-     installShellCompletion k3d.$shell
-   done
-  '';
 
   vendorSha256 = null;
 
+  nativeBuildInputs = [ installShellFiles ];
+
+  excludedPackages = "\\(tools\\|docgen\\)";
+
+  preBuild = let t = "github.com/rancher/k3d/v4/version"; in
+    ''
+      buildFlagsArray+=("-ldflags" "-s -w -X ${t}.Version=v${version} -X ${t}.K3sVersion=v${k3sVersion}")
+    '';
+
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  postInstall = ''
+    installShellCompletion --cmd k3d \
+      --bash <($out/bin/k3d completion bash) \
+      --fish <($out/bin/k3d completion fish) \
+      --zsh <($out/bin/k3d completion zsh)
+  '';
+
+  doInstallCheck = true;
+  installCheckPhase = ''
+    runHook preInstallCheck
+    $out/bin/k3d --help
+    $out/bin/k3d version | grep "k3d version v${version}"
+    runHook postInstallCheck
+  '';
+
+  meta = with lib; {
     homepage = "https://github.com/rancher/k3d";
-    description = "A helper to run k3s (Lightweight Kubernetes. 5 less than k8s) in a docker container";
+    changelog = "https://github.com/rancher/k3d/blob/v${version}/CHANGELOG.md";
+    description = "A helper to run k3s (Lightweight Kubernetes. 5 less than k8s) in a docker container - k3d";
+    longDescription = ''
+      k3s is the lightweight Kubernetes distribution by Rancher: rancher/k3s
+
+      k3d creates containerized k3s clusters. This means, that you can spin up a
+      multi-node k3s cluster on a single machine using docker.
+    '';
     license = licenses.mit;
+    maintainers = with maintainers; [ kuznero jlesquembre ngerstle jk ];
     platforms = platforms.linux;
-    maintainers = with maintainers; [ kuznero jlesquembre ngerstle ];
   };
 }

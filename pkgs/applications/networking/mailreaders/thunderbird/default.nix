@@ -2,6 +2,7 @@
 , bzip2
 , cargo
 , common-updater-scripts
+, copyDesktopItems
 , coreutils
 , curl
 , dbus
@@ -13,15 +14,15 @@
 , freetype
 , glib
 , gnugrep
-, gnused
 , gnupg
+, gnused
 , gpgme
 , icu
 , jemalloc
 , lib
+, libevent
 , libGL
 , libGLU
-, libevent
 , libjpeg
 , libnotify
 , libpng
@@ -37,7 +38,7 @@
 , nss_3_53
 , pango
 , perl
-, pkgconfig
+, pkg-config
 , python2
 , python3
 , runtimeShell
@@ -60,7 +61,7 @@
 , alsaSupport ? stdenv.isLinux, alsaLib
 , pulseaudioSupport ? stdenv.isLinux, libpulseaudio
 , gtk3Support ? true, gtk2, gtk3, wrapGAppsHook
-, waylandSupport ? true
+, waylandSupport ? true, libdrm
 , libxkbcommon, calendarSupport ? true
 
 # Use official trademarked branding.  Permission obtained at:
@@ -72,31 +73,33 @@ assert waylandSupport -> gtk3Support == true;
 
 stdenv.mkDerivation rec {
   pname = "thunderbird";
-  version = "78.10.1";
+  version = "78.11.0";
 
   src = fetchurl {
     url =
       "mirror://mozilla/thunderbird/releases/${version}/source/thunderbird-${version}.source.tar.xz";
     sha512 =
-      "3dy8db83sw7kvv0pqqzrnidpa0s6j4vl32f08pgka68pgaldxbr9ay4m1amvjafykz4mpk161v35g4dzb1xf7sxdfl38621yayf9ypz";
+      "1m12kx830pfzvby8j9i5nb9c5v71vlg4wr0qrjgg3pw5ml9j5x7myrqyfd49l2qppm3xjn08srvmf45avnwq0lrys4sb83iwsd46sf6";
   };
 
   nativeBuildInputs = [
     autoconf213
     cargo
+    copyDesktopItems
     gnused
     llvmPackages.llvm
     m4
     nasm
     nodejs
     perl
-    pkgconfig
+    pkg-config
     python2
     python3
     rust-cbindgen
     rustc
     which
     yasm
+    unzip
   ] ++ lib.optional gtk3Support wrapGAppsHook;
 
   buildInputs = [
@@ -124,7 +127,6 @@ stdenv.mkDerivation rec {
     pango
     perl
     sqlite
-    unzip
     xorg.libX11
     xorg.libXScrnSaver
     xorg.libXcursor
@@ -135,12 +137,13 @@ stdenv.mkDerivation rec {
     xorg.libXt
     xorg.pixman
     xorg.xorgproto
+    xorg.libXdamage
     zip
     zlib
   ] ++ lib.optional alsaSupport alsaLib
     ++ lib.optional gtk3Support gtk3
     ++ lib.optional pulseaudioSupport libpulseaudio
-    ++ lib.optional waylandSupport libxkbcommon;
+    ++ lib.optionals waylandSupport [ libxkbcommon libdrm ];
 
   NIX_CFLAGS_COMPILE =[
     "-I${glib.dev}/include/gio-unix-2.0"
@@ -239,7 +242,7 @@ stdenv.mkDerivation rec {
     "--enable-strip"
   ]) ++ lib.optionals (!stdenv.hostPlatform.isi686) [
     # on i686-linux: --with-libclang-path is not available in this configuration
-    "--with-libclang-path=${llvmPackages.libclang}/lib"
+    "--with-libclang-path=${llvmPackages.libclang.lib}/lib"
     "--with-clang-path=${llvmPackages.clang}/bin/clang"
   ] ++ lib.optional alsaSupport "--enable-alsa"
   ++ lib.optional calendarSupport "--enable-calendar"
@@ -259,14 +262,14 @@ stdenv.mkDerivation rec {
 
   doCheck = false;
 
-  postInstall = let
-    desktopItem = makeDesktopItem {
+  desktopItems = [
+    (makeDesktopItem {
       categories = lib.concatStringsSep ";" [ "Application" "Network" ];
       desktopName = "Thunderbird";
       genericName = "Mail Reader";
       name = "thunderbird";
       exec = "thunderbird %U";
-      icon = "$out/lib/thunderbird/chrome/icons/default/default256.png";
+      icon = "thunderbird";
       mimeType = lib.concatStringsSep ";" [
         # Email
         "x-scheme-handler/mailto"
@@ -280,12 +283,13 @@ stdenv.mkDerivation rec {
         "x-scheme-handler/snews"
         "x-scheme-handler/nntp"
       ];
-    };
-  in ''
+    })
+  ];
+
+  postInstall = ''
     # TODO: Move to a dev output?
     rm -rf $out/include $out/lib/thunderbird-devel-* $out/share/idl
-
-    ${desktopItem.buildCommand}
+    install -Dm 444 $out/lib/thunderbird/chrome/icons/default/default256.png $out/share/icons/hicolor/256x256/apps/thunderbird.png
   '';
 
   # Note on GPG support:
@@ -336,7 +340,7 @@ stdenv.mkDerivation rec {
 
   requiredSystemFeatures = [ "big-parallel" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A full-featured e-mail client";
     homepage = "https://www.thunderbird.net";
     maintainers = with maintainers; [

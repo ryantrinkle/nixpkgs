@@ -1,27 +1,25 @@
 {
-  stdenv, makeWrapper, fetchFromGitHub,
+  lib, stdenv, makeWrapper, fetchFromGitHub,
   imagemagick, i3lock-color, xdpyinfo, xrandr, bc, feh, procps, xrdb
 }:
 
 stdenv.mkDerivation rec {
   pname = "betterlockscreen";
-  version = "3.0.1";
+  version = "3.1.0";
 
   src = fetchFromGitHub {
     owner = "pavanjadhaw";
     repo = "betterlockscreen";
     rev = version;
-    sha256 = "0jc8ifb69shmd0avx6vny4m1w5dfxkkf5vnm7qcrmc8yflb0s3z6";
+    sha256 = "14vkgdzw7mprjsvmhm3aav8gds73ngn2xxij4syq7l1mhk701wak";
   };
 
   nativeBuildInputs = [ makeWrapper ];
 
-  patches = [ ./replace-i3lock.patch ];
-
   installPhase =
     let
       PATH =
-        stdenv.lib.makeBinPath
+        lib.makeBinPath
         [imagemagick i3lock-color xdpyinfo xrandr bc feh procps xrdb];
     in ''
       mkdir -p $out/bin
@@ -29,8 +27,8 @@ stdenv.mkDerivation rec {
       wrapProgram "$out/bin/betterlockscreen" --prefix PATH : "$out/bin:${PATH}"
     '';
 
-  meta = with stdenv.lib; {
-    description = "Betterlockscreen is a simple minimal lock screen which allows you to cache images with different filters and lockscreen with blazing speed.";
+  meta = with lib; {
+    description = "A simple minimal lock screen which allows you to cache images with different filters and lockscreen with blazing speed";
     homepage = "https://github.com/pavanjadhaw/betterlockscreen";
     license = licenses.mit;
     platforms = platforms.linux;

@@ -1,6 +1,6 @@
 { buildPythonPackage
 , fetchPypi
-, futures
+, futures ? null
 , isPy27
 , isPyPy
 , jinja2
@@ -33,11 +33,12 @@
 
 buildPythonPackage rec {
   pname = "bokeh";
-  version = "2.1.1";
+  # update together with panel which is not straightforward
+  version = "2.3.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "2dfabf228f55676b88acc464f416e2b13ee06470a8ad1dd3e609bb789425fbad";
+    sha256 = "dd417708f90702190222b1068a645acae99e66d4b58d7a336d545aeaa04e9b40";
   };
 
   patches = [

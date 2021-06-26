@@ -1,17 +1,23 @@
-{ stdenv, fetchurl, tzdata, iana-etc, runCommand
-, perl, which, pkgconfig, patch, procps, pcre, cacert, Security, Foundation
+{ lib, stdenv, fetchurl, tzdata, iana-etc, runCommand
+, perl, which, pkg-config, patch, procps, pcre, cacert, Security, Foundation
 , mailcap, runtimeShell
-, buildPackages, pkgsTargetTarget
+, buildPackages
+, pkgsBuildTarget
 , fetchpatch
+, callPackage
 }:
 
 let
 
-  inherit (stdenv.lib) optionals optionalString;
+  inherit (lib) optionals optionalString;
+
+  version = "1.14.15";
+
+  go_bootstrap = buildPackages.callPackage ./bootstrap.nix { };
 
   goBootstrap = runCommand "go-bootstrap" {} ''
     mkdir $out
-    cp -rf ${buildPackages.go_bootstrap}/* $out/
+    cp -rf ${go_bootstrap}/* $out/
     chmod -R u+w $out
     find $out -name "*.c" -delete
     cp -rf $out/bin/* $out/share/go/bin/
@@ -25,13 +31,17 @@ let
     "armv5tel" = "arm";
     "armv6l" = "arm";
     "armv7l" = "arm";
+    "powerpc64le" = "ppc64le";
   }.${platform.parsed.cpu.name} or (throw "Unsupported system");
 
+  # We need a target compiler which is still runnable at build time,
+  # to handle the cross-building case where build != host == target
+  targetCC = pkgsBuildTarget.targetPackages.stdenv.cc;
 in
 
 stdenv.mkDerivation rec {
   pname = "go";
-  version = "1.14.15";
+  inherit version;
 
   src = fetchurl {
     url = "https://dl.google.com/go/go${version}.src.tar.gz";
@@ -39,7 +49,7 @@ stdenv.mkDerivation rec {
   };
 
   # perl is used for testing go vet
-  nativeBuildInputs = [ perl which pkgconfig patch procps ];
+  nativeBuildInputs = [ perl which pkg-config patch procps ];
   buildInputs = [ cacert pcre ]
     ++ optionals stdenv.isLinux [ stdenv.cc.libc.out ]
     ++ optionals (stdenv.hostPlatform.libc == "glibc") [ stdenv.cc.libc.static ];
@@ -138,6 +148,14 @@ stdenv.mkDerivation rec {
     ./go-1.9-skip-flaky-20072.patch
     ./skip-external-network-tests.patch
     ./skip-nohup-tests.patch
+    ./go_no_vendor_checks-1_14.patch
+
+    # support TZ environment variable starting with colon
+    (fetchpatch {
+      name = "tz-support-colon.patch";
+      url = "https://github.com/golang/go/commit/58fe2cd4022c77946ce4b598cf3e30ccc8367143.patch";
+      sha256 = "0vphwiqrm0qykfj3rfayr65qzk22fksg7qkamvaz0lmf6fqvbd2f";
+    })
 
     # fix rare TestDontCacheBrokenHTTP2Conn failure
     (fetchpatch {
@@ -166,15 +184,15 @@ stdenv.mkDerivation rec {
   # {CC,CXX}_FOR_TARGET must be only set for cross compilation case as go expect those
   # to be different from CC/CXX
   CC_FOR_TARGET = if (stdenv.buildPlatform != stdenv.targetPlatform) then
-      "${pkgsTargetTarget.stdenv.cc}/bin/${pkgsTargetTarget.stdenv.cc.targetPrefix}cc"
+      "${targetCC}/bin/${targetCC.targetPrefix}cc"
     else
       null;
   CXX_FOR_TARGET = if (stdenv.buildPlatform != stdenv.targetPlatform) then
-      "${pkgsTargetTarget.stdenv.cc}/bin/${pkgsTargetTarget.stdenv.cc.targetPrefix}c++"
+      "${targetCC}/bin/${targetCC.targetPrefix}c++"
     else
       null;
 
-  GOARM = toString (stdenv.lib.intersectLists [(stdenv.hostPlatform.parsed.cpu.version or "")] ["5" "6" "7"]);
+  GOARM = toString (lib.intersectLists [(stdenv.hostPlatform.parsed.cpu.version or "")] ["5" "6" "7"]);
   GO386 = 387; # from Arch: don't assume sse2 on i686
   CGO_ENABLED = 1;
   # Hopefully avoids test timeouts on Hydra
@@ -241,12 +259,14 @@ stdenv.mkDerivation rec {
 
   disallowedReferences = [ goBootstrap ];
 
-  meta = with stdenv.lib; {
-    branch = "1.14";
+  meta = with lib; {
     homepage = "http://golang.org/";
     description = "The Go Programming language";
     license = licenses.bsd3;
     maintainers = teams.golang.members;
     platforms = platforms.linux ++ platforms.darwin;
+    knownVulnerabilities = [
+      "Support for Go 1.14 ended with the release of Go 1.16: https://golang.org/doc/devel/release.html#policy"
+    ];
   };
 }

@@ -1,8 +1,9 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 , meson
 , ninja
-, pkgconfig
+, pkg-config
+, python3
 , gettext
 , gobject-introspection
 , gst-plugins-base
@@ -11,14 +12,18 @@
 
 stdenv.mkDerivation rec {
   pname = "gst-rtsp-server";
-  version = "1.16.3";
+  version = "1.18.4";
 
   src = fetchurl {
-    url = "${meta.homepage}/src/${pname}/${pname}-${version}.tar.xz";
-    sha256 = "187ywrzm628sr7m4rdizs21379javka5kmc8iz2i7m96523np237";
+    url = "https://gstreamer.freedesktop.org/src/${pname}/${pname}-${version}.tar.xz";
+    sha256 = "153c78klvzlmi86d0gmdf7w9crv11rkd4y82b14a0wdr83gbhsx4";
   };
 
-  outputs = [ "out" "dev" ];
+  outputs = [
+    "out"
+    "dev"
+    # "devdoc" # disabled until `hotdoc` is packaged in nixpkgs
+  ];
 
   patches = [
     # To use split outputs, we need this so double prefix won't be used in the
@@ -34,7 +39,11 @@ stdenv.mkDerivation rec {
     ninja
     gettext
     gobject-introspection
-    pkgconfig
+    pkg-config
+    python3
+
+    # documentation
+    # TODO add hotdoc here
   ];
 
   buildInputs = [
@@ -44,9 +53,15 @@ stdenv.mkDerivation rec {
 
   mesonFlags = [
     "-Dexamples=disabled" # requires many dependencies and probably not useful for our users
+    "-Ddoc=disabled" # `hotdoc` not packaged in nixpkgs as of writing
   ];
 
-  meta = with stdenv.lib; {
+  postPatch = ''
+    patchShebangs \
+      scripts/extract-release-date-from-doap-file.py
+  '';
+
+  meta = with lib; {
     description = "GStreamer RTSP server";
     homepage = "https://gstreamer.freedesktop.org";
     longDescription = ''

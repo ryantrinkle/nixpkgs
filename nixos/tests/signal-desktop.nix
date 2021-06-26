@@ -2,7 +2,7 @@ import ./make-test-python.nix ({ pkgs, ...} :
 
 {
   name = "signal-desktop";
-  meta = with pkgs.stdenv.lib.maintainers; {
+  meta = with pkgs.lib.maintainers; {
     maintainers = [ flokli primeos ];
   };
 
@@ -44,6 +44,9 @@ import ./make-test-python.nix ({ pkgs, ...} :
     # - https://github.com/NixOS/nixpkgs/issues/108772
     # - https://github.com/NixOS/nixpkgs/pull/117555
     print(machine.succeed("su - alice -c 'file ~/.config/Signal/sql/db.sqlite'"))
+    machine.succeed(
+        "su - alice -c 'file ~/.config/Signal/sql/db.sqlite' | grep 'db.sqlite: data'"
+    )
     machine.fail(
         "su - alice -c 'file ~/.config/Signal/sql/db.sqlite' | grep -e SQLite -e database"
     )

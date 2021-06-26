@@ -1,18 +1,18 @@
-{ stdenv, fetchurl, pkgconfig, systemd
+{ lib, stdenv, fetchurl, pkg-config, systemd
 , boost, libsodium, libedit, re2
 , net-snmp, lua, protobuf, openssl, zlib, h2o
 }:
 
 stdenv.mkDerivation rec {
   pname = "dnsdist";
-  version = "1.5.0";
+  version = "1.5.2";
 
   src = fetchurl {
     url = "https://downloads.powerdns.com/releases/dnsdist-${version}.tar.bz2";
-    sha256 = "0n3vy84kczvbwbzmr1d2c9lh3im77gz83wczj0im4zs91kpw81rc";
+    sha256 = "sha256-K9e1M9Lae7RWY8amLkftDS8Zigd/WNxzDEY7eXNjZ0k=";
   };
 
-  nativeBuildInputs = [ pkgconfig protobuf ];
+  nativeBuildInputs = [ pkg-config protobuf ];
   buildInputs = [ systemd boost libsodium libedit re2 net-snmp lua openssl zlib h2o ];
 
   configureFlags = [
@@ -32,10 +32,10 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "DNS Loadbalancer";
     homepage = "https://dnsdist.org";
     license = licenses.gpl2;
-    maintainers = with maintainers; [ das_j ];
+    maintainers = with maintainers; [ SuperSandro2000 ];
   };
 }

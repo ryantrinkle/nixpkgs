@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, cmake, help2man }:
+{ lib, stdenv, fetchFromGitHub, cmake, help2man }:
 
 stdenv.mkDerivation rec {
   pname = "postsrsd";
@@ -19,11 +19,11 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ cmake help2man ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/roehling/postsrsd";
     description = "Postfix Sender Rewriting Scheme daemon";
     license = licenses.gpl2;
-    platforms = platforms.linux;
+    platforms = platforms.all;
     maintainers = with maintainers; [ abbradar ];
   };
 }

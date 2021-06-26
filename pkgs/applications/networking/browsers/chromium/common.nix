@@ -4,12 +4,12 @@
 , gnutar, bzip2, flac, speex, libopus
 , libevent, expat, libjpeg, snappy
 , libpng, libcap
-, xdg_utils, yasm, nasm, minizip, libwebp
+, xdg-utils, yasm, nasm, minizip, libwebp
 , libusb1, pciutils, nss, re2
 
-, python2Packages, perl, pkgconfig
-, nspr, systemd, kerberos
-, utillinux, alsaLib
+, python2, python3, perl, pkg-config
+, nspr, systemd, libkrb5
+, util-linux, alsaLib
 , bison, gperf
 , glib, gtk3, dbus-glib
 , glibc
@@ -20,12 +20,13 @@
 , pipewire
 , libva
 , libdrm, wayland, mesa, libxkbcommon # Ozone
+, curl
 
 # optional dependencies
 , libgcrypt ? null # gnomeSupport || cupsSupport
 
 # package customization
-, gnomeSupport ? false, gnome ? null
+, gnomeSupport ? false, gnome2 ? null
 , gnomeKeyringSupport ? false, libgnome-keyring3 ? null
 , proprietaryCodecs ? true
 , cupsSupport ? true
@@ -38,18 +39,24 @@
 
 buildFun:
 
-with stdenv.lib;
+with lib;
 
 let
   jre = jre8; # TODO: remove override https://github.com/NixOS/nixpkgs/pull/89731
+  python2WithPackages = python2.withPackages(ps: with ps; [
+    ply jinja2 setuptools
+  ]);
+  python3WithPackages = python3.withPackages(ps: with ps; [
+    ply jinja2 setuptools
+  ]);
 
   # The additional attributes for creating derivations based on the chromium
   # source tree.
   extraAttrs = buildFun base;
 
-  githubPatch = commit: sha256: fetchpatch {
+  githubPatch = { commit, sha256, revert ? false }: fetchpatch {
     url = "https://github.com/chromium/chromium/commit/${commit}.patch";
-    inherit sha256;
+    inherit sha256 revert;
   };
 
   mkGnFlags =
@@ -85,10 +92,11 @@ let
   };
 
   defaultDependencies = [
+    (libpng.override { apngSupport = false; }) # https://bugs.chromium.org/p/chromium/issues/detail?id=752403
     bzip2 flac speex opusWithCustomModes
     libevent expat libjpeg snappy
-    libpng libcap
-    xdg_utils minizip libwebp
+    libcap
+    xdg-utils minizip libwebp
     libusb1 re2
     ffmpeg libxslt libxml2
     nasm
@@ -100,16 +108,17 @@ let
   buildPath = "out/${buildType}";
   libExecPath = "$out/libexec/${packageName}";
 
+  warnObsoleteVersionConditional = min-version: result:
+    let ungoogled-version = (importJSON ./upstream-info.json).ungoogled-chromium.version;
+    in warnIf (versionAtLeast ungoogled-version min-version) "chromium: ungoogled version ${ungoogled-version} is newer than a conditional bounded at ${min-version}. You can safely delete it."
+      result;
   chromiumVersionAtLeast = min-version:
-    versionAtLeast upstream-info.version min-version;
+    let result = versionAtLeast upstream-info.version min-version;
+    in  warnObsoleteVersionConditional min-version result;
   versionRange = min-version: upto-version:
     let inherit (upstream-info) version;
         result = versionAtLeast version min-version && versionOlder version upto-version;
-        ungoogled-version = (importJSON ./upstream-info.json).ungoogled-chromium.version;
-    in if versionAtLeast ungoogled-version upto-version
-       then warn "chromium: ungoogled version ${ungoogled-version} is newer than a patchset bounded at ${upto-version}. You can safely delete it."
-            result
-       else result;
+    in warnObsoleteVersionConditional upto-version result;
 
   ungoogler = ungoogled-chromium {
     inherit (upstream-info.deps.ungoogled-patches) rev sha256;
@@ -126,40 +135,46 @@ let
     };
 
     nativeBuildInputs = [
-      llvmPackages.lldClang.bintools
-      ninja which python2Packages.python perl pkgconfig
-      python2Packages.ply python2Packages.jinja2 nodejs
-      gnutar python2Packages.setuptools
+      ninja pkg-config
+      python2WithPackages perl nodejs
+      gnutar which
+      llvmPackages.bintools
+    ] ++ lib.optionals (chromiumVersionAtLeast "92") [
+      python3WithPackages
     ];
 
     buildInputs = defaultDependencies ++ [
       nspr nss systemd
-      utillinux alsaLib
-      bison gperf kerberos
+      util-linux alsaLib
+      bison gperf libkrb5
       glib gtk3 dbus-glib
       libXScrnSaver libXcursor libXtst libxshmfence libGLU libGL
+      mesa # required for libgbm
       pciutils protobuf speechd libXdamage at-spi2-core
       jre
       pipewire
       libva
       libdrm wayland mesa.drivers libxkbcommon
+      curl
     ] ++ optional gnomeKeyringSupport libgnome-keyring3
-      ++ optionals gnomeSupport [ gnome.GConf libgcrypt ]
+      ++ optionals gnomeSupport [ gnome2.GConf libgcrypt ]
       ++ optionals cupsSupport [ libgcrypt cups ]
       ++ optional pulseSupport libpulseaudio;
 
     patches = [
       ./patches/no-build-timestamps.patch # Optional patch to use SOURCE_DATE_EPOCH in compute_build_timestamp.py (should be upstreamed)
       ./patches/widevine-79.patch # For bundling Widevine (DRM), might be replaceable via bundle_widevine_cdm=true in gnFlags
-    ] ++ optional (chromiumVersionAtLeast "90")
+      # Fix the build by adding a missing dependency (s. https://crbug.com/1197837):
       ./patches/fix-missing-atspi2-dependency.patch
-    ++ optionals (chromiumVersionAtLeast "91") [
       ./patches/closure_compiler-Use-the-Java-binary-from-the-system.patch
-      (githubPatch
-        # Revert "Reland #7 of "Force Python 3 to be used in build.""
-        "38b6a9a8e5901766613879b6976f207aa163588a"
-        "1lvxbd7rl6hz5j6kh6q83yb6vd9g7anlqbai8g1w1bp6wdpgwvp9"
-      )
+    ] ++ lib.optionals (chromiumVersionAtLeast "93") [
+      # We need to revert this patch to build M93 with LLVM 12.
+      (githubPatch {
+        # Reland "Replace 'blacklist' with 'ignorelist' in ./tools/msan/."
+        commit = "9d080c0934b848ee4a05013c78641e612fcc1e03";
+        sha256 = "1bxdhxmiy6h4acq26lq43x2mxx6rawmfmlgsh5j7w8kyhkw5af0c";
+        revert = true;
+      })
     ];
 
     postPatch = ''
@@ -181,6 +196,7 @@ let
         substituteInPlace third_party/harfbuzz-ng/src/src/update-unicode-tables.make \
           --replace "/usr/bin/env -S make -f" "/usr/bin/make -f"
       fi
+      chmod -x third_party/webgpu-cts/src/tools/deno
 
       # We want to be able to specify where the sandbox is via CHROME_DEVEL_SANDBOX
       substituteInPlace sandbox/linux/suid/client/setuid_sandbox_host.cc \
@@ -199,7 +215,7 @@ let
           '/usr/share/locale/' \
           '${glibc}/share/locale/'
 
-      sed -i -e 's@"\(#!\)\?.*xdg-@"\1${xdg_utils}/bin/xdg-@' \
+      sed -i -e 's@"\(#!\)\?.*xdg-@"\1${xdg-utils}/bin/xdg-@' \
         chrome/browser/shell_integration_linux.cc
 
       sed -i -e '/lib_loader.*Load/s!"\(libudev\.so\)!"${lib.getLib systemd}/lib/\1!' \
@@ -266,12 +282,9 @@ let
     } // optionalAttrs pulseSupport {
       use_pulseaudio = true;
       link_pulseaudio = true;
-    } // optionalAttrs (chromiumVersionAtLeast "89") {
-      rtc_pipewire_version = "0.3"; # TODO: Can be removed once ungoogled-chromium is at M90
       # Disable PGO (defaults to 2 since M89) because it fails without additional changes:
       # error: Could not read profile ../../chrome/build/pgo_profiles/chrome-linux-master-1610647094-405a32bcf15e5a84949640f99f84a5b9f61e2f2e.profdata: Unsupported instrumentation profile format version
       chrome_pgo_phase = 0;
-    } // optionalAttrs (chromiumVersionAtLeast "90") {
       # Disable build with TFLite library because it fails without additional changes:
       # ninja: error: '../../chrome/test/data/simple_test.tflite', needed by 'test_data/simple_test.tflite', missing and no known rule to make it
       # Note: chrome/test/data/simple_test.tflite is in the Git repository but not in chromium-90.0.4400.8.tar.xz
@@ -302,7 +315,7 @@ let
 
       # This is to ensure expansion of $out.
       libExecPath="${libExecPath}"
-      python build/linux/unbundle/replace_gn_files.py --system-libraries ${toString gnSystemLibraries}
+      ${python2}/bin/python2 build/linux/unbundle/replace_gn_files.py --system-libraries ${toString gnSystemLibraries}
       ${gnChromium}/bin/gn gen --args=${escapeShellArg gnFlags} out/Release | tee gn-gen-outputs.txt
 
       # Fail if `gn gen` contains a WARNING.

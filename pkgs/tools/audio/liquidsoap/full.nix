@@ -1,8 +1,8 @@
-{ stdenv, makeWrapper, fetchurl, which, pkgconfig
+{ lib, stdenv, makeWrapper, fetchurl, which, pkg-config
 , ocamlPackages
 , libao, portaudio, alsaLib, libpulseaudio, libjack2
 , libsamplerate, libmad, taglib, lame, libogg
-, libvorbis, speex, libtheora, libopus
+, libvorbis, speex, libtheora, libopus, zlib
 , faad2, flac, ladspaH, ffmpeg, frei0r, dssi
 }:
 
@@ -49,12 +49,12 @@ stdenv.mkDerivation {
 
   configureFlags = [ "--localstatedir=/var" ];
 
-  nativeBuildInputs = [ makeWrapper pkgconfig ];
+  nativeBuildInputs = [ makeWrapper pkg-config ];
   buildInputs =
     [ which ocamlPackages.ocaml ocamlPackages.findlib
       libao portaudio alsaLib libpulseaudio libjack2
       libsamplerate libmad taglib lame libogg
-      libvorbis speex libtheora libopus
+      libvorbis speex libtheora libopus zlib
       faad2 flac ladspaH ffmpeg frei0r dssi
       ocamlPackages.xmlm ocamlPackages.ocaml_pcre
       ocamlPackages.camomile
@@ -64,7 +64,7 @@ stdenv.mkDerivation {
 
   hardeningDisable = [ "format" "fortify" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Swiss-army knife for multimedia streaming";
     homepage = "https://www.liquidsoap.info/";
     maintainers = with maintainers; [ ehmry ];

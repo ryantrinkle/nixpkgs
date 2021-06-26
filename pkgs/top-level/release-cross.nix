@@ -5,9 +5,11 @@
   supportedSystems ? [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" ]
 , # Strip most of attributes when evaluating to spare memory usage
   scrubJobs ? true
+, # Attributes passed to nixpkgs. Don't build packages marked as unfree.
+  nixpkgsArgs ? { config = { allowUnfree = false; inHydra = true; }; }
 }:
 
-with import ./release-lib.nix { inherit supportedSystems scrubJobs; };
+with import ./release-lib.nix { inherit supportedSystems scrubJobs nixpkgsArgs; };
 
 let
   nativePlatforms = all;
@@ -147,6 +149,9 @@ in
   aarch64-musl = mapTestOnCross lib.systems.examples.aarch64-multiplatform-musl linuxCommon;
 
   x86_64-musl = mapTestOnCross lib.systems.examples.musl64 linuxCommon;
+
+  ppc64le = mapTestOnCross lib.systems.examples.powernv linuxCommon;
+  ppc64le-musl = mapTestOnCross lib.systems.examples.musl-power linuxCommon;
 
   android64 = mapTestOnCross lib.systems.examples.aarch64-android-prebuilt linuxCommon;
   android32 = mapTestOnCross lib.systems.examples.armv7a-android-prebuilt linuxCommon;

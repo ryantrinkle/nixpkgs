@@ -19,16 +19,16 @@ let
 in
 buildGoModule rec {
   pname = "argo";
-  version = "2.10.1";
+  version = "3.0.4";
 
   src = fetchFromGitHub {
     owner = "argoproj";
     repo = "argo";
     rev = "v${version}";
-    sha256 = "1k023rq4p0hvq5famxm83csp3zsijrki8myk6v83xyfigwxc8sia";
+    sha256 = "sha256-zswX6nt7AxxTMznbY4Rk0A8j2PpSNht+gbTMbDr2yuY=";
   };
 
-  vendorSha256 = "0fqdxs3r4249qxlc9cac0lpbqf2aifkcah07v0cckb9rxfyiwhjz";
+  vendorSha256 = "sha256-YjVAoMyGKMHLGEPeOOkCKCzeWFiUsXfJIKcw5GYoljg=";
 
   doCheck = false;
 
@@ -46,10 +46,11 @@ buildGoModule rec {
   buildFlagsArray = ''
     -ldflags=
       -s -w
-      -X github.com/argoproj/argo.version=${version}
-      -X github.com/argoproj/argo.gitCommit=${src.rev}
-      -X github.com/argoproj/argo.gitTreeState=clean
-      -X github.com/argoproj/argo.gitTag=${version}
+      -X github.com/argoproj/argo-workflows/v3.buildDate=unknown
+      -X github.com/argoproj/argo-workflows/v3.gitCommit=${src.rev}
+      -X github.com/argoproj/argo-workflows/v3.gitTag=${src.rev}
+      -X github.com/argoproj/argo-workflows/v3.gitTreeState=clean
+      -X github.com/argoproj/argo-workflows/v3.version=${version}
   '';
 
   postInstall = ''

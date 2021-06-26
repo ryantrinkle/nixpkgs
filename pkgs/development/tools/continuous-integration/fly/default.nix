@@ -1,17 +1,17 @@
-{ buildGoModule, fetchFromGitHub, stdenv, lib, writeText }:
+{ buildGoModule, fetchFromGitHub, stdenv, lib }:
 
 buildGoModule rec {
   pname = "fly";
-  version = "6.5.1";
+  version = "7.2.0";
 
   src = fetchFromGitHub {
     owner = "concourse";
     repo = "concourse";
     rev = "v${version}";
-    sha256 = "0ldw40xn9nb5picly32nq558x0klvkyrr9af0jfngbvm4l5209bc";
+    sha256 = "sha256-uKzN5h2gJqsD25ETgfYqu4ijC2b0ZLGdMGTiliFOatA=";
   };
 
-  vendorSha256 = "1fxbxkg7disndlmb065abnfn7sn79qclkcbizmrq49f064w1ijr4";
+  vendorSha256 = "sha256-2PvXylOPVA0/mIQhhKv8o65bfAxkvKP6FPunzTWwVtI=";
 
   doCheck = false;
 

@@ -1,15 +1,14 @@
-{ stdenv, fetchurl, fetchFromGitHub, cmake, pkgconfig, makeWrapper, ncurses, nixosTests
-, libiconv, openssl, pcre, boost, judy, bison, libxml2, libkrb5, linux-pam, curl
-, libaio, libevent, jemalloc450, jemalloc, cracklib, systemd, perl
+{ lib, stdenv, fetchurl, fetchFromGitHub, cmake, pkg-config, makeWrapper, ncurses, nixosTests
+, libiconv, openssl, pcre2, boost, judy, bison, libxml2, libkrb5, linux-pam, curl
+, libaio, libevent, jemalloc, cracklib, systemd, perl
 , bzip2, lz4, lzo, snappy, xz, zlib, zstd
 , fixDarwinDylibNames, cctools, CoreServices, less
 , numactl # NUMA Support
 , withStorageMroonga ? true, kytea, msgpack, zeromq
 , withStorageRocks ? true
-, withStorageToku ? true
 }:
 
-with stdenv.lib;
+with lib;
 
 let # in mariadb # spans the whole file
 
@@ -23,25 +22,25 @@ mariadb = server // {
 };
 
 common = rec { # attributes common to both builds
-  version = "10.4.17";
+  version = "10.5.10";
 
   src = fetchurl {
     urls = [
       "https://downloads.mariadb.org/f/mariadb-${version}/source/mariadb-${version}.tar.gz"
       "https://downloads.mariadb.com/MariaDB/mariadb-${version}/source/mariadb-${version}.tar.gz"
     ];
-    sha256 = "0vni912lahd2v1zwy0aa7qvphy8hqpq6ym5f4ijx871icki09cd7";
+    sha256 = "1fxsq2xgcb8j81z043bifpmxblj6nb3wqjm9rgsnpwmazkwk5zx5";
     name   = "mariadb-${version}.tar.gz";
   };
 
-  nativeBuildInputs = [ cmake pkgconfig ];
+  nativeBuildInputs = [ cmake pkg-config ]
+    ++ optional stdenv.hostPlatform.isDarwin fixDarwinDylibNames;
 
   buildInputs = [
-    ncurses openssl zlib pcre libiconv curl
+    ncurses openssl zlib pcre2 libiconv curl
   ] ++ optionals stdenv.hostPlatform.isLinux [ libaio systemd libkrb5 ]
-    ++ optionals stdenv.hostPlatform.isDarwin [ perl fixDarwinDylibNames cctools CoreServices ]
-    ++ optional (!stdenv.hostPlatform.isDarwin && withStorageToku) [ jemalloc450 ]
-    ++ optional (!stdenv.hostPlatform.isDarwin && !withStorageToku) [ jemalloc ];
+    ++ optionals stdenv.hostPlatform.isDarwin [ perl cctools CoreServices ]
+    ++ optional (!stdenv.hostPlatform.isDarwin) [ jemalloc ];
 
   prePatch = ''
     sed -i 's,[^"]*/var/log,/var/log,g' storage/mroonga/vendor/groonga/CMakeLists.txt
@@ -98,8 +97,6 @@ common = rec { # attributes common to both builds
     rm -r $out/lib/pkgconfig
     rm -r $out/share/aclocal
   '';
-
-  enableParallelBuilding = true;
 
   passthru.mysqlVersion = "5.7";
 
@@ -175,6 +172,7 @@ server = stdenv.mkDerivation (common // {
     "-DWITH_INNODB_DISALLOW_WRITES=ON"
     "-DWITHOUT_EXAMPLE=1"
     "-DWITHOUT_FEDERATED=1"
+    "-DWITHOUT_TOKUDB=1"
   ] ++ optional (stdenv.hostPlatform.isLinux && !stdenv.hostPlatform.isAarch32) [
     "-DWITH_NUMA=ON"
   ] ++ optional (!withStorageMroonga) [
@@ -183,13 +181,12 @@ server = stdenv.mkDerivation (common // {
     "-DWITHOUT_ROCKSDB=1"
   ] ++ optional (!stdenv.hostPlatform.isDarwin && withStorageRocks) [
     "-DWITH_ROCKSDB_JEMALLOC=ON"
-  ] ++ optional (stdenv.hostPlatform.isDarwin || stdenv.hostPlatform.isMusl || !withStorageToku) [
-    "-DWITHOUT_TOKUDB=1"
-  ] ++ optional (!stdenv.hostPlatform.isDarwin && withStorageToku) [
-    "-DWITH_JEMALLOC=static"
-  ] ++ optional stdenv.hostPlatform.isDarwin [
+  ] ++ optional (!stdenv.hostPlatform.isDarwin) [
+    "-DWITH_JEMALLOC=yes"
+  ] ++ optionals stdenv.hostPlatform.isDarwin [
     "-DPLUGIN_AUTH_PAM=OFF"
     "-DWITHOUT_OQGRAPH=1"
+    "-DWITHOUT_PLUGIN_S3=1"
   ];
 
   preConfigure = optionalString (!stdenv.hostPlatform.isDarwin) ''

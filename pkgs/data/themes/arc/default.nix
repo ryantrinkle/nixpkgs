@@ -1,62 +1,64 @@
-{ stdenv
+{ lib, stdenv
 , fetchFromGitHub
 , sassc
-, autoreconfHook
-, pkgconfig
+, meson
+, ninja
+, pkg-config
 , gtk3
-, gnome3
+, glib
+, gnome
 , gtk-engine-murrine
 , optipng
-, inkscape_0
+, inkscape
 , cinnamon
 }:
 
 stdenv.mkDerivation rec {
   pname = "arc-theme";
-  version = "20200819";
+  version = "20210412";
 
   src = fetchFromGitHub {
     owner = "jnsh";
     repo = pname;
     rev = version;
-    sha256 = "1l5sc4r5jp3526r4p32fszny0cw6pkb45cp424hq0s0k344z9px6";
+    sha256 = "sha256-BNJirtBtdWsIzQfsJsZzg1zFbJEzZPq1j2qZ+1QjRH8=";
   };
 
   nativeBuildInputs = [
-    autoreconfHook
-    pkgconfig
+    meson
+    ninja
+    pkg-config
     sassc
     optipng
-    inkscape_0
+    inkscape
     gtk3
+    glib # for glib-compile-resources
   ];
 
   propagatedUserEnvPkgs = [
-    gnome3.gnome-themes-extra
+    gnome.gnome-themes-extra
     gtk-engine-murrine
   ];
-
-  enableParallelBuilding = true;
 
   preBuild = ''
     # Shut up inkscape's warnings about creating profile directory
     export HOME="$NIX_BUILD_ROOT"
   '';
 
-  configureFlags = [
-    "--with-cinnamon=${cinnamon.cinnamon-common.version}"
-    "--with-gnome-shell=${gnome3.gnome-shell.version}"
-    "--disable-unity"
+  mesonFlags = [
+    "-Dthemes=cinnamon,gnome-shell,gtk2,gtk3,plank,xfwm,metacity"
+    "-Dvariants=light,darker,dark,lighter"
+    "-Dcinnamon_version=${cinnamon.cinnamon-common.version}"
+    "-Dgnome_shell_version=${gnome.gnome-shell.version}"
+    "-Dgtk3_version=${gtk3.version}"
+    # You will need to patch gdm to make use of this.
+    "-Dgnome_shell_gresource=true"
   ];
 
-  postInstall = ''
-    install -Dm644 -t $out/share/doc/${pname} AUTHORS *.md
-  '';
-
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Flat theme with transparent elements for GTK 3, GTK 2 and Gnome Shell";
     homepage = "https://github.com/jnsh/arc-theme";
-    license = licenses.gpl3;
+    license = licenses.gpl3Only;
     platforms = platforms.linux;
     maintainers = with maintainers; [ simonvandel romildo ];
   };

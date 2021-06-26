@@ -1,4 +1,4 @@
-{ stdenv, mkDerivation, fetchFromGitHub, libav_0_8, libkeyfinder, qtbase, qtxmlpatterns, qmake, taglib }:
+{ lib, mkDerivation, fetchFromGitHub, libav_0_8, libkeyfinder, qtbase, qtxmlpatterns, qmake, taglib }:
 
 mkDerivation rec {
   pname = "keyfinder";
@@ -16,14 +16,13 @@ mkDerivation rec {
 
   postPatch = ''
     substituteInPlace is_KeyFinder.pro \
-       --replace "keyfinder.0" "keyfinder" \
        --replace "-stdlib=libc++" "" \
        --replace "\$\$[QT_INSTALL_PREFIX]" "$out"
   '';
 
-  enableParallelBuilding = true;
+  dontWrapQtApps = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Musical key detection for digital audio (graphical UI)";
     longDescription = ''
       KeyFinder is an open source key detection tool, for DJs interested in

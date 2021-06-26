@@ -1,4 +1,4 @@
-{ stdenv
+{ lib, stdenv
 , runCommandCC
 , fetchPypi
 , buildPythonPackage
@@ -10,7 +10,6 @@
 , scipy
 , six
 , libgpuarray
-, libredirect
 , cudaSupport ? false, cudatoolkit
 , cudnnSupport ? false, cudnn
 , nvidia_x11
@@ -41,8 +40,8 @@ let
     if stdenv.cc.isClang then "clang++" else
     throw "Unknown C++ compiler";
   cxx_compiler = wrapped cxx_compiler_name "\\$HOME/.theano"
-    (    stdenv.lib.optional cudaSupport libgpuarray_
-      ++ stdenv.lib.optional cudnnSupport cudnn );
+    (    lib.optional cudaSupport libgpuarray_
+      ++ lib.optional cudnnSupport cudnn );
 
   libgpuarray_ = libgpuarray.override { inherit cudaSupport cudatoolkit; };
 
@@ -61,30 +60,19 @@ in buildPythonPackage rec {
     substituteInPlace theano/configdefaults.py \
       --replace 'StrParam(param, is_valid=warn_cxx)' 'StrParam('\'''${cxx_compiler}'\''', is_valid=warn_cxx)' \
       --replace 'rc == 0 and config.cxx != ""' 'config.cxx != ""'
-  '' + stdenv.lib.optionalString cudaSupport ''
+  '' + lib.optionalString cudaSupport ''
     substituteInPlace theano/configdefaults.py \
       --replace 'StrParam(get_cuda_root)' 'StrParam('\'''${cudatoolkit}'\''')'
-  '' + stdenv.lib.optionalString cudnnSupport ''
+  '' + lib.optionalString cudnnSupport ''
     substituteInPlace theano/configdefaults.py \
       --replace 'StrParam(default_dnn_base_path)' 'StrParam('\'''${cudnn}'\''')'
   '';
 
-  # Needs to be postFixup so it runs before pythonImportsCheck even when
-  # doCheck = false (meaning preCheck would be disabled).
-  # This branch is missing #97597 (and its predecessor #93560), meaning only
-  # "/tmp" is exempt from NIX_ENFORCE_PURITY's objections when theano is
-  # imported from within a nix build environment. Therefore use libredirect
-  # to convince the wrapper we are actually accessing "/tmp".
+  # needs to be postFixup so it runs before pythonImportsCheck even when
+  # doCheck = false (meaning preCheck would be disabled)
   postFixup = ''
     mkdir -p check-phase
     export HOME=$(pwd)/check-phase
-
-    export NIX_REDIRECTS=/tmp=$TMPDIR
-    export LD_PRELOAD=${libredirect}/lib/libredirect.so
-    export TEMP=/tmp
-    export TEMPDIR=/tmp
-    export TMP=/tmp
-    export TMPDIR=/tmp
   '';
   doCheck = false;
   # takes far too long, also throws "TypeError: sort() missing 1 required positional argument: 'a'"
@@ -97,7 +85,7 @@ in buildPythonPackage rec {
 
   pythonImportsCheck = [ "theano" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "http://deeplearning.net/software/theano/";
     description = "A Python library for large-scale array computation";
     license = licenses.bsd3;

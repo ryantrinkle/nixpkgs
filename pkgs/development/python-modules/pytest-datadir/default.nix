@@ -1,4 +1,4 @@
-{ stdenv, buildPythonPackage, fetchFromGitHub
+{ lib, buildPythonPackage, fetchFromGitHub
 , setuptools_scm, pytest, cmake
 }:
 
@@ -23,10 +23,10 @@ buildPythonPackage rec {
   checkInputs = [ pytest ];
   checkPhase = "pytest";
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/gabrielcnr/pytest-datadir";
     description = "pytest plugin for manipulating test data directories and files";
     license = licenses.mit;
-    maintainers = with maintainers; [ metadark ];
+    maintainers = with maintainers; [ kira-bruneau ];
   };
 }

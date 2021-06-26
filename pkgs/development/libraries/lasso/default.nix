@@ -1,4 +1,4 @@
-{ stdenv, autoconf, automake, autoreconfHook, fetchurl, glib, gobject-introspection, gtk-doc, libtool, libxml2, libxslt, openssl, pkgconfig, python27Packages, xmlsec, zlib }:
+{ lib, stdenv, autoconf, automake, autoreconfHook, fetchurl, fetchpatch, glib, gobject-introspection, gtk-doc, libtool, libxml2, libxslt, openssl, pkg-config, python27Packages, xmlsec, zlib }:
 
 stdenv.mkDerivation rec {
 
@@ -11,7 +11,15 @@ stdenv.mkDerivation rec {
 
   };
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig ];
+  patches = [
+    (fetchpatch {
+      name = "CVE-2021-28091.patch";
+      url = "https://git.entrouvert.org/lasso.git/patch/?id=ea7e5efe9741e1b1787a58af16cb15b40c23be5a";
+      sha256 = "0070x01pir30hsb21mp69pf9pxingadl3y4w0afw07a5c57drhn4";
+    })
+  ];
+
+  nativeBuildInputs = [ autoreconfHook pkg-config ];
   buildInputs = [ autoconf automake glib gobject-introspection gtk-doc libtool libxml2 libxslt openssl python27Packages.six xmlsec zlib ];
 
   configurePhase = ''
@@ -21,7 +29,7 @@ stdenv.mkDerivation rec {
                 --prefix=$out
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://lasso.entrouvert.org/";
     description = "Liberty Alliance Single Sign-On library";
     license = licenses.gpl2Plus;

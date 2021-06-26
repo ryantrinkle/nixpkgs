@@ -1,10 +1,10 @@
-{ mkDerivation, stdenv, fetchhg
+{ mkDerivation, lib, fetchhg
 , qmake, qttools
 , qtbase, qtsvg, qtxmlpatterns
 , poppler_utils
 }:
 
-with stdenv.lib;
+with lib;
 
 mkDerivation rec {
   pname = "valentina";
@@ -57,7 +57,6 @@ mkDerivation rec {
   enableParallelBuilding = true;
 
   meta = {
-    broken = true;
     description = "An open source sewing pattern drafting software";
     homepage = "https://valentinaproject.bitbucket.io/";
     license = licenses.gpl3;

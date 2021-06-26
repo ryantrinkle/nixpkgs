@@ -1,14 +1,15 @@
-{ stdenv
+{ lib
 , buildPythonPackage
+, isPy3k
 , fetchPypi
-, isPy27
 , pep8
 }:
 
 buildPythonPackage rec {
   pname = "shortuuid";
   version = "1.0.1";
-  disabled = isPy27;
+
+  disabled = !isPy3k;
 
   src = fetchPypi {
     inherit pname version;
@@ -17,7 +18,7 @@ buildPythonPackage rec {
 
   buildInputs = [pep8];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A generator library for concise, unambiguous and URL-safe UUIDs";
     homepage = "https://github.com/stochastic-technologies/shortuuid/";
     license = licenses.bsd3;

@@ -11,7 +11,7 @@ import ./make-test-python.nix ({ pkgs, lib, ... }:
       services = {
         hedgedoc = {
           enable = true;
-          configuration.dbURL = "sqlite:///var/lib/codimd/codimd.db";
+          configuration.dbURL = "sqlite:///var/lib/hedgedoc/hedgedoc.db";
         };
       };
     };
@@ -21,7 +21,15 @@ import ./make-test-python.nix ({ pkgs, lib, ... }:
       services = {
         hedgedoc = {
           enable = true;
-          configuration.dbURL = "postgres://hedgedoc:snakeoilpassword@localhost:5432/hedgedocdb";
+          configuration.dbURL = "postgres://hedgedoc:\${DB_PASSWORD}@localhost:5432/hedgedocdb";
+
+          /*
+           * Do not use pkgs.writeText for secrets as
+           * they will end up in the world-readable Nix store.
+           */
+          environmentFile = pkgs.writeText "hedgedoc-env" ''
+            DB_PASSWORD=snakeoilpassword
+          '';
         };
         postgresql = {
           enable = true;

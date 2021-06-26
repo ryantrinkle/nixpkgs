@@ -1,16 +1,16 @@
-{ stdenv, buildGoModule, fetchFromGitHub, installShellFiles }:
+{ lib, buildGoModule, fetchFromGitHub, installShellFiles }:
 
 buildGoModule rec {
   pname = "helm";
-  version = "3.3.4";
+  version = "3.5.4";
 
   src = fetchFromGitHub {
     owner = "helm";
     repo = "helm";
     rev = "v${version}";
-    sha256 = "1b719kzchgis4imscgf6i7dvc1mq3ymgh5ganpb89kcs88qw3szj";
+    sha256 = "sha256-u8GJVOubPlIG88TFG5+OvbovMz4Q595wWo2YCwuTgG8=";
   };
-  vendorSha256 = "0f8a0psvic923rh13f5041p7hr6w8dy9qxdw3l195yky5cf3fj6w";
+  vendorSha256 = "sha256-zdZxGiwgx8c0zt9tQebJi7k/LNNYjhNInsVeBbxPsgE=";
 
   doCheck = false;
 
@@ -24,7 +24,7 @@ buildGoModule rec {
     installShellCompletion helm.{bash,zsh}
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/kubernetes/helm";
     description = "A package manager for kubernetes";
     license = licenses.asl20;

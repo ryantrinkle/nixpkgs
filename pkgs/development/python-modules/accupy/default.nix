@@ -1,41 +1,47 @@
 { lib
 , buildPythonPackage
 , fetchPypi
+, pythonOlder
 , mpmath
 , numpy
-, pipdate
 , pybind11
 , pyfma
 , eigen
+, importlib-metadata
 , pytestCheckHook
 , matplotlib
+, dufte
 , isPy27
 }:
 
 buildPythonPackage rec {
   pname = "accupy";
-  version = "0.3.2";
+  version = "0.3.4";
   disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "be5c8c9ef2f83c9eeddac85463879957c87a93b257a6202a76ad6b43080b32f9";
+    sha256 = "36506aca53154528997ac22aee6292c83da0f4850bb375c149512b5284bd4948";
   };
 
+  nativeBuildInputs = [
+    pybind11
+  ];
+
   buildInputs = [
-    pybind11 eigen
+    eigen
   ];
 
   propagatedBuildInputs = [
     mpmath
     numpy
-    pipdate
     pyfma
-  ];
+  ] ++ lib.optional (pythonOlder "3.8") importlib-metadata;
 
   checkInputs = [
     pytestCheckHook
     matplotlib
+    dufte
   ];
 
   postConfigure = ''

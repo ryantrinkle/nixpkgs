@@ -1,12 +1,12 @@
-{ stdenv, fetchurl, unzip, makeWrapper, dotnetCorePackages, jq }:
+{ lib, stdenv, fetchurl, unzip, makeWrapper, dotnetCorePackages, jq }:
 
 stdenv.mkDerivation rec {
   pname = "ArchiSteamFarm";
-  version = "4.2.3.6";
+  version = "4.3.1.0";
 
   src = fetchurl {
     url = "https://github.com/JustArchiNET/ArchiSteamFarm/releases/download/${version}/ASF-generic.zip";
-    sha256 = "1a8baxrb8czndxxi16md1nyl2snfx215yvrygdpcblgngkp2z2y9";
+    sha256 = "1q28byshh4wkfsfdb0sfdqq9a5da9k7i4nagsfpk0fzyajvzd4lx";
   };
 
   nativeBuildInputs = [ unzip makeWrapper jq ];
@@ -31,12 +31,12 @@ stdenv.mkDerivation rec {
       --run "ln -sf $dist/www ."
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Application with primary purpose of idling Steam cards from multiple accounts simultaneously";
     homepage = "https://github.com/JustArchiNET/ArchiSteamFarm";
     license = licenses.asl20;
     platforms = dotnetCorePackages.aspnetcore_3_1.meta.platforms;
-    maintainers = with maintainers; [ gnidorah ];
+    maintainers = with maintainers; [ ];
     hydraPlatforms = [];
   };
 }

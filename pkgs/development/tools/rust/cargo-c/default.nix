@@ -5,7 +5,7 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-c";
-  version = "0.6.7";
+  version = "0.8.0";
 
   src = stdenv.mkDerivation rec {
     name = "${pname}-source-${version}";
@@ -14,11 +14,11 @@ rustPlatform.buildRustPackage rec {
       owner = "lu-zero";
       repo = pname;
       rev = "v${version}";
-      sha256 = "0n52xh4qg12bvvp2dgx5wfj5f31qijdqahasa3qfa3c3aqq7cvvg";
+      sha256 = "1rvbikhbqsfa2sh79kapqg4yz19r1yhqfykl6cf4yjg6vawkwfw1";
     };
     cargoLock = fetchurl {
       url = "https://github.com/lu-zero/${pname}/releases/download/v${version}/Cargo.lock";
-      sha256 = "0296187hsaxxmqhsrrva4qf313jwh3z08j1vxcbislxdq8xg32qb";
+      sha256 = "17cdac8ym59jwjxs3k4isazknhrlr6lw0j0r76n5xf0dd7apfgcs";
     };
 
     installPhase = ''
@@ -28,11 +28,11 @@ rustPlatform.buildRustPackage rec {
     '';
   };
 
-  cargoSha256 = "1gwyszpcmss2d0lm5hvf3b48jy7b0fm7xizhrl3wd6rzw7pg06zd";
+  cargoSha256 = "0pxakfiidxfczh3harnjhb1zv340r812jxzwam8z2kyw3mkyhh8z";
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ openssl ]
-  ++ stdenv.lib.optionals stdenv.isDarwin [ CoreFoundation libiconv Security ];
+  ++ lib.optionals stdenv.isDarwin [ CoreFoundation libiconv Security ];
 
   meta = with lib; {
     description = "A cargo subcommand to build and install C-ABI compatibile dynamic and static libraries";
@@ -45,6 +45,6 @@ rustPlatform.buildRustPackage rec {
     changelog = "https://github.com/lu-zero/cargo-c/releases/tag/v${version}";
     license = licenses.mit;
     platforms = platforms.unix;
-    maintainers = with maintainers; [ primeos ];
+    maintainers = with maintainers; [ ];
   };
 }

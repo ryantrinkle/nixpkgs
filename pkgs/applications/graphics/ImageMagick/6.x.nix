@@ -1,7 +1,7 @@
-{ lib, stdenv, fetchFromGitHub, pkgconfig, libtool
+{ lib, stdenv, fetchFromGitHub, pkg-config, libtool
 , bzip2, zlib, libX11, libXext, libXt, fontconfig, freetype, ghostscript, libjpeg, djvulibre
 , lcms2, openexr, libpng, librsvg, libtiff, libxml2, openjpeg, libwebp, fftw, libheif, libde265
-, ApplicationServices
+, ApplicationServices, Foundation
 }:
 
 let
@@ -9,19 +9,20 @@ let
     if stdenv.hostPlatform.system == "i686-linux" then "i686"
     else if stdenv.hostPlatform.system == "x86_64-linux" || stdenv.hostPlatform.system == "x86_64-darwin" then "x86-64"
     else if stdenv.hostPlatform.system == "armv7l-linux" then "armv7l"
-    else if stdenv.hostPlatform.system == "aarch64-linux" then "aarch64"
+    else if stdenv.hostPlatform.system == "aarch64-linux"  || stdenv.hostPlatform.system == "aarch64-darwin" then "aarch64"
+    else if stdenv.hostPlatform.system == "powerpc64le-linux" then "ppc64le"
     else throw "ImageMagick is not supported on this platform.";
 in
 
 stdenv.mkDerivation rec {
   pname = "imagemagick";
-  version = "6.9.12-12";
+  version = "6.9.12-16";
 
   src = fetchFromGitHub {
     owner = "ImageMagick";
     repo = "ImageMagick6";
     rev = version;
-    sha256 = "sha256-yqMYuayQjPlTqi3+CtwP5CdsAGud/fHR0I2LwUPIq00=";
+    sha256 = "sha256-kg8vt88G6huRbJlVYztKxHiFPhGz/QHuNKtbhmai790=";
   };
 
   outputs = [ "out" "dev" "doc" ]; # bin/ isn't really big
@@ -41,7 +42,7 @@ stdenv.mkDerivation rec {
       [ "--enable-static" "--disable-shared" ] # due to libxml2 being without DLLs ATM
     ;
 
-  nativeBuildInputs = [ pkgconfig libtool ];
+  nativeBuildInputs = [ pkg-config libtool ];
 
   buildInputs =
     [ zlib fontconfig freetype ghostscript
@@ -49,7 +50,8 @@ stdenv.mkDerivation rec {
     ]
     ++ lib.optionals (!stdenv.hostPlatform.isMinGW)
       [ openexr librsvg openjpeg ]
-    ++ lib.optional stdenv.isDarwin ApplicationServices;
+    ++ lib.optionals stdenv.isDarwin
+      [ ApplicationServices Foundation ];
 
   propagatedBuildInputs =
     [ bzip2 freetype libjpeg lcms2 fftw ]
@@ -64,10 +66,10 @@ stdenv.mkDerivation rec {
     moveToOutput "bin/*-config" "$dev"
     moveToOutput "lib/ImageMagick-*/config-Q16" "$dev" # includes configure params
     for file in "$dev"/bin/*-config; do
-      substituteInPlace "$file" --replace "${pkgconfig}/bin/pkg-config -config" \
-        ${pkgconfig}/bin/${pkgconfig.targetPrefix}pkg-config
-      substituteInPlace "$file" --replace ${pkgconfig}/bin/pkg-config \
-        "PKG_CONFIG_PATH='$dev/lib/pkgconfig' '${pkgconfig}/bin/${pkgconfig.targetPrefix}pkg-config'"
+      substituteInPlace "$file" --replace "${pkg-config}/bin/pkg-config -config" \
+        ${pkg-config}/bin/${pkg-config.targetPrefix}pkg-config
+      substituteInPlace "$file" --replace ${pkg-config}/bin/pkg-config \
+        "PKG_CONFIG_PATH='$dev/lib/pkgconfig' '${pkg-config}/bin/${pkg-config.targetPrefix}pkg-config'"
     done
   '' + lib.optionalString (ghostscript != null) ''
     for la in $out/lib/*.la; do

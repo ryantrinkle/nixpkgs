@@ -24,15 +24,6 @@ in {
         description = "the thermald manual configuration file.";
       };
 
-      adaptive = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          Whether to enable adaptive mode, only working on kernel versions greater than 5.8.
-          Thermald will detect this itself, safe to enable on kernel versions below 5.8.
-        '';
-      };
-
       package = mkOption {
         type = types.package;
         default = pkgs.thermald;
@@ -55,8 +46,8 @@ in {
             --no-daemon \
             ${optionalString cfg.debug "--loglevel=debug"} \
             ${optionalString (cfg.configFile != null) "--config-file ${cfg.configFile}"} \
-            ${optionalString cfg.adaptive "--adaptive"} \
-            --dbus-enable
+            --dbus-enable \
+            --adaptive
         '';
       };
     };

@@ -1,7 +1,6 @@
 { lib
 , buildPythonPackage
 , fetchFromGitHub
-, isPy27
 , numpy
 , matplotlib
 , pytest
@@ -10,7 +9,6 @@
 buildPythonPackage rec {
   pname = "showit";
   version = "1.1.4";
-  disabled = isPy27;
 
   src = fetchFromGitHub {
     owner = "freeman-lab";

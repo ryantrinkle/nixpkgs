@@ -1,11 +1,11 @@
-{ lib, buildPythonPackage, fetchPypi, isPy27
-, cssselect, cssutils, lxml, mock, nose, requests, cachetools
+{ lib, buildPythonPackage, fetchPypi, isPy27,
+  cssselect, cssutils, lxml, mock, nose, requests, cachetools
 }:
 
 buildPythonPackage rec {
   pname = "premailer";
   version = "3.7.0";
-  disabled = isPy27;
+  disabled = isPy27; # no longer compatible with urllib
 
   src = fetchPypi {
     inherit pname version;

@@ -1,4 +1,5 @@
-{ stdenv
+{ lib
+, stdenv
 , buildGoModule
 , fetchFromGitHub
 , go-bindata
@@ -11,9 +12,9 @@
 
 buildGoModule rec {
   pname = "minikube";
-  version = "1.13.0";
+  version = "1.20.0";
 
-  vendorSha256 = "09bcp7pqbs9j06z1glpad70dqlsnrf69vn75l00bdjknbrvbzrb9";
+  vendorSha256 = "sha256-ncgf2C4PZMoVMZIMDn9LwP2EDqg7T/WbUPRd/SqGGnU=";
 
   doCheck = false;
 
@@ -21,7 +22,7 @@ buildGoModule rec {
     owner = "kubernetes";
     repo = "minikube";
     rev = "v${version}";
-    sha256 = "1xlz07q0nlsq6js58b5ad0wxajwganaqcvwglj4w6fgmiqm9s1ny";
+    sha256 = "sha256-TnvbO8OLjnI5WGy3QR4OZbesOBat2VsL7ElCnj2Tkmk=";
   };
 
   nativeBuildInputs = [ go-bindata installShellFiles pkg-config which ];
@@ -45,11 +46,11 @@ buildGoModule rec {
     done
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://minikube.sigs.k8s.io";
     description = "A tool that makes it easy to run Kubernetes locally";
     license = licenses.asl20;
-    maintainers = with maintainers; [ ebzzry copumpkin vdemeester atkinschang ];
+    maintainers = with maintainers; [ ebzzry copumpkin vdemeester atkinschang Chili-Man ];
     platforms = platforms.unix;
   };
 }

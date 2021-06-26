@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl }:
+{lib, stdenv, fetchurl}:
 
 stdenv.mkDerivation rec {
   pname = "libmspack";

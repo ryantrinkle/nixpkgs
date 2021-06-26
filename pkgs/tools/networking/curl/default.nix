@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, pkgconfig, perl
+{ stdenv, lib, fetchurl, pkg-config, perl
 , http2Support ? true, nghttp2
 , idnSupport ? false, libidn ? null
 , ldapSupport ? false, openldap ? null
@@ -7,7 +7,15 @@
 , gnutlsSupport ? false, gnutls ? null
 , wolfsslSupport ? false, wolfssl ? null
 , scpSupport ? zlibSupport && !stdenv.isSunOS && !stdenv.isCygwin, libssh2 ? null
-, gssSupport ? !stdenv.hostPlatform.isWindows, libkrb5 ? null
+, gssSupport ? with stdenv.hostPlatform; !(
+    !isWindows &&
+    # a very sad story re static: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=439039
+    !isStatic &&
+    # the "mig" tool does not configure its compiler correctly. This could be
+    # fixed in mig, but losing gss support on cross compilation to darwin is
+    # not worth the effort.
+    !(isDarwin && (stdenv.buildPlatform != stdenv.hostPlatform))
+  ), libkrb5 ? null
 , c-aresSupport ? false, c-ares ? null
 , brotliSupport ? false, brotli ? null
 }:
@@ -34,19 +42,20 @@ assert gssSupport -> libkrb5 != null;
 
 stdenv.mkDerivation rec {
   pname = "curl";
-  version = "7.74.0";
+  version = "7.76.1";
 
   src = fetchurl {
     urls = [
       "https://curl.haxx.se/download/${pname}-${version}.tar.bz2"
       "https://github.com/curl/curl/releases/download/${lib.replaceStrings ["."] ["_"] pname}-${version}/${pname}-${version}.tar.bz2"
     ];
-    sha256 = "19bp3d91xq9vqwlbzq261j23mk9lz4lyka4gr2fm6dhnd3k66k8g";
+    sha256 = "1scmfrp0c27pkd7yva9k50miprjpsyfbb33apx72qc9igm6ii3ks";
   };
 
   patches = [
-    ./7.74.0-CVE-2021-22876.patch
-    ./7.74.0-CVE-2021-22890.patch
+    ./CVE-2021-22897.patch
+    ./CVE-2021-22898.patch
+    ./CVE-2021-22901.patch
   ];
 
   outputs = [ "bin" "dev" "out" "man" "devdoc" ];
@@ -54,12 +63,12 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  nativeBuildInputs = [ pkgconfig perl ];
+  nativeBuildInputs = [ pkg-config perl ];
 
   # Zlib and OpenSSL must be propagated because `libcurl.la' contains
   # "-lz -lssl", which aren't necessary direct build inputs of
   # applications that use Curl.
-  propagatedBuildInputs = with stdenv.lib;
+  propagatedBuildInputs = with lib;
     optional http2Support nghttp2 ++
     optional idnSupport libidn ++
     optional ldapSupport openldap ++
@@ -94,13 +103,13 @@ stdenv.mkDerivation rec {
       ( if idnSupport then "--with-libidn=${libidn.dev}" else "--without-libidn" )
       ( if brotliSupport then "--with-brotli" else "--without-brotli" )
     ]
-    ++ stdenv.lib.optional wolfsslSupport "--with-wolfssl=${wolfssl.dev}"
-    ++ stdenv.lib.optional c-aresSupport "--enable-ares=${c-ares}"
-    ++ stdenv.lib.optional gssSupport "--with-gssapi=${libkrb5.dev}"
+    ++ lib.optional wolfsslSupport "--with-wolfssl=${wolfssl.dev}"
+    ++ lib.optional c-aresSupport "--enable-ares=${c-ares}"
+    ++ lib.optional gssSupport "--with-gssapi=${libkrb5.dev}"
        # For the 'urandom', maybe it should be a cross-system option
-    ++ stdenv.lib.optional (stdenv.hostPlatform != stdenv.buildPlatform)
+    ++ lib.optional (stdenv.hostPlatform != stdenv.buildPlatform)
        "--with-random=/dev/urandom"
-    ++ stdenv.lib.optionals stdenv.hostPlatform.isWindows [
+    ++ lib.optionals stdenv.hostPlatform.isWindows [
       "--disable-shared"
       "--enable-static"
     ];
@@ -115,9 +124,9 @@ stdenv.mkDerivation rec {
 
     # Install completions
     make -C scripts install
-  '' + stdenv.lib.optionalString scpSupport ''
+  '' + lib.optionalString scpSupport ''
     sed '/^dependency_libs/s|${libssh2.dev}|${libssh2.out}|' -i "$out"/lib/*.la
-  '' + stdenv.lib.optionalString gnutlsSupport ''
+  '' + lib.optionalString gnutlsSupport ''
     ln $out/lib/libcurl.so $out/lib/libcurl-gnutls.so
     ln $out/lib/libcurl.so $out/lib/libcurl-gnutls.so.4
     ln $out/lib/libcurl.so $out/lib/libcurl-gnutls.so.4.4.0
@@ -127,7 +136,7 @@ stdenv.mkDerivation rec {
     inherit sslSupport openssl;
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A command line tool for transferring files with URL syntax";
     homepage    = "https://curl.haxx.se/";
     license = licenses.curl;

@@ -1,12 +1,12 @@
-{ stdenv, fetchurl }:
+{ lib, stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
   pname = "gerrit";
-  version = "3.2.6";
+  version = "3.3.2";
 
   src = fetchurl {
     url = "https://gerrit-releases.storage.googleapis.com/gerrit-${version}.war";
-    sha256 = "1jhq1a9b574ha2j5cisshdhggsy0z1m93q0xwkc8zqy387g7dcfj";
+    sha256 = "sha256-tqlJANxJl2r0ZxPb7d8KU9cRMQUFPUIm/zMp4zREGL0=";
   };
 
   buildCommand = ''
@@ -32,7 +32,7 @@ stdenv.mkDerivation rec {
     ];
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://www.gerritcodereview.com/index.md";
     license = licenses.asl20;
     description = "A web based code review and repository management for the git version control system";

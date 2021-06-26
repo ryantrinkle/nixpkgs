@@ -1,5 +1,5 @@
 { stdenv, lib, fetchFromGitHub, makeWrapper
-, gettext, zsh, pinentry, cryptsetup, gnupg, utillinux, e2fsprogs, sudo
+, gettext, zsh, pinentry, cryptsetup, gnupg, util-linux, e2fsprogs, sudo
 }:
 
 stdenv.mkDerivation rec {
@@ -31,10 +31,10 @@ stdenv.mkDerivation rec {
     install -Dm644 doc/tomb.1 $out/share/man/man1/tomb.1
 
     wrapProgram $out/bin/tomb \
-      --prefix PATH : $out/bin:${lib.makeBinPath [ cryptsetup gettext gnupg pinentry utillinux e2fsprogs ]}
+      --prefix PATH : $out/bin:${lib.makeBinPath [ cryptsetup gettext gnupg pinentry util-linux e2fsprogs ]}
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "File encryption on GNU/Linux";
     homepage    = "https://www.dyne.org/software/tomb/";
     license     = licenses.gpl3;

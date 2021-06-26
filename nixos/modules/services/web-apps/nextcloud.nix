@@ -6,17 +6,19 @@ let
   cfg = config.services.nextcloud;
   fpm = config.services.phpfpm.pools.nextcloud;
 
-  phpPackage =
-    let
-      base = pkgs.php74;
-    in
-      base.buildEnv {
-        extensions = { enabled, all }: with all;
-          enabled ++ [
-            apcu redis memcached imagick
-          ];
-        extraConfig = phpOptionsStr;
-      };
+  phpPackage = pkgs.php74.buildEnv {
+    extensions = { enabled, all }:
+      (with all;
+        enabled
+        ++ optional cfg.enableImagemagick imagick
+        # Optionally enabled depending on caching settings
+        ++ optional cfg.caching.apcu apcu
+        ++ optional cfg.caching.redis redis
+        ++ optional cfg.caching.memcached memcached
+      )
+      ++ cfg.phpExtraExtensions all; # Enabled by user
+    extraConfig = toKeyValue phpOptions;
+  };
 
   toKeyValue = generators.toKeyValue {
     mkKeyValue = generators.mkKeyValueDefault {} " = ";
@@ -30,7 +32,6 @@ let
     // optionalAttrs cfg.caching.apcu {
       "apc.enable_cli" = "1";
     };
-  phpOptionsStr = toKeyValue phpOptions;
 
   occ = pkgs.writeScriptBin "nextcloud-occ" ''
     #! ${pkgs.runtimeShell}
@@ -42,7 +43,7 @@ let
     export NEXTCLOUD_CONFIG_DIR="${cfg.home}/config"
     $sudo \
       ${phpPackage}/bin/php \
-      occ $*
+      occ "$@"
   '';
 
   inherit (config.system) stateVersion;
@@ -61,6 +62,9 @@ in {
 
       Further details about this can be found in the `Nextcloud`-section of the NixOS-manual
       (which can be openend e.g. by running `nixos-help`).
+    '')
+    (mkRemovedOptionModule [ "services" "nextcloud" "disableImagemagick" ] ''
+      Use services.nextcloud.nginx.enableImagemagick instead.
     '')
   ];
 
@@ -88,7 +92,7 @@ in {
     package = mkOption {
       type = types.package;
       description = "Which package to use for the Nextcloud instance.";
-      relatedPackages = [ "nextcloud18" "nextcloud19" "nextcloud20" "nextcloud21" ];
+      relatedPackages = [ "nextcloud19" "nextcloud20" "nextcloud21" ];
     };
 
     maxUploadSize = mkOption {
@@ -116,6 +120,21 @@ in {
       description = ''
         Enable this option if you plan on using the webfinger plugin.
         The appropriate nginx rewrite rules will be added to your configuration.
+      '';
+    };
+
+    phpExtraExtensions = mkOption {
+      type = with types; functionTo (listOf package);
+      default = all: [];
+      defaultText = "all: []";
+      description = ''
+        Additional PHP extensions to use for nextcloud.
+        By default, only extensions necessary for a vanilla nextcloud installation are enabled,
+        but you may choose from the list of available extensions and add further ones.
+        This is sometimes necessary to be able to install a certain nextcloud app that has additional requirements.
+      '';
+      example = literalExample ''
+        all: [ all.pdlib all.bz2 ]
       '';
     };
 
@@ -287,6 +306,16 @@ in {
       };
     };
 
+    enableImagemagick = mkEnableOption ''
+        Whether to load the ImageMagick module into PHP.
+        This is used by the theming app and for generating previews of certain images (e.g. SVG and HEIF).
+        You may want to disable it for increased security. In that case, previews will still be available
+        for some images (e.g. JPEG and PNG).
+        See https://github.com/nextcloud/server/issues/13099
+    '' // {
+      default = true;
+    };
+
     caching = {
       apcu = mkOption {
         type = types.bool;
@@ -355,42 +384,28 @@ in {
         }
       ];
 
-      warnings = []
-        ++ (optional (cfg.poolConfig != null) ''
+      warnings = let
+        latest = 21;
+        upgradeWarning = major: nixos:
+          ''
+            A legacy Nextcloud install (from before NixOS ${nixos}) may be installed.
+
+            After nextcloud${toString major} is installed successfully, you can safely upgrade
+            to ${toString (major + 1)}. The latest version available is nextcloud${toString latest}.
+
+            Please note that Nextcloud doesn't support upgrades across multiple major versions
+            (i.e. an upgrade from 16 is possible to 17, but not 16 to 18).
+
+            The package can be upgraded by explicitly declaring the service-option
+            `services.nextcloud.package`.
+          '';
+      in (optional (cfg.poolConfig != null) ''
           Using config.services.nextcloud.poolConfig is deprecated and will become unsupported in a future release.
           Please migrate your configuration to config.services.nextcloud.poolSettings.
         '')
-        ++ (optional (versionOlder cfg.package.version "18") ''
-          A legacy Nextcloud install (from before NixOS 20.03) may be installed.
-
-          You're currently deploying an older version of Nextcloud. This may be needed
-          since Nextcloud doesn't allow major version upgrades that skip multiple
-          versions (i.e. an upgrade from 16 is possible to 17, but not 16 to 18).
-
-          It is assumed that Nextcloud will be upgraded from version 16 to 17.
-
-           * If this is a fresh install, there will be no upgrade to do now.
-
-           * If this server already had Nextcloud installed, first deploy this to your
-             server, and wait until the upgrade to 17 is finished.
-
-          Then, set `services.nextcloud.package` to `pkgs.nextcloud18` to upgrade to
-          Nextcloud version 18. Please note that Nextcloud 19 is already out and it's
-          recommended to upgrade to nextcloud19 after that.
-        '')
-        ++ (optional (versionOlder cfg.package.version "19") ''
-          A legacy Nextcloud install (from before NixOS 20.09) may be installed.
-
-          If/After nextcloud18 is installed successfully, you can safely upgrade to
-          nextcloud19. If not, please upgrade to nextcloud18 first since Nextcloud doesn't
-          support upgrades that skip multiple versions (i.e. an upgrade from 17 to 19 isn't
-          possible, but an upgrade from 18 to 19).
-        '')
-        ++ (optional (versionOlder cfg.package.version "21") ''
-          The latest Nextcloud release is v21 which can be installed by setting
-          `services.nextcloud.package` to `pkgs.nextcloud21`. Please note that if you're
-          on `pkgs.nextcloud19`, you'll have to install `pkgs.nextcloud20` first.
-        '');
+        ++ (optional (versionOlder cfg.package.version "19") (upgradeWarning 18 "20.09"))
+        ++ (optional (versionOlder cfg.package.version "20") (upgradeWarning 19 "21.05"))
+        ++ (optional (versionOlder cfg.package.version "21") (upgradeWarning 20 "21.05"));
 
       services.nextcloud.package = with pkgs;
         mkDefault (
@@ -400,9 +415,13 @@ in {
               nextcloud defined in an overlay, please set `services.nextcloud.package` to
               `pkgs.nextcloud`.
             ''
-          else if versionOlder stateVersion "20.03" then nextcloud17
           else if versionOlder stateVersion "20.09" then nextcloud18
-          else nextcloud19
+          # 21.03 will not be an official release - it was instead 21.05.
+          # This versionOlder statement remains set to 21.03 for backwards compatibility.
+          # See https://github.com/NixOS/nixpkgs/pull/108899 and
+          # https://github.com/NixOS/rfcs/blob/master/rfcs/0080-nixos-release-schedule.md.
+          else if versionOlder stateVersion "21.03" then nextcloud19
+          else nextcloud21
         );
     }
 
@@ -429,7 +448,9 @@ in {
                 $file = "${c.dbpassFile}";
                 if (!file_exists($file)) {
                   throw new \RuntimeException(sprintf(
-                    "Cannot start Nextcloud, dbpass file %s set by NixOS doesn't exist!",
+                    "Cannot start Nextcloud, dbpass file %s set by NixOS doesn't seem to "
+                    . "exist! Please make sure that the file exists and has appropriate "
+                    . "permissions for user & group 'nextcloud'!",
                     $file
                   ));
                 }
@@ -570,7 +591,6 @@ in {
         pools.nextcloud = {
           user = "nextcloud";
           group = "nextcloud";
-          phpOptions = phpOptionsStr;
           phpPackage = phpPackage;
           phpEnv = {
             NEXTCLOUD_CONFIG_DIR = "${cfg.home}/config";
@@ -588,6 +608,7 @@ in {
         home = "${cfg.home}";
         group = "nextcloud";
         createHome = true;
+        isSystemUser = true;
       };
       users.groups.nextcloud.members = [ "nextcloud" config.services.nginx.user ];
 

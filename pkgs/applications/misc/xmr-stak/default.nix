@@ -1,5 +1,5 @@
 { stdenv, stdenvGcc6, lib
-, fetchFromGitHub, cmake, libmicrohttpd, openssl
+, fetchFromGitHub, cmake, libmicrohttpd_0_9_70, openssl
 , opencl-headers, ocl-icd, hwloc, cudatoolkit
 , devDonationLevel ? "0.0"
 , cudaSupport ? false
@@ -27,7 +27,7 @@ stdenv'.mkDerivation rec {
     ++ lib.optional (!openclSupport) "-DOpenCL_ENABLE=OFF";
 
   nativeBuildInputs = [ cmake ];
-  buildInputs = [ libmicrohttpd openssl hwloc ]
+  buildInputs = [ libmicrohttpd_0_9_70 openssl hwloc ]
     ++ lib.optional cudaSupport cudatoolkit
     ++ lib.optionals openclSupport [ opencl-headers ocl-icd ];
 
@@ -37,7 +37,6 @@ stdenv'.mkDerivation rec {
   '';
 
   meta = with lib; {
-    broken = true;
     description = "Unified All-in-one Monero miner";
     homepage = "https://github.com/fireice-uk/xmr-stak";
     license = licenses.gpl3Plus;

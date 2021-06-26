@@ -1,33 +1,45 @@
-{ stdenv, fetchFromGitHub, fetchpatch, openssl, libevent }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, fetchpatch
+, openssl
+, libevent
+, pkg-config
+, libprom
+, libpromhttp
+, libmicrohttpd
+}:
 
 stdenv.mkDerivation rec {
   pname = "coturn";
-  version = "4.5.1.3";
+  version = "4.5.2";
 
   src = fetchFromGitHub {
     owner = "coturn";
     repo = "coturn";
     rev = version;
-    sha256 = "1801931k4qdvc7jvaqxvjyhbh1xsvjz0pjajf6xc222n4ggar1q5";
+    sha256 = "1s7ncc82ny4bb3qkn3fqr0144xsr7h2y8xmzsf5037h6j8f7j3v8";
   };
 
-  buildInputs = [ openssl libevent ];
+  nativeBuildInputs = [ pkg-config ];
+  buildInputs = [
+    openssl
+    libevent
+    libprom
+    libpromhttp
+    libmicrohttpd
+  ];
 
   patches = [
     ./pure-configure.patch
-    (fetchpatch {
-      name = "CVE-2020-26262.patch";
-      url = "https://github.com/coturn/coturn/commit/abfe1fd08d78baa0947d17dac0f7411c3d948e4d.patch";
-      sha256 = "06e0b92043d6afcd96f2cf514c60d17987642f41403cfb17cc35f37c7c726ba4";
-    })
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://coturn.net/";
     license = with licenses; [ bsd3 ];
     description = "A TURN server";
     platforms = platforms.all;
     broken = stdenv.isDarwin; # 2018-10-21
-    maintainers = [ maintainers.ralith ];
+    maintainers = with maintainers; [ ralith _0x4A6F ];
   };
 }

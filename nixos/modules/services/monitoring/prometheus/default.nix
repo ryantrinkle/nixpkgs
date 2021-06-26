@@ -47,12 +47,12 @@ let
 
   cmdlineArgs = cfg.extraFlags ++ [
     "--storage.tsdb.path=${workingDir}/data/"
-    "--config.file=${prometheusYml}"
+    "--config.file=/run/prometheus/prometheus-substituted.yaml"
     "--web.listen-address=${cfg.listenAddress}:${builtins.toString cfg.port}"
     "--alertmanager.notification-queue-capacity=${toString cfg.alertmanagerNotificationQueueCapacity}"
     "--alertmanager.timeout=${toString cfg.alertmanagerTimeout}s"
-  ] ++
-  optional (cfg.webExternalUrl != null) "--web.external-url=${cfg.webExternalUrl}";
+  ] ++ optional (cfg.webExternalUrl != null) "--web.external-url=${cfg.webExternalUrl}"
+    ++ optional (cfg.retentionTime != null)  "--storage.tsdb.retention.time=${cfg.retentionTime}";
 
   filterValidPrometheus = filterAttrsListRecursive (n: v: !(n == "_module" || v == null));
   filterAttrsListRecursive = pred: x:
@@ -112,17 +112,21 @@ let
           http://tools.ietf.org/html/rfc4366#section-3.1
         '';
       };
-      remote_timeout = mkDefOpt types.str "30s" ''
-        Timeout for requests to the remote write endpoint.
-      '';
-      relabel_configs = mkOpt (types.listOf promTypes.relabel_config) ''
-         List of remote write relabel configurations.
-         List of relabel configurations.
-       '';
-      name = mkOpt types.string ''
-        Name of the remote write config, which if specified must be unique among remote write configs.
+      name = mkOpt types.str ''
+        Name of the remote read config, which if specified must be unique among remote read configs.
         The name will be used in metrics and logging in place of a generated value to help users distinguish between
-        remote write configs.
+        remote read configs.
+      '';
+      required_matchers = mkOpt (types.attrsOf types.str) ''
+        An optional list of equality matchers which have to be
+        present in a selector to query the remote read endpoint.
+      '';
+      remote_timeout = mkOpt types.str ''
+        Timeout for requests to the remote read endpoint.
+      '';
+      read_recent = mkOpt types.bool ''
+        Whether reads should be made for queries for time ranges that
+        the local storage should have complete data for.
       '';
       basic_auth = mkOpt (types.submodule {
         options = {
@@ -136,30 +140,22 @@ let
           password_file = mkOpt types.str "HTTP password file";
         };
       }) ''
-        Sets the `Authorization` header on every remote write request with the
+        Sets the `Authorization` header on every remote read request with the
         configured username and password.
         password and password_file are mutually exclusive.
       '';
       bearer_token = mkOpt types.str ''
-        Sets the `Authorization` header on every remote write request with
+        Sets the `Authorization` header on every remote read request with
         the configured bearer token. It is mutually exclusive with `bearer_token_file`.
       '';
       bearer_token_file = mkOpt types.str ''
-        Sets the `Authorization` header on every remote write request with the bearer token
+        Sets the `Authorization` header on every remote read request with the bearer token
         read from the configured file. It is mutually exclusive with `bearer_token`.
       '';
       tls_config = mkOpt promTypes.tls_config ''
-        Configures the remote write request's TLS settings.
+        Configures the remote read request's TLS settings.
       '';
       proxy_url = mkOpt types.str "Optional Proxy URL.";
-      metadata_config = {
-        send = mkDefOpt types.bool "true" ''
-          Whether metric metadata is sent to remote storage or not.
-        '';
-        send_interval = mkDefOpt types.str "1m" ''
-          How frequently metric metadata is sent to remote storage.
-        '';
-      };
     };
   };
 
@@ -172,14 +168,13 @@ let
           http://tools.ietf.org/html/rfc4366#section-3.1
         '';
       };
-      remote_timeout = mkDefOpt types.str "30s" ''
+      remote_timeout = mkOpt types.str ''
         Timeout for requests to the remote write endpoint.
       '';
-      relabel_configs = mkOpt (types.listOf promTypes.relabel_config) ''
-         List of remote write relabel configurations.
-         List of relabel configurations.
-       '';
-      name = mkOpt types.string ''
+      write_relabel_configs = mkOpt (types.listOf promTypes.relabel_config) ''
+        List of remote write relabel configurations.
+      '';
+      name = mkOpt types.str ''
         Name of the remote write config, which if specified must be unique among remote write configs.
         The name will be used in metrics and logging in place of a generated value to help users distinguish between
         remote write configs.
@@ -212,14 +207,50 @@ let
         Configures the remote write request's TLS settings.
       '';
       proxy_url = mkOpt types.str "Optional Proxy URL.";
-      metadata_config = {
-        send = mkDefOpt types.bool "true" ''
-          Whether metric metadata is sent to remote storage or not.
-        '';
-        send_interval = mkDefOpt types.str "1m" ''
-          How frequently metric metadata is sent to remote storage.
-        '';
-      };
+      queue_config = mkOpt (types.submodule {
+        options = {
+          capacity = mkOpt types.int ''
+            Number of samples to buffer per shard before we block reading of more
+            samples from the WAL. It is recommended to have enough capacity in each
+            shard to buffer several requests to keep throughput up while processing
+            occasional slow remote requests.
+          '';
+          max_shards = mkOpt types.int ''
+            Maximum number of shards, i.e. amount of concurrency.
+          '';
+          min_shards = mkOpt types.int ''
+            Minimum number of shards, i.e. amount of concurrency.
+          '';
+          max_samples_per_send = mkOpt types.int ''
+            Maximum number of samples per send.
+          '';
+          batch_send_deadline = mkOpt types.str ''
+            Maximum time a sample will wait in buffer.
+          '';
+          min_backoff = mkOpt types.str ''
+            Initial retry delay. Gets doubled for every retry.
+          '';
+          max_backoff = mkOpt types.str ''
+            Maximum retry delay.
+          '';
+        };
+      }) ''
+        Configures the queue used to write to remote storage.
+      '';
+      metadata_config = mkOpt (types.submodule {
+        options = {
+          send = mkOpt types.bool ''
+            Whether metric metadata is sent to remote storage or not.
+          '';
+          send_interval = mkOpt types.str ''
+            How frequently metric metadata is sent to remote storage.
+          '';
+        };
+      }) ''
+        Configures the sending of series metadata to remote storage.
+        Metadata configuration is subject to change at any point
+        or be removed in future releases.
+      '';
     };
   };
 
@@ -339,12 +370,24 @@ let
         List of file service discovery configurations.
       '';
 
+      gce_sd_configs = mkOpt (types.listOf promTypes.gce_sd_config) ''
+        List of Google Compute Engine service discovery configurations.
+
+        See <link
+        xlink:href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config">the
+        relevant Prometheus configuration docs</link> for more detail.
+      '';
+
       static_configs = mkOpt (types.listOf promTypes.static_config) ''
         List of labeled target groups for this job.
       '';
 
       relabel_configs = mkOpt (types.listOf promTypes.relabel_config) ''
         List of relabel configurations.
+      '';
+
+      metric_relabel_configs = mkOpt (types.listOf promTypes.relabel_config) ''
+        List of metric relabel configurations.
       '';
 
       sample_limit = mkDefOpt types.int "0" ''
@@ -524,6 +567,52 @@ let
     };
   };
 
+  promTypes.gce_sd_config = types.submodule {
+    options = {
+      # Use `mkOption` instead of `mkOpt` for project and zone because they are
+      # required configuration values for `gce_sd_config`.
+      project = mkOption {
+        type = types.str;
+        description = ''
+          The GCP Project.
+        '';
+      };
+
+      zone = mkOption {
+        type = types.str;
+        description = ''
+          The zone of the scrape targets. If you need multiple zones use multiple
+          gce_sd_configs.
+        '';
+      };
+
+      filter = mkOpt types.str ''
+        Filter can be used optionally to filter the instance list by other
+        criteria Syntax of this filter string is described here in the filter
+        query parameter section: <link
+        xlink:href="https://cloud.google.com/compute/docs/reference/latest/instances/list"
+        />.
+      '';
+
+      refresh_interval = mkDefOpt types.str "60s" ''
+        Refresh interval to re-read the cloud instance list.
+      '';
+
+      port = mkDefOpt types.port "80" ''
+        The port to scrape metrics from. If using the public IP address, this
+        must instead be specified in the relabeling rule.
+      '';
+
+      tag_separator = mkDefOpt types.str "," ''
+        The tag separator used to separate concatenated GCE instance network tags.
+
+        See the GCP documentation on network tags for more information: <link
+        xlink:href="https://cloud.google.com/vpc/docs/add-remove-network-tags"
+        />
+      '';
+    };
+  };
+
   promTypes.relabel_config = types.submodule {
     options = {
       source_labels = mkOpt (types.listOf types.str) ''
@@ -641,6 +730,45 @@ in {
       default = [];
       description = ''
         Extra commandline options when launching Prometheus.
+      '';
+    };
+
+    environmentFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      example = "/root/prometheus.env";
+      description = ''
+        Environment file as defined in <citerefentry>
+        <refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum>
+        </citerefentry>.
+
+        Secrets may be passed to the service without adding them to the
+        world-readable Nix store, by specifying placeholder variables as
+        the option value in Nix and setting these variables accordingly in the
+        environment file.
+
+        Environment variables from this file will be interpolated into the
+        config file using envsubst with this syntax:
+        <literal>$ENVIRONMENT ''${VARIABLE}</literal>
+
+        <programlisting>
+          # Example scrape config entry handling an OAuth bearer token
+          {
+            job_name = "home_assistant";
+            metrics_path = "/api/prometheus";
+            scheme = "https";
+            bearer_token = "\''${HOME_ASSISTANT_BEARER_TOKEN}";
+            [...]
+          }
+        </programlisting>
+
+        <programlisting>
+          # Content of the environment file
+          HOME_ASSISTANT_BEARER_TOKEN=someoauthbearertoken
+        </programlisting>
+
+        Note that this file needs to be available on the host on which
+        <literal>Prometheus</literal> is running.
       '';
     };
 
@@ -764,6 +892,15 @@ in {
         errors, despite a correct configuration.
       '';
     };
+
+    retentionTime = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "15d";
+      description = ''
+        How long to retain samples in storage.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -793,12 +930,19 @@ in {
     systemd.services.prometheus = {
       wantedBy = [ "multi-user.target" ];
       after    = [ "network.target" ];
+      preStart = ''
+         ${lib.getBin pkgs.envsubst}/bin/envsubst -o "/run/prometheus/prometheus-substituted.yaml" \
+                                                  -i "${prometheusYml}"
+      '';
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/prometheus" +
           optionalString (length cmdlineArgs != 0) (" \\\n  " +
             concatStringsSep " \\\n  " cmdlineArgs);
         User = "prometheus";
         Restart  = "always";
+        EnvironmentFile = mkIf (cfg.environmentFile != null) [ cfg.environmentFile ];
+        RuntimeDirectory = "prometheus";
+        RuntimeDirectoryMode = "0700";
         WorkingDirectory = workingDir;
         StateDirectory = cfg.stateDir;
       };

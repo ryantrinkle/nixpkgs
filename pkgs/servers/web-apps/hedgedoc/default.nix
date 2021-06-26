@@ -88,14 +88,14 @@ mkYarnPackage rec {
     EOF
     chmod +x $out/bin/hedgedoc
     wrapProgram $out/bin/hedgedoc \
-      --set NODE_PATH "$out/node_modules"
+      --set NODE_PATH "$out/lib/node_modules"
 
     runHook postDist
   '';
 
   passthru.tests = { inherit (nixosTests) hedgedoc; };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Realtime collaborative markdown notes on all platforms";
     license = licenses.agpl3;
     homepage = "https://hedgedoc.org";
